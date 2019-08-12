@@ -8,6 +8,8 @@
 
 import acorn from './reducer'
 import { createStore } from 'redux'
+import render from './drawing'
+
 import { createGoal } from './create-goal/actions'
 
 // const obj = { "key": "val" }
@@ -26,12 +28,13 @@ let store = createStore(acorn)
 store.dispatch(createGoal("Sample Title! 😛"))
 store.dispatch(createGoal("Another one! 😇"))
 
-console.log(store.getState())
+const canvas = document.createElement('canvas')
+document.body.appendChild(canvas)
 
-function component() {
-  const element = document.createElement('div')
-  element.innerHTML = JSON.stringify(store.getState())
-  return element
-}
+// whenever the STATE in the STORE changes, re-render the state data to the canvas
+store.subscribe(() => {
+  render(store, canvas)
+})
 
-document.body.appendChild(component())
+// Do an initial draw of the view
+render(store, canvas)
