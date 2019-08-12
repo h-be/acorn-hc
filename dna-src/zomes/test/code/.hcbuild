@@ -1,0 +1,14 @@
+{
+  "steps": [
+    {
+      "command": "cargo",
+      "arguments": [
+        "build",
+        "--release",
+        "--target=wasm32-unknown-unknown",
+        "--target-dir=/Users/connor/nix-holochain/test/target"
+      ]
+    }
+  ],
+  "artifact": "/Users/connor/nix-holochain/test/target/wasm32-unknown-unknown/release/test.wasm"
+}
