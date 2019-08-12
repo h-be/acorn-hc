@@ -40,3 +40,7 @@ store.subscribe(() => {
 
 // Do an initial draw of the view
 render(store, canvas)
+
+setTimeout(() => {
+  store.dispatch(createGoal("Wait and show"))
+}, 2000)
