@@ -27,10 +27,14 @@ Developing the UI is simple.
 Open a terminal to the `/ui-src` folder within this folder
 
 Run the following command
-`npm install`
+```
+npm install
+```
 
 Now run
-`npm start`
+```
+npm start
+```
 
 A browser window will open, displaying the UI.
 
