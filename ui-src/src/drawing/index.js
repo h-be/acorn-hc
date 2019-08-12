@@ -21,7 +21,7 @@ function render(store, canvas) {
 
   // render each goal as rectangle to the canvas/screen
   state.goals.forEach(function(goal, index) {
-    ctx.fillStyle = 'red'
+    ctx.fillStyle = '#FFF'
     ctx.fillRect(100 + 300 * index, 200, 200, 64)
     // render text
     ctx.fillStyle = 'black'
