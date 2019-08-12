@@ -29,6 +29,8 @@ store.dispatch(createGoal("Sample Title! 😛"))
 store.dispatch(createGoal("Another one! 😇"))
 
 const canvas = document.createElement('canvas')
+canvas.width = document.body.clientWidth
+canvas.height = document.body.clientHeight
 document.body.appendChild(canvas)
 
 // whenever the STATE in the STORE changes, re-render the state data to the canvas
