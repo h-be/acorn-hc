@@ -2,9 +2,10 @@
   "name": "acorn",
   "version": "0.0.1",
   "description": "the most wonderful state of affairs tree",
-  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "webpack-dev-server --open",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack"
   },
   "repository": {
     "type": "git",
@@ -20,5 +21,10 @@
   "bugs": {
     "url": "https://github.com/h-be/acorn/issues"
   },
-  "homepage": "https://github.com/h-be/acorn#readme"
+  "homepage": "https://github.com/h-be/acorn#readme",
+  "devDependencies": {
+    "webpack": "^4.39.1",
+    "webpack-cli": "^3.3.6",
+    "webpack-dev-server": "^3.8.0"
+  }
 }
