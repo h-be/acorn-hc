@@ -1,2 +1,3 @@
 ui-src/node_modules
 dna-src/zomes/my_zome/code/.hcbuild
+.cargo
