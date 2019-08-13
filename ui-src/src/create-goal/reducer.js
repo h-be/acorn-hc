@@ -14,7 +14,7 @@ export default function(state = defaultState, action) {
   switch (type) {
     case createGoal.success().type:
       console.log(payload)
-      return state.concat([payload.content])
+      return state.concat([payload])
     default:
       return state
   }

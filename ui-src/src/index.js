@@ -43,8 +43,24 @@ let store = createStore(acorn, /* preloadedState, */ composeEnhancers(
   store.dispatch(action)
 */
 
-store.dispatch(createGoal.create({ entry: { content: "Sample Title! 😛" }}))
-store.dispatch(createGoal.create({ entry: { content: "Another one! 😇" }}))
+store.dispatch(createGoal.create({ entry: {
+  content: "Test title //o= <- spider",
+  user_hash: "Boop",
+  unix_timestamp: 412,
+  complete: false,
+  certain: true,
+  small: true, }}))
+
+store.dispatch(createGoal.create({ entry: {
+  content: "Another test! 😇",
+  user_hash: "Boop",
+  unix_timestamp: 413,
+  complete: false,
+  certain: true,
+  small: true, }}))
+
+// store.dispatch(createGoal.create({ entry: { content: "Sample Title! 😛" }}))
+// store.dispatch(createGoal.create({ entry: { content: "Another one! 😇" }}))
 
 const canvas = document.createElement('canvas')
 canvas.width = document.body.clientWidth

@@ -12,7 +12,7 @@ import { createHolochainZomeCallAsyncAction } from '@holochain/hc-redux-middlewa
 
 /* action creator functions */
 
-const createGoal = createHolochainZomeCallAsyncAction('test-instance', 'my_zome', 'create_my_entry')
+const createGoal = createHolochainZomeCallAsyncAction('test-instance', 'my_zome', 'create_goal')
 
 // function createGoal(title) {
 //   return {

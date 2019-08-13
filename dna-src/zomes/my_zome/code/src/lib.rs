@@ -68,14 +68,14 @@ mod my_zome {
             validation_package: || {
                 hdk::ValidationPackageDefinition::Entry
             },
-            validation: | _validation_data: hdk::EntryValidationData<MyEntry>| {
+            validation: | _validation_data: hdk::EntryValidationData<Goal>| {
                 Ok(())
             }
         )
     }
 
     #[zome_fn("hc_public")]
-    fn create_my_entry(entry: MyEntry) -> ZomeApiResult<MyEntry> {
+    fn create_goal(entry: Goal) -> ZomeApiResult<Goal> {
         let app_entry = Entry::App("my_entry".into(), entry.clone().into());
         let _ = hdk::commit_entry(&app_entry)?;
         Ok(entry)
