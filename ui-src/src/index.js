@@ -20,7 +20,12 @@ const defaultHolochainPort = '8888'
 
 // this url should use the same port set up by the Holochain Conductor
 const websocketUrl = `ws://localhost:${defaultHolochainPort}`
+// attempts to form a websocket (two way messages) connection to a running
+// Holochain Conductor
 const hcWc = connect({ url: websocketUrl })
+
+// holochainMiddleware takes in the hc-web-client websocket connection
+// and uses it to facilitate the calls to Holochain
 const middleware = [holochainMiddleware(hcWc)]
 
 // This enables the redux-devtools browser extension
