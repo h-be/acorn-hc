@@ -5,16 +5,21 @@
   that can be taken within that feature.
 */
 
+import { createHolochainZomeCallAsyncAction } from '@holochain/hc-redux-middleware'
+
 /* constants */
 const CREATE_GOAL = "CREATE_GOAL"
 
 /* action creator functions */
-function createGoal(title) {
-  return {
-    type: CREATE_GOAL,
-    title // title: title
-  }
-}
+
+const createGoal = createHolochainZomeCallAsyncAction('test-instance', 'my_zome', 'create_my_entry')
+
+// function createGoal(title) {
+//   return {
+//     type: CREATE_GOAL,
+//     title // title: title
+//   }
+// }
 
 export {
   CREATE_GOAL,

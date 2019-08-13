@@ -6,18 +6,30 @@
   modular code in separate files, imported here and called.
 */
 
-import acorn from './reducer'
-import { createStore } from 'redux'
-import render from './drawing'
+// Library Imports
+import { createStore, applyMiddleware, compose } from 'redux'
+import { connect } from '@holochain/hc-web-client'
+import { holochainMiddleware } from '@holochain/hc-redux-middleware'
 
+// Local Imports
+import acorn from './reducer'
+import render from './drawing'
 import { createGoal } from './create-goal/actions'
 
-// const obj = { "key": "val" }
-//
-// const { key } = obj
-// import { key } from './reducer'
 
-let store = createStore(acorn)
+// this url should use the same port set up by the Holochain Conductor
+const websocketUrl = 'ws://localhost:3000'
+const hcWc = connect({ url: websocketUrl })
+const middleware = [holochainMiddleware(hcWc)]
+
+// This enables the redux-devtools browser extension
+// which gives really awesome debugging for apps that use redux
+const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose
+
+// acorn is the top-level reducer. the second argument is custom Holochain middleware
+let store = createStore(acorn, /* preloadedState, */ composeEnhancers(
+  applyMiddleware(...middleware)
+))
 
 /*
   store.subscribe(cb)
@@ -25,8 +37,8 @@ let store = createStore(acorn)
   store.dispatch(action)
 */
 
-store.dispatch(createGoal("Sample Title! 😛"))
-store.dispatch(createGoal("Another one! 😇"))
+store.dispatch(createGoal.create({ entry: { content: "Sample Title! 😛" }}))
+store.dispatch(createGoal.create({ entry: { content: "Another one! 😇" }}))
 
 const canvas = document.createElement('canvas')
 canvas.width = document.body.clientWidth
@@ -41,6 +53,6 @@ store.subscribe(() => {
 // Do an initial draw of the view
 render(store, canvas)
 
-setTimeout(() => {
-  store.dispatch(createGoal("Wait and show"))
-}, 2000)
+// setTimeout(() => {
+//   store.dispatch(createGoal("Wait and show"))
+// }, 2000)

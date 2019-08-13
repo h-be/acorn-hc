@@ -5,14 +5,16 @@
   a new state.
 */
 
-import { CREATE_GOAL } from './actions'
+import { createGoal } from './actions'
 
 const defaultState = []
 
-export default function createGoal(state = defaultState, action) {
-  switch (action.type) {
-    case CREATE_GOAL:
-      return state.concat([action.title])
+export default function(state = defaultState, action) {
+  const { payload, type } = action
+  switch (type) {
+    case createGoal.success().type:
+      console.log(payload)
+      return state.concat([payload.content])
     default:
       return state
   }
