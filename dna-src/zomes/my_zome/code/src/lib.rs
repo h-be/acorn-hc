@@ -31,12 +31,19 @@ use hdk_proc_macros::zome;
 
 // see https://developer.holochain.org/api/latest/hdk/ for info on using the hdk library
 
-// This is a sample zome that defines an entry type "MyEntry" that can be committed to the
-// agent's chain via the exposed function create_my_entry
+#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
 
-#[derive(Serialize, Deserialize, Debug, DefaultJson,Clone)]
-pub struct MyEntry {
+// A Goal Card. This is a card on the SoA Tree which can be small or non-small, complete or
+// incomplete, certain or uncertain, and contains text content.
+// user hash and unix timestamp are included to prevent hash collisions.
+
+pub struct Goal {
     content: String,
+    user_hash: Address,
+    unix_timestamp: u32,
+    complete: bool,
+    certain: bool,
+    small: bool,
 }
 
 #[zome]
