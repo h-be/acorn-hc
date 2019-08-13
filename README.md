@@ -40,3 +40,11 @@ A browser window will open, displaying the UI.
 
 Make changes to the Javascript in `ui-src/src`, and save the files, and your
 changes will appear with live reloading in the browser window.
+
+####  UI Dev Resources
+
+- [redux](https://redux.js.org/introduction/getting-started)
+- [canvas](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API)
+- [redux + canvas](https://medium.com/@peterxjang/a-functional-canvas-approach-with-redux-ce59a369241b)
+- [webpack](https://webpack.js.org/guides/getting-started/)
+
