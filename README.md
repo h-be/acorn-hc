@@ -18,9 +18,38 @@ Resources:
 
 ### Validation
 
-## UI development
+## Development
 
-Developing the UI is simple.
+### HC
+
+Before starting up the UI development, start up a Holochain Conductor with the Acorn DNA. Here's how:
+
+Enter a nix shell (for convenience, we are using a `nix-hc` alias)
+
+Test that you are on Holochain version 0.0.26-alpha1
+```
+hc --version
+```
+
+Change directories to the `/dna-src` subfolder of this project
+Run
+```
+hc package
+```
+This builds the DNA into the `dist` folder, from the source code under `zomes`.
+
+Run
+```
+hc run
+```
+This starts up the Conductor with a running instance of the DNA in it.
+
+Leave this terminal open and running, as long as you're doing development.
+
+### UI
+
+Developing the UI is simple. You will need to already be running the Holochain Conductor in
+order to also develop the UI, since they are now coupled.
 
 > **Prerequisite** have nodejs installed
 
@@ -47,4 +76,3 @@ changes will appear with live reloading in the browser window.
 - [canvas](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API)
 - [redux + canvas](https://medium.com/@peterxjang/a-functional-canvas-approach-with-redux-ce59a369241b)
 - [webpack](https://webpack.js.org/guides/getting-started/)
-

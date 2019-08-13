@@ -8,7 +8,7 @@
 import { createHolochainZomeCallAsyncAction } from '@holochain/hc-redux-middleware'
 
 /* constants */
-const CREATE_GOAL = "CREATE_GOAL"
+// const CREATE_GOAL = "CREATE_GOAL"
 
 /* action creator functions */
 
@@ -22,6 +22,6 @@ const createGoal = createHolochainZomeCallAsyncAction('test-instance', 'my_zome'
 // }
 
 export {
-  CREATE_GOAL,
+  // CREATE_GOAL,
   createGoal
 }

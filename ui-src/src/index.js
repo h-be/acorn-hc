@@ -16,9 +16,10 @@ import acorn from './reducer'
 import render from './drawing'
 import { createGoal } from './create-goal/actions'
 
+const defaultHolochainPort = '8888'
 
 // this url should use the same port set up by the Holochain Conductor
-const websocketUrl = 'ws://localhost:3000'
+const websocketUrl = `ws://localhost:${defaultHolochainPort}`
 const hcWc = connect({ url: websocketUrl })
 const middleware = [holochainMiddleware(hcWc)]
 
