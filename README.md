@@ -44,7 +44,7 @@ hc run
 ```
 This starts up the Conductor with a running instance of the DNA in it.
 
-Leave this terminal open and running, as long as you're doing development.
+Leave this terminal open and running, as long as you're doing development. Repackage and run `hc run` again if you make changes to the DNA.
 
 ### UI
 
