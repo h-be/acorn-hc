@@ -12,8 +12,8 @@ import {
 
 const defaultState = {
   isOpen: true,
-  xLoc: 100,
-  yLoc: 100
+  xLoc: 2,
+  yLoc: 2
 }
 
 export default function(state = defaultState, action) {

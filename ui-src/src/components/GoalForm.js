@@ -11,13 +11,20 @@ class GoalForm extends Component {
       goal_title: ''
     }
     this.handleChange = this.handleChange.bind(this)
+    this.handleKeyDown = this.handleKeyDown.bind(this)
     this.handleSubmit = this.handleSubmit.bind(this)
   }
   handleChange(event) {
     this.setState({ goal_title: event.target.value })
   }
+  handleKeyDown(event) {
+    if (event.key === 'Enter') {
+      event.preventDefault()
+      this.handleSubmit()
+    }
+  }
   handleSubmit(event) {
-    event.preventDefault()
+    if (event) event.preventDefault()
     const goal = {
       entry: {
         content: this.state.goal_title,
@@ -29,18 +36,20 @@ class GoalForm extends Component {
       }
     }
     this.props.createGoal(goal)
-    return false
+    this.setState({ goal_title: '' })
   }
   render() {
     const { goal_title } = this.state
     const { isOpen, xLoc, yLoc } = this.props
     // jsx format
     return (<div style={{ position:'absolute', top:`${yLoc}px`, left:`${xLoc}px`}}>
-      {isOpen ? <form onSubmit={this.handleSubmit}>
-        <input
-          type='text'
+      {isOpen ? <form className='goal_form' onSubmit={this.handleSubmit}>
+        <textarea
+          placeholder='Add a title...'
           value={this.state.goal_title}
           onChange={this.handleChange}
+          onKeyDown={this.handleKeyDown}
+          autoFocus
         />
       </form> : null}
     </div>)
