@@ -7,3 +7,9 @@ html, body, canvas {
 body {
   background-color: #F4F4F4;
 }
+
+div.react {
+  position: absolute;
+  top: 0;
+  left: 0;
+}

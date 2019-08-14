@@ -8,11 +8,15 @@ of how ACTIONS affect STATE
 
 import { combineReducers } from 'redux'
 
-import goals from './create-goal/reducer'
+import goals from './goals/reducer'
+import goalCreation from './goal-creation/reducer'
 // import anotherone from './another/path'
 
 // combine reducers from each feature to create the top-level reducer
 export default combineReducers({
-  goals: goals // ,
+  goals: goals, // ,
+  ui: combineReducers({
+    goalCreation
+  }) // ,
   // anotherone: anotherone
 })

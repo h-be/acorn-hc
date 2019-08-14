@@ -7,6 +7,9 @@
 */
 
 // Library Imports
+import React from 'react'
+import ReactDOM from 'react-dom'
+import { Provider } from 'react-redux'
 import { createStore, applyMiddleware, compose } from 'redux'
 import { connect } from '@holochain/hc-web-client'
 import { holochainMiddleware } from '@holochain/hc-redux-middleware'
@@ -14,7 +17,8 @@ import { holochainMiddleware } from '@holochain/hc-redux-middleware'
 // Local Imports
 import acorn from './reducer'
 import render from './drawing'
-import { createGoal } from './create-goal/actions'
+import { createGoal } from './goals/actions'
+import GoalFormContainer from './components/GoalFormContainer'
 
 const defaultHolochainPort = '8888'
 
@@ -62,10 +66,20 @@ store.dispatch(createGoal.create({ entry: {
 // store.dispatch(createGoal.create({ entry: { content: "Sample Title! 😛" }}))
 // store.dispatch(createGoal.create({ entry: { content: "Another one! 😇" }}))
 
+
+/* SETUP THE REACT CONTAINER, WHERE DOM ELEMENTS WILL BE RENDERED */
+const reactContainer = document.createElement('div')
+reactContainer.className = 'react'
+
+
+/* SETUP THE CANVAS SPACE, WHERE MANY VISUAL non-dom ELEMENTS WILL BE RENDERED */
 const canvas = document.createElement('canvas')
 canvas.width = document.body.clientWidth
 canvas.height = document.body.clientHeight
+
+
 document.body.appendChild(canvas)
+document.body.appendChild(reactContainer)
 
 // whenever the STATE in the STORE changes, re-render the state data to the canvas
 store.subscribe(() => {
@@ -75,6 +89,11 @@ store.subscribe(() => {
 // Do an initial draw of the view
 render(store, canvas)
 
-// setTimeout(() => {
-//   store.dispatch(createGoal("Wait and show"))
-// }, 2000)
+// By passing the `store` in as a wrapper around our React component
+// we make the state available throughout it
+ReactDOM.render(
+  <Provider store={store}>
+    <GoalFormContainer />
+  </Provider>,
+  reactContainer
+)

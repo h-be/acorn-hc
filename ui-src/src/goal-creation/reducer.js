@@ -5,16 +5,28 @@
   a new state.
 */
 
-import { createGoal } from './actions'
+import {
+  OPEN_GOAL_CREATOR,
+  CLOSE_GOAL_CREATOR
+} from './actions'
 
-const defaultState = []
+const defaultState = {
+  isOpen: true
+}
 
 export default function(state = defaultState, action) {
   const { payload, type } = action
   switch (type) {
-    case createGoal.success().type:
-      console.log(payload)
-      return state.concat([payload])
+    case OPEN_GOAL_CREATOR:
+      return {
+        ...state,
+        isOpen: true
+      }
+    case CLOSE_GOAL_CREATOR:
+      return {
+        ...state,
+        isOpen: false
+      }
     default:
       return state
   }
