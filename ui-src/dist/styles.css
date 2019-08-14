@@ -13,3 +13,24 @@ div.react {
   top: 0;
   left: 0;
 }
+
+.goal_form {
+  width: 363px;
+  height: 132px;
+  border: 2px solid #FF5D36;
+  border-radius: 15px;
+  background-color: #FFF;
+}
+
+.goal_form textarea {
+  background-color: transparent;
+  border: 0;
+  outline: none;
+  margin: 25px;
+  width: 313px;
+  height: 78px;
+  resize: none;
+  color: #4D4D4D;
+  font-family: Helvetica, Sans-Serif;
+  font-size: 20px;
+}

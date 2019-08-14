@@ -18,7 +18,7 @@ import { holochainMiddleware } from '@holochain/hc-redux-middleware'
 import acorn from './reducer'
 import render from './drawing'
 import { createGoal } from './goals/actions'
-import GoalFormContainer from './components/GoalFormContainer'
+import GoalForm from './components/GoalForm'
 
 const defaultHolochainPort = '8888'
 
@@ -47,6 +47,7 @@ let store = createStore(acorn, /* preloadedState, */ composeEnhancers(
   store.dispatch(action)
 */
 
+/*
 store.dispatch(createGoal.create({ entry: {
   content: "Small incomplete",
   user_hash: "Boop",
@@ -90,6 +91,8 @@ store.dispatch(createGoal.create({ entry: {
   certain: false,
   small: false, }}))
 
+  */
+
 // store.dispatch(createGoal.create({ entry: { content: "Sample Title! 😛" }}))
 // store.dispatch(createGoal.create({ entry: { content: "Another one! 😇" }}))
 
@@ -120,7 +123,7 @@ render(store, canvas)
 // we make the state available throughout it
 ReactDOM.render(
   <Provider store={store}>
-    <GoalFormContainer />
+    <GoalForm />
   </Provider>,
   reactContainer
 )

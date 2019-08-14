@@ -11,7 +11,9 @@ import {
 } from './actions'
 
 const defaultState = {
-  isOpen: true
+  isOpen: true,
+  xLoc: 2,
+  yLoc: 2
 }
 
 export default function(state = defaultState, action) {
