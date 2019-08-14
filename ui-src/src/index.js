@@ -93,9 +93,6 @@ store.dispatch(createGoal.create({ entry: {
 
   */
 
-// store.dispatch(createGoal.create({ entry: { content: "Sample Title! 😛" }}))
-// store.dispatch(createGoal.create({ entry: { content: "Another one! 😇" }}))
-
 
 /* SETUP THE REACT CONTAINER, WHERE DOM ELEMENTS WILL BE RENDERED */
 const reactContainer = document.createElement('div')
