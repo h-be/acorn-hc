@@ -6,10 +6,10 @@
   to the canvas.
 */
 
-const cornerRadius = 23
+const cornerRadius = 25
 const w = 363
 const h = 132
-const borderWidth = 4
+const borderWidth = 2
 
 // `store` is a redux store
 // `canvas` is a reference to an HTML5 canvas DOM element
@@ -29,7 +29,7 @@ function render(store, canvas) {
     ctx.stroke()
     // draw fill rectangle
     ctx.beginPath()
-    ctx.lineWidth = (cornerRadius - borderWidth).toString()
+    ctx.lineWidth = (cornerRadius - borderWidth * 2).toString()
     ctx.lineJoin = 'round'
     ctx.strokeStyle = backgroundColor
     ctx.fillStyle = backgroundColor
