@@ -6,6 +6,22 @@
   to the canvas.
 */
 
+function setupCanvas(canvas) {
+  // Get the device pixel ratio, falling back to 1.
+  var dpr = window.devicePixelRatio || 1;
+  // Get the size of the canvas in CSS pixels.
+  var rect = canvas.getBoundingClientRect();
+  // Give the canvas pixel dimensions of their CSS
+  // size * the device pixel ratio.
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  var ctx = canvas.getContext('2d');
+  // Scale all drawing operations by the dpr, so you
+  // don't have to worry about the difference.
+  ctx.scale(dpr, dpr);
+  return ctx;
+}
+
 const cornerRadius = 23
 const w = 363
 const h = 132
@@ -16,7 +32,7 @@ const borderWidth = 4
 // render the state contained in store onto the canvas
 function render(store, canvas) {
   // Get the 2 dimensional drawing context of the canvas (there is also 3 dimensional, e.g.)
-  const ctx = canvas.getContext('2d')
+  const ctx = setupCanvas(canvas)
 
   // draw rectangle function.
   function drawRect(x, y, width, height, borderWidth, backgroundColor, borderColor) {
