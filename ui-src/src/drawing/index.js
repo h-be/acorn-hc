@@ -67,7 +67,7 @@ function render(store, canvas) {
     // render rectangle
     // populates tiles in a 3x4 grid
     let x = 50 + 430 * ((index) % 3)
-    let y = 100 + 200 * ((index) % 4)
+    let y = 180 + 200 * ((index) % 4)
 
     // set up border color FOR INITAL FEATURES SPEC
     let borderColor = '#FF5D36'
