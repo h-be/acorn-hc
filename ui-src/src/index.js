@@ -48,20 +48,47 @@ let store = createStore(acorn, /* preloadedState, */ composeEnhancers(
 */
 
 store.dispatch(createGoal.create({ entry: {
-  content: "Test title //o= <- spider",
+  content: "Small incomplete",
   user_hash: "Boop",
   unix_timestamp: 412,
   complete: false,
   certain: true,
   small: true, }}))
-
 store.dispatch(createGoal.create({ entry: {
-  content: "Another test! 😇",
+  content: "Small complete",
+  user_hash: "Boop",
+  unix_timestamp: 413,
+  complete: true,
+  certain: true,
+  small: true, }}))
+store.dispatch(createGoal.create({ entry: {
+  content: "Non-small complete certain",
+  user_hash: "Boop",
+  unix_timestamp: 412,
+  complete: true,
+  certain: true,
+  small: false, }}))
+store.dispatch(createGoal.create({ entry: {
+  content: "Non-small complete uncertain",
+  user_hash: "Boop",
+  unix_timestamp: 413,
+  complete: true,
+  certain: false,
+  small: false, }}))
+store.dispatch(createGoal.create({ entry: {
+  content: "Non-small incomplete certain",
   user_hash: "Boop",
   unix_timestamp: 413,
   complete: false,
   certain: true,
-  small: true, }}))
+  small: false, }}))
+store.dispatch(createGoal.create({ entry: {
+  content: "Non-small incomplete uncertain",
+  user_hash: "Boop",
+  unix_timestamp: 413,
+  complete: false,
+  certain: false,
+  small: false, }}))
 
 // store.dispatch(createGoal.create({ entry: { content: "Sample Title! 😛" }}))
 // store.dispatch(createGoal.create({ entry: { content: "Another one! 😇" }}))
