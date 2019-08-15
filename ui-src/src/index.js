@@ -18,7 +18,7 @@ import { holochainMiddleware } from '@holochain/hc-redux-middleware'
 import setupEventListeners from './event-listeners'
 import acorn from './reducer'
 import render from './drawing'
-import { createGoal } from './goals/actions'
+import { createGoal, fetchGoals } from './goals/actions'
 import App from './components/App'
 
 const defaultHolochainPort = '8888'
@@ -132,4 +132,4 @@ ReactDOM.render(
 
 // dispatch fetch goals function to pull in all the existing goals
 // on first render
-store.dispatch(fetchGoals())
+store.dispatch(fetchGoals.create())
