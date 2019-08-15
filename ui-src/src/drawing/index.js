@@ -38,7 +38,7 @@ function render(store, canvas) {
   // pull the current state from the store
   const state = store.getState()
 
-  const coordinates = layoutFormula(state.goals)
+  const coordinates = layoutFormula(canvas.width, state.goals, state.edges)
 
   // render each goal to the canvas
   state.goals.forEach(function(goal, index) {

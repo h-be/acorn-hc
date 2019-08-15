@@ -1,8 +1,11 @@
+import {
+  goalWidth,
+  goalHeight
+} from './dimensions'
 
 const cornerRadius = 25
-const width = 363
-const height = 132
 const borderWidth = 2
+
 
 // draw rectangle function.
 function drawRect(ctx, x, y, width, height, borderWidth, backgroundColor, borderColor) {
@@ -35,7 +38,7 @@ export default function render(goal, { x, y }, ctx) {
   let backgroundColor = '#FFFFFF'
 
   // draw rectangle
-  drawRect(ctx, x, y, width, height, borderWidth, backgroundColor, borderColor)
+  drawRect(ctx, x, y, goalWidth, goalHeight, borderWidth, backgroundColor, borderColor)
 
   // render text
   let goalText = goal.content
