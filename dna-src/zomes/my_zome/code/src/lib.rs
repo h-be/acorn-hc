@@ -92,7 +92,7 @@ mod my_zome {
             validation_package: || {
                 hdk::ValidationPackageDefinition::Entry
             },
-            validation: | _validation_data: hdk::EntryValidationData<Goal>| {
+            validation: | _validation_data: hdk::EntryValidationData<String>| {
                 Ok(())
             },
             links: [
