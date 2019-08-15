@@ -34,3 +34,8 @@ div.react {
   font-family: Helvetica, Sans-Serif;
   font-size: 20px;
 }
+
+.instructions {
+  font-family: Helvetica, Sans-Serif;
+  margin-left: 10px;
+}

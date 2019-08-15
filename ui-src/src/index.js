@@ -15,10 +15,11 @@ import { connect } from '@holochain/hc-web-client'
 import { holochainMiddleware } from '@holochain/hc-redux-middleware'
 
 // Local Imports
+import setupEventListeners from './event-listeners'
 import acorn from './reducer'
 import render from './drawing'
 import { createGoal } from './goals/actions'
-import GoalForm from './components/GoalForm'
+import App from './components/App'
 
 const defaultHolochainPort = '8888'
 
@@ -108,6 +109,9 @@ canvas.height = document.body.clientHeight
 document.body.appendChild(canvas)
 document.body.appendChild(reactContainer)
 
+// attach keyboard and mouse events
+setupEventListeners(store)
+
 // whenever the STATE in the STORE changes, re-render the state data to the canvas
 store.subscribe(() => {
   render(store, canvas)
@@ -120,7 +124,7 @@ render(store, canvas)
 // we make the state available throughout it
 ReactDOM.render(
   <Provider store={store}>
-    <GoalForm />
+    <App />
   </Provider>,
   reactContainer
 )
