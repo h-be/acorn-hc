@@ -6,6 +6,7 @@
   to the canvas.
 */
 
+import layoutFormula from './layoutFormula'
 import drawGoalCard from './drawGoalCard'
 
 function setupCanvas(canvas) {
@@ -37,9 +38,13 @@ function render(store, canvas) {
   // pull the current state from the store
   const state = store.getState()
 
+  const coordinates = layoutFormula(state.goals)
+
   // render each goal to the canvas
   state.goals.forEach(function(goal, index) {
-    drawGoalCard(goal, index, ctx)
+    // use the set of coordinates at the same index
+    // in the coordinates array
+    drawGoalCard(goal, coordinates[index], ctx)
   })
 }
 

@@ -1,7 +1,7 @@
 
 const cornerRadius = 25
-const w = 363
-const h = 132
+const width = 363
+const height = 132
 const borderWidth = 2
 
 // draw rectangle function.
@@ -24,12 +24,7 @@ function drawRect(ctx, x, y, width, height, borderWidth, backgroundColor, border
   ctx.fill()
 }
 
-function render(goal, index, ctx) {
-  // render rectangle
-  // populates tiles in a 3x4 grid
-  let x = 50 + 430 * ((index) % 3)
-  let y = 180 + 200 * ((index) % 4)
-
+export default function render(goal, { x, y }, ctx) {
   // set up border color FOR INITIAL FEATURES SPEC
   let borderColor = '#FF5D36'
   if (goal.complete) {
@@ -40,7 +35,7 @@ function render(goal, index, ctx) {
   let backgroundColor = '#FFFFFF'
 
   // draw rectangle
-  drawRect(ctx, x, y, w, h, borderWidth, backgroundColor, borderColor)
+  drawRect(ctx, x, y, width, height, borderWidth, backgroundColor, borderColor)
 
   // render text
   let goalText = goal.content
@@ -49,5 +44,3 @@ function render(goal, index, ctx) {
   ctx.textBaseline = 'top'
   ctx.fillText(goalText, x + 29, y + 27)
 }
-
-export default render
