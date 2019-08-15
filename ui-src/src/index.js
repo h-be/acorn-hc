@@ -132,4 +132,4 @@ ReactDOM.render(
 
 // dispatch fetch goals function to pull in all the existing goals
 // on first render
-store.dispatch(fetchGoals.create())
+store.dispatch(fetchGoals.create({}))
