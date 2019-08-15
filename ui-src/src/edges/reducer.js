@@ -8,10 +8,10 @@
 // import { createGoal } from './actions'
 
 const defaultState = [
-  {
+  /*{
     parent: 'Small incomplete',
     child: 'Small complete'
-  }/* ,
+  },
   {
     parent: 'Small complete',
     child: 'Other thing'

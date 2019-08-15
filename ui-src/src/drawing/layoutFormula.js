@@ -35,6 +35,7 @@ function mapGoalToHierarchy(goal, edges) {
 function mapHierarchyToPosition({ goal, hierarchy }, withHierarchies, screenWidth) {
   const verticalOffset = 10
   const verticalSpacing = 100
+  const horizontalSpacing = 20
 
   // FIXME: this needs to be related to the display pixel ratio or something
   const RETINA_HACK_HALFSCREEN = 4
@@ -42,11 +43,13 @@ function mapHierarchyToPosition({ goal, hierarchy }, withHierarchies, screenWidt
   const sameTier = withHierarchies.filter((wH) => wH.hierarchy === hierarchy)
   const indexInTier = sameTier.map((wH) => wH.goal.content).indexOf(goal.content)
 
-  // default position is horizontal half screen
-  const x = (screenWidth / RETINA_HACK_HALFSCREEN) - (goalWidth / 2) + (indexInTier * 10)
+  const horizontalHalfScreen = screenWidth / RETINA_HACK_HALFSCREEN
+  const halfGoalWidth = goalWidth / 2
+  const totalWidth = goalWidth + horizontalSpacing
+  const x = horizontalHalfScreen + (indexInTier * totalWidth) - ((sameTier.length - 1) * totalWidth)/2 - halfGoalWidth
 
   // default position is a function of the hierarchical status of the goal
-  const y = verticalOffset + ((goalHeight + verticalSpacing) * hierarchy) + (indexInTier * 10)
+  const y = verticalOffset + hierarchy * (goalHeight + verticalSpacing)
 
   return {
     x,

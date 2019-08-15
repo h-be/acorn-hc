@@ -8,7 +8,7 @@
 import { createGoal, fetchGoals } from './actions'
 
 const defaultState = [
-  {
+  /*{
     content: "Small incomplete",
     user_hash: "Boop",
     unix_timestamp: 412,
@@ -31,7 +31,7 @@ const defaultState = [
     complete: true,
     certain: true,
     small: true
-  }
+  }*/
 ]
 
 export default function(state = defaultState, action) {
