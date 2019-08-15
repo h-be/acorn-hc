@@ -124,3 +124,8 @@ ReactDOM.render(
   </Provider>,
   reactContainer
 )
+
+
+// dispatch fetch goals function to pull in all the existing goals
+// on first render
+store.dispatch(fetchGoals())

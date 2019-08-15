@@ -13,7 +13,9 @@ const DEVELOPMENT_INSTANCE_NAME = 'test-instance'
 const ZOME_NAME = 'my_zome' // TODO: change this
 
 const createGoal = createHolochainZomeCallAsyncAction(DEVELOPMENT_INSTANCE_NAME, ZOME_NAME, 'create_goal')
+const fetchGoals = createHolochainZomeCallAsyncAction(DEVELOPMENT_INSTANCE_NAME, ZOME_NAME, 'fetch_goals')
 
 export {
-  createGoal
+  createGoal,
+  fetchGoals
 }
