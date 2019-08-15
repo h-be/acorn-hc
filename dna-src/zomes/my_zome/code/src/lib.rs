@@ -16,6 +16,7 @@ use hdk::{
 use hdk::holochain_core_types::{
     entry::Entry,
     dna::entry_types::Sharing,
+    link::LinkMatch,
 };
 
 use hdk::holochain_json_api::{
@@ -24,7 +25,7 @@ use hdk::holochain_json_api::{
 };
 
 use hdk::holochain_persistence_api::{
-    cas::content::Address
+    cas::content::{Address, AddressableContent}
 };
 
 use hdk_proc_macros::zome;
@@ -51,6 +52,13 @@ mod my_zome {
 
     #[init]
     pub fn init() {
+        // create anchor entry
+        let anchor_entry = Entry::App(
+            "anchor".into(), // app entry type
+            // app entry value. We'll use the value to specify what this anchor is for
+            "goals".into(),
+        );
+        let _anchor_address = hdk::commit_entry(&anchor_entry)?;
         Ok(())
     }
 
@@ -60,10 +68,10 @@ mod my_zome {
     }
 
     #[entry_def]
-     fn my_entry_def() -> ValidatingEntryType {
+     fn goal_def() -> ValidatingEntryType {
         entry!(
-            name: "my_entry",
-            description: "this is a same entry defintion",
+            name: "goal",
+            description: "this is an entry representing a goal",
             sharing: Sharing::Public,
             validation_package: || {
                 hdk::ValidationPackageDefinition::Entry
@@ -74,16 +82,64 @@ mod my_zome {
         )
     }
 
-    #[zome_fn("hc_public")]
-    fn create_goal(entry: Goal) -> ZomeApiResult<Goal> {
-        let app_entry = Entry::App("my_entry".into(), entry.clone().into());
-        let _ = hdk::commit_entry(&app_entry)?;
-        Ok(entry)
+    #[entry_def]
+     fn anchor_def() -> ValidatingEntryType {
+        entry!(
+            name: "anchor",
+            description: "this is an anchor entry that we can link other entries to so we can find them",
+            sharing: Sharing::Public,
+            validation_package: || {
+                hdk::ValidationPackageDefinition::Entry
+            },
+            validation: | _validation_data: hdk::EntryValidationData<String>| {
+                Ok(())
+            },
+            links: [
+            to!(
+                "goal",
+                link_type: "anchor->goal",
+                validation_package: || {
+                    hdk::ValidationPackageDefinition::Entry
+                },
+                validation: | _validation_data: hdk::LinkValidationData| {
+                    Ok(())
+                }
+                )
+            ]
+        )
     }
 
     #[zome_fn("hc_public")]
-    fn get_my_entry(address: Address) -> ZomeApiResult<Option<Entry>> {
-        hdk::get_entry(&address)
+    fn create_goal(goal: Goal) -> ZomeApiResult<Goal> {
+        let app_entry = Entry::App("goal".into(), goal.clone().into());
+        let _ = hdk::commit_entry(&app_entry)?;
+
+        // link each new goal to the anchor
+        let anchor_entry = Entry::App(
+            "anchor".into(), // app entry type
+            "goals".into() // app entry value
+        );
+        let anchor_address = hdk::entry_address(&anchor_entry).unwrap();
+
+        hdk::link_entries(&anchor_address, &hdk::entry_address(&app_entry).unwrap(),  "anchor->goal", "")?;
+        Ok(goal)
+    }
+
+    #[zome_fn("hc_public")]
+    fn fetch_goals() -> ZomeApiResult<Vec<Goal>> {
+        // set up the anchor entry and compute its hash
+        let anchor_address = Entry::App(
+            "anchor".into(), // app entry type
+            "goals".into(),
+        ).address();
+
+        Ok(
+            hdk::utils::get_links_and_load_type(
+                &anchor_address,
+                LinkMatch::Exactly("anchor->goal"), // the link type to match
+                LinkMatch::Any,
+            )?
+        )
     }
 
 }

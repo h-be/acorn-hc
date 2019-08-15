@@ -3,7 +3,7 @@ import {
   goalHeight
 } from './dimensions'
 
-const cornerRadius = 25
+const cornerRadius = 30
 const borderWidth = 2
 
 
@@ -14,7 +14,7 @@ function drawRect(ctx, x, y, width, height, borderWidth, backgroundColor, border
   ctx.lineWidth = cornerRadius.toString()
   ctx.lineJoin = 'round'
   ctx.strokeStyle = borderColor
-  ctx.rect(x, y, width, height)
+  ctx.rect(x, y, width - cornerRadius + borderWidth, height - cornerRadius + borderWidth)
   ctx.stroke()
   // draw fill rectangle
   ctx.beginPath()
@@ -22,7 +22,7 @@ function drawRect(ctx, x, y, width, height, borderWidth, backgroundColor, border
   ctx.lineJoin = 'round'
   ctx.strokeStyle = backgroundColor
   ctx.fillStyle = backgroundColor
-  ctx.rect(x, y, width, height)
+  ctx.rect(x, y, width - cornerRadius + borderWidth, height - cornerRadius + borderWidth)
   ctx.stroke()
   ctx.fill()
 }

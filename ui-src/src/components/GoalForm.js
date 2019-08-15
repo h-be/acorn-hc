@@ -58,7 +58,7 @@ class GoalForm extends Component {
     // with the contents from the form
     // inserted into it
     this.props.createGoal({
-      entry: {
+      goal: {
         content: this.state.goal_title,
         user_hash: "Boop",
         unix_timestamp: 413,
