@@ -9,7 +9,6 @@ extern crate serde_json;
 #[macro_use]
 extern crate holochain_json_derive;
 
-use std::convert::TryFrom;
 use hdk::{
     entry_definition::ValidatingEntryType,
     error::ZomeApiResult,
@@ -26,7 +25,7 @@ use hdk::holochain_json_api::{
 };
 
 use hdk::holochain_persistence_api::{
-    cas::content::Address
+    cas::content::{Address, AddressableContent}
 };
 
 use hdk_proc_macros::zome;
@@ -128,39 +127,19 @@ mod my_zome {
 
     #[zome_fn("hc_public")]
     fn fetch_goals() -> ZomeApiResult<Vec<Goal>> {
-        let anchor_address = hdk::entry_address(&Entry::App("anchor".into(), "goals".into())).unwrap();
-        let links = hdk::get_links(&anchor_address, LinkMatch::Exactly("anchor->goal"), LinkMatch::Any)?;
+        // set up the anchor entry and compute its hash
+        let anchor_address = Entry::App(
+            "anchor".into(), // app entry type
+            "goals".into(),
+        ).address();
 
-        match links.addresses().into_iter().next() {
-            Some(first_goal) => {
-                let mut goal_addresses = vec![first_goal];
-                let mut there_are_more = true;
-                // keep adding addresses to the list as long as there are more links
-                while there_are_more {
-                    there_are_more = match hdk::get_links(goal_addresses.last().unwrap(), LinkMatch::Exactly("anchor->goal"), LinkMatch::Any)?.addresses().into_iter().next() {
-                        Some(addr) => {
-                            goal_addresses.push(addr.clone());
-                            true
-                        },
-                        None => {
-                            false
-                        },
-                    }
-                }
-                let goals: Vec<Goal> = goal_addresses.iter().map(|addr| {
-                    let goal_entry = hdk::get_entry(addr).unwrap().unwrap();
-                    if let Entry::App(_, goal_struct) = goal_entry {
-                        Goal::try_from(goal_struct).expect("Entry at address is type other than Goal")
-                    } else {
-                        panic!("Not an app entry!")
-                    }
-                }).collect();
-                Ok(goals)
-            },
-            None => {
-                Ok(Vec::new())
-            },
-        }
+        Ok(
+            hdk::utils::get_links_and_load_type(
+                &anchor_address,
+                LinkMatch::Exactly("anchor->goal"), // the link type to match
+                LinkMatch::Any,
+            )?
+        )
     }
 
 }
