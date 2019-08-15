@@ -4,6 +4,7 @@ import { connect } from 'react-redux'
 import ReactDOM from 'react-dom'
 
 import { createGoal } from '../goals/actions'
+import { closeGoalCreator } from '../goal-creation/actions'
 
 
 // a React Component is defined as a class that extends the basic
@@ -68,6 +69,7 @@ class GoalForm extends Component {
     })
     // reset the textarea value to empty
     this.setState({ goal_title: '' })
+    this.props.closeGoalCreator()
   }
 
   /*
@@ -108,7 +110,8 @@ GoalForm.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   xLoc: PropTypes.number.isRequired,
   yLoc: PropTypes.number.isRequired,
-  createGoal: PropTypes.func.isRequired
+  createGoal: PropTypes.func.isRequired,
+  closeGoalCreator: PropTypes.func.isRequired
 }
 
 // https://react-redux.js.org/using-react-redux/connect-mapstate
@@ -134,6 +137,9 @@ function mapDispatchToProps(dispatch) {
   return {
     createGoal: (goal) => {
       dispatch(createGoal.create(goal))
+    },
+    closeGoalCreator: () => {
+      dispatch(closeGoalCreator())
     }
   }
 }
