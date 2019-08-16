@@ -36,6 +36,14 @@ use std::fmt::Debug;
 // see https://developer.holochain.org/api/latest/hdk/ for info on using the hdk library
 
 
+// An edge. This is an arrow on the SoA Tree which directionally links
+// two goals.
+#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
+pub struct Edge {
+    parent_address: Address,
+    child_address: Address,
+}
+
 // A Goal Card. This is a card on the SoA Tree which can be small or non-small, complete or
 // incomplete, certain or uncertain, and contains text content.
 // user hash and unix timestamp are included to prevent hash collisions.
@@ -66,13 +74,19 @@ mod my_zome {
 
     #[init]
     pub fn init() {
-        // create anchor entry
-        let anchor_entry = Entry::App(
+        // create anchor entries
+        let goals_anchor_entry = Entry::App(
             "anchor".into(), // app entry type
             // app entry value. We'll use the value to specify what this anchor is for
             "goals".into(),
         );
-        let _anchor_address = hdk::commit_entry(&anchor_entry)?;
+        let edges_anchor_entry = Entry::App(
+            "anchor".into(), // app entry type
+            // app entry value. We'll use the value to specify what this anchor is for
+            "edges".into(),
+        );
+        let _goals_anchor_address = hdk::commit_entry(&goals_anchor_entry)?;
+        let _edges_anchor_address = hdk::commit_entry(&edges_anchor_entry)?;
         Ok(())
     }
 
@@ -109,15 +123,25 @@ mod my_zome {
                 Ok(())
             },
             links: [
-            to!(
-                "goal",
-                link_type: "anchor->goal",
-                validation_package: || {
-                    hdk::ValidationPackageDefinition::Entry
-                },
-                validation: | _validation_data: hdk::LinkValidationData| {
-                    Ok(())
-                }
+                to!(
+                    "goal",
+                    link_type: "anchor->goal",
+                    validation_package: || {
+                        hdk::ValidationPackageDefinition::Entry
+                    },
+                    validation: | _validation_data: hdk::LinkValidationData| {
+                        Ok(())
+                    }
+                ),
+                to!(
+                    "edge",
+                    link_type: "anchor->edge",
+                    validation_package: || {
+                        hdk::ValidationPackageDefinition::Entry
+                    },
+                    validation: | _validation_data: hdk::LinkValidationData| {
+                        Ok(())
+                    }
                 )
             ]
         )
@@ -129,16 +153,32 @@ mod my_zome {
         let _ = hdk::commit_entry(&app_entry)?;
 
         // link each new goal to the anchor
-        let anchor_entry = Entry::App(
+        let anchor_address = Entry::App(
             "anchor".into(), // app entry type
             "goals".into() // app entry value
-        );
-        let anchor_address = hdk::entry_address(&anchor_entry).unwrap();
+        ).address();
 
-        hdk::link_entries(&anchor_address, &hdk::entry_address(&app_entry).unwrap(),  "anchor->goal", "")?;
+        hdk::link_entries(&anchor_address, &app_entry.address(),  "anchor->goal", "")?;
 
         // format the response as a GetResponse
         Ok(GetResponse{goal, address: app_entry.address()})
+    }
+
+    #[zome_fn("hc_public")]
+    fn create_edge(edge: Edge) -> ZomeApiResult<Edge> {
+
+        let app_entry = Entry::App("edge".into(), edge.clone().into());
+        let _ = hdk::commit_entry(&app_entry)?;
+
+        // link each new goal to the anchor
+        let anchor_address = Entry::App(
+            "anchor".into(), // app entry type
+            "edges".into() // app entry value
+        ).address();
+
+        hdk::link_entries(&anchor_address, &app_entry.address(),  "anchor->edge", "")?;
+
+        Ok(edge)
     }
 
     #[zome_fn("hc_public")]
@@ -150,7 +190,7 @@ mod my_zome {
         ).address();
 
         Ok(
-            // get all the entries linked to a goal anchor (drop entries with wrong type)
+            // return all the Goal objects from the entries linked to the edge anchor (drop entries with wrong type)
             hdk::utils::get_links_and_load_type(
                 &anchor_address,
                 LinkMatch::Exactly("anchor->goal"), // the link type to match
@@ -166,6 +206,24 @@ mod my_zome {
                 // return a response structs with the goal and its address
                 GetResponse{goal, address}
             }).collect()
+        )
+    }
+
+        #[zome_fn("hc_public")]
+    fn fetch_edges() -> ZomeApiResult<Vec<Edge>> {
+        // set up the anchor entry and compute its hash
+        let anchor_address = Entry::App(
+            "anchor".into(), // app entry type
+            "edges".into(),
+        ).address();
+
+        Ok(
+            // return all the Edge objects from the entries linked to the edge anchor (drop entries with wrong type)
+            hdk::utils::get_links_and_load_type(
+                &anchor_address,
+                LinkMatch::Exactly("anchor->edge"), // the link type to match
+                LinkMatch::Any,
+            )?
         )
     }
 
