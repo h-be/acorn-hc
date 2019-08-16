@@ -9,10 +9,12 @@ import {
   OPEN_GOAL_CREATOR,
   CLOSE_GOAL_CREATOR,
   SET_G_KEYDOWN,
-  UNSET_G_KEYDOWN
+  UNSET_G_KEYDOWN,
+  UPDATE_CONTENT
 } from './actions'
 
 const defaultState = {
+  content: '',
   gKeyDown: false,
   isOpen: false,
   xLoc: 2,
@@ -22,6 +24,11 @@ const defaultState = {
 export default function(state = defaultState, action) {
   const { payload, type } = action
   switch (type) {
+    case UPDATE_CONTENT:
+      return {
+        ...state,
+        content: payload
+      }
     case OPEN_GOAL_CREATOR:
       return {
         ...state,
@@ -32,7 +39,8 @@ export default function(state = defaultState, action) {
     case CLOSE_GOAL_CREATOR:
       return {
         ...state,
-        isOpen: false
+        isOpen: false,
+        content: ''
       }
     case SET_G_KEYDOWN:
       return {

@@ -1,10 +1,9 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
-import ReactDOM from 'react-dom'
 
 import { createGoal } from '../goals/actions'
-import { closeGoalCreator } from '../goal-creation/actions'
+import { closeGoalCreator, updateContent } from '../goal-creation/actions'
 
 
 // a React Component is defined as a class that extends the basic
@@ -16,14 +15,6 @@ class GoalForm extends Component {
     // which does its own initialization steps.
     // important, always call this.
     super()
-
-    // Set a default state
-    this.state = {
-      // goal_title will be the value that is rendered into the
-      // textarea onscreen, changed when it changes, and submitted
-      // as the `content` value of a new goal getting created
-      goal_title: ''
-    }
 
     // always required to make sure that functions defined on the class
     // have the proper `this` scope attached to them.
@@ -38,7 +29,7 @@ class GoalForm extends Component {
     EVENT HANDLERS
   */
   handleChange(event) {
-    this.setState({ goal_title: event.target.value })
+    this.props.updateContent(event.target.value)
   }
   handleKeyDown(event) {
     if (event.key === 'Enter') {
@@ -68,7 +59,7 @@ class GoalForm extends Component {
       }
     })
     // reset the textarea value to empty
-    this.setState({ goal_title: '' })
+    this.props.updateContent('')
     this.props.closeGoalCreator()
   }
 
@@ -80,8 +71,7 @@ class GoalForm extends Component {
     // is the strict definition of what HTML should appear on screen
     // depending on the data that is given to the component
 
-    const { goal_title } = this.state
-    const { isOpen, xLoc, yLoc } = this.props
+    const { content, isOpen, xLoc, yLoc } = this.props
 
     // use the xLoc and yLoc to position the form anywhere on the screen
     // using a position relative to its container
@@ -92,7 +82,7 @@ class GoalForm extends Component {
       {isOpen ? <form className='goal_form' onSubmit={this.handleSubmit}>
         <textarea
           placeholder='Add a title...'
-          value={this.state.goal_title}
+          value={content}
           onChange={this.handleChange}
           onKeyDown={this.handleKeyDown}
           autoFocus
@@ -107,6 +97,7 @@ class GoalForm extends Component {
 // and helps us to understand it more quickly as a developer
 // looking at the code after it was written
 GoalForm.propTypes = {
+  content: PropTypes.string.isRequired,
   isOpen: PropTypes.bool.isRequired,
   xLoc: PropTypes.number.isRequired,
   yLoc: PropTypes.number.isRequired,
@@ -120,10 +111,11 @@ GoalForm.propTypes = {
 // that component expects
 function mapStateToProps(state) {
   // all the state for this component is store under state->ui->goalCreation
-  const { isOpen, xLoc, yLoc } = state.ui.goalCreation
+  const { content, isOpen, xLoc, yLoc } = state.ui.goalCreation
   // the name of the expected proptypes is the same
   // as the name of the properties as stored in state
   return {
+    content,
     isOpen,
     xLoc,
     yLoc
@@ -135,6 +127,9 @@ function mapStateToProps(state) {
 // action dispatchers for redux action types
 function mapDispatchToProps(dispatch) {
   return {
+    updateContent: (content) => {
+      dispatch(updateContent(content))
+    },
     createGoal: (goal) => {
       dispatch(createGoal.create(goal))
     },

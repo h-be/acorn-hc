@@ -10,6 +10,7 @@ const OPEN_GOAL_CREATOR = 'OPEN_GOAL_CREATOR'
 const CLOSE_GOAL_CREATOR = 'CLOSE_GOAL_CREATOR'
 const SET_G_KEYDOWN = 'SET_G_KEYDOWN'
 const UNSET_G_KEYDOWN = 'UNSET_G_KEYDOWN'
+const UPDATE_CONTENT = 'UPDATE_CONTENT'
 
 /* action creator functions */
 
@@ -41,13 +42,22 @@ function unsetGKeyDown() {
   }
 }
 
+function updateContent(content) {
+  return {
+   type: UPDATE_CONTENT,
+   payload: content
+ }
+}
+
 export {
   OPEN_GOAL_CREATOR,
   CLOSE_GOAL_CREATOR,
   SET_G_KEYDOWN,
   UNSET_G_KEYDOWN,
+  UPDATE_CONTENT,
   openGoalCreator,
   closeGoalCreator,
   setGKeyDown,
-  unsetGKeyDown
+  unsetGKeyDown,
+  updateContent
 }
