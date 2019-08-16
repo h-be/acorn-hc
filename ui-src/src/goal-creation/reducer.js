@@ -14,6 +14,7 @@ import {
 } from './actions'
 
 const defaultState = {
+  parentAddress: null,
   content: '',
   gKeyDown: false,
   isOpen: false,
@@ -34,13 +35,15 @@ export default function(state = defaultState, action) {
         ...state,
         isOpen: true,
         xLoc: payload.x,
-        yLoc: payload.y
+        yLoc: payload.y,
+        parentAddress: payload.parentAddress
       }
     case CLOSE_GOAL_CREATOR:
       return {
         ...state,
         isOpen: false,
-        content: ''
+        content: '',
+        parentAddress: null
       }
     case SET_G_KEYDOWN:
       return {

@@ -14,12 +14,14 @@ const UPDATE_CONTENT = 'UPDATE_CONTENT'
 
 /* action creator functions */
 
-function openGoalCreator(x, y) {
+// parentAddress is optional
+function openGoalCreator(x, y, parentAddress) {
    return {
     type: OPEN_GOAL_CREATOR,
     payload: {
       x,
-      y
+      y,
+      parentAddress
     }
   }
 }

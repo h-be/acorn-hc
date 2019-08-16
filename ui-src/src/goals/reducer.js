@@ -16,7 +16,10 @@ export default function(state = defaultState, action) {
     case createGoal.success().type:
       return {
         ...state,
-        [payload.address]: payload.goal
+        [payload.address]: {
+          ...payload.goal,
+          address: payload.address
+        }
       }
     case fetchGoals.success().type:
       // payload is [ { goal: { key: val }, address: 'asdfy' }, ... ]

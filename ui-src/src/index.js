@@ -67,7 +67,7 @@ document.body.appendChild(canvas)
 document.body.appendChild(reactContainer)
 
 // attach keyboard and mouse events
-setupEventListeners(store)
+setupEventListeners(store, canvas)
 
 // whenever the STATE in the STORE changes, re-render the state data to the canvas
 store.subscribe(() => {

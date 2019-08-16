@@ -1,3 +1,13 @@
+import layoutFormula from '../drawing/layoutFormula'
+import {
+  goalWidth,
+  goalHeight
+} from '../drawing/dimensions'
+
+import {
+  selectGoal,
+  unselectAll
+} from '../selection/actions'
 import {
   setGKeyDown,
   unsetGKeyDown,
@@ -10,7 +20,7 @@ const KEYCODES = {
   esc: 27
 }
 
-export default function setupEventListeners(store) {
+export default function setupEventListeners(store, canvas) {
   document.body.addEventListener('keydown', event => {
     switch (event.keyCode) {
       case KEYCODES.g:
@@ -18,6 +28,7 @@ export default function setupEventListeners(store) {
         break
       case KEYCODES.esc:
         store.dispatch(closeGoalCreator())
+        store.dispatch(unselectAll())
         break
       default:
         // console.log(event)
@@ -40,7 +51,35 @@ export default function setupEventListeners(store) {
     // opening the GoalForm is dependent on
     // holding down the `g` keyboard key modifier
     if (store.getState().ui.goalCreation.gKeyDown) {
-      store.dispatch(openGoalCreator(event.clientX, event.clientY))
+      let parentAddress
+      if (store.getState().ui.selection.selectedGoals.length) {
+        // use first
+        parentAddress = store.getState().ui.selection.selectedGoals[0]
+      }
+      store.dispatch(openGoalCreator(event.clientX, event.clientY, parentAddress))
+    }
+    else {
+      // check for node in clicked area
+      // select it if so
+      // TODO: move this elsewhere in the code
+      const clickX = event.clientX
+      const clickY = event.clientY
+
+      // pull the current state from the store
+      const state = store.getState()
+      // converts the goals object to an array
+      const addressesArray = Object.keys(state.goals)
+      const goalsAsArray = addressesArray.map(address => state.goals[address])
+      const coordinates = layoutFormula(canvas.width, goalsAsArray, state.edges)
+      coordinates.forEach(({ x, y }, index) => {
+        const right = x + goalWidth
+        const bottom = y + goalHeight
+        // if click occurred within the box of a Goal
+        if (clickX >= x && clickX <= right && clickY >= y && clickY <= bottom) {
+          const clickedAddress = addressesArray[index]
+          store.dispatch(selectGoal(clickedAddress))
+        }
+      })
     }
   })
 }

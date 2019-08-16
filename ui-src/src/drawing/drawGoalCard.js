@@ -5,7 +5,7 @@ import {
   borderWidth
 } from './dimensions'
 
-function roundRect(ctx, x, y, w, h, radius, color, stroke) {
+function roundRect(ctx, x, y, w, h, radius, color, stroke, strokeWidth) {
   const r = x + w
   const b = y + h
 
@@ -14,7 +14,7 @@ function roundRect(ctx, x, y, w, h, radius, color, stroke) {
   if (stroke) ctx.strokeStyle = color
   else ctx.fillStyle = color
 
-  ctx.lineWidth = stroke ? "2": "1"
+  ctx.lineWidth = stroke ? strokeWidth : '1'
   ctx.moveTo(x+radius, y)
   ctx.lineTo(r-radius, y)
   ctx.quadraticCurveTo(r, y, r, y+radius)
@@ -29,14 +29,17 @@ function roundRect(ctx, x, y, w, h, radius, color, stroke) {
   else ctx.fill()
 }
 
-export default function render(goal, { x, y }, ctx) {
+export default function render(goal, { x, y }, isSelected, ctx) {
   // set up border color FOR INITIAL FEATURES SPEC
+
+  // TODO: refactor these colors to central location specifically for styles/theming
   let borderColor = '#FF5D36'
   if (goal.complete) {
     borderColor = '#8fd14f' // FIXME: wasn't in the spec
   } else if (goal.certain) {
     borderColor = '#FFC400'
   }
+  const selectedColor = '#5F65FF'
   let backgroundColor = '#FFFFFF'
 
   const halfBorder = borderWidth / 2 // for use with 'stroke' of the border
@@ -44,7 +47,11 @@ export default function render(goal, { x, y }, ctx) {
   // background
   roundRect(ctx, x + borderWidth, y + borderWidth, goalWidth - twiceBorder, goalHeight - twiceBorder, cornerRadius, backgroundColor, false)
   // border
-  roundRect(ctx, x + halfBorder, y + halfBorder, goalWidth - halfBorder, goalHeight - halfBorder, cornerRadius, borderColor, true)
+  roundRect(ctx, x + halfBorder, y + halfBorder, goalWidth - halfBorder, goalHeight - halfBorder, cornerRadius, borderColor, true, '2')
+
+  if (isSelected) {
+    roundRect(ctx, x - 3, y - 3, goalWidth + 7, goalHeight + 7, cornerRadius + 4, selectedColor, true, '4')
+  }
 
 
   // render text

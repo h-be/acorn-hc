@@ -53,11 +53,24 @@ function render(store, canvas) {
     if (childCoords && parentCoords) drawEdge(childCoords, parentCoords, ctx)
   })
 
+  if (state.ui.goalCreation.isOpen) {
+    if (state.ui.goalCreation.parentAddress) {
+      const parentIndex = addressesArray.indexOf(state.ui.goalCreation.parentAddress)
+      const parentCoords = coordinates[parentIndex]
+      const newGoalCoords = {
+        x: state.ui.goalCreation.xLoc,
+        y: state.ui.goalCreation.yLoc
+      }
+      drawEdge(newGoalCoords, parentCoords, ctx)
+    }
+  }
+
   // render each goal to the canvas
   goalsAsArray.forEach(function(goal, index) {
     // use the set of coordinates at the same index
     // in the coordinates array
-    drawGoalCard(goal, coordinates[index], ctx)
+    const isSelected = state.ui.selection.selectedGoals.indexOf(goal.address) > -1
+    drawGoalCard(goal, coordinates[index], isSelected, ctx)
   })
 }
 

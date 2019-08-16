@@ -3,6 +3,7 @@ import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 
 import { createGoal } from '../goals/actions'
+import { createEdge } from '../edges/actions'
 import { closeGoalCreator, updateContent } from '../goal-creation/actions'
 
 
@@ -37,7 +38,7 @@ class GoalForm extends Component {
       this.handleSubmit()
     }
   }
-  handleSubmit(event) {
+  async handleSubmit(event) {
     if (event) {
       // this is to prevent the page from refreshing
       // when the form is submitted, which is the
@@ -48,9 +49,9 @@ class GoalForm extends Component {
     // dispatch the action to create a goal
     // with the contents from the form
     // inserted into it
-    this.props.createGoal({
+    const response = await this.props.createGoal({
       goal: {
-        content: this.state.goal_title,
+        content: this.props.content,
         user_hash: "Boop",
         unix_timestamp: 413,
         complete: false,
@@ -58,6 +59,14 @@ class GoalForm extends Component {
         small: false
       }
     })
+    if (this.props.parentAddress) {
+      this.props.createEdge({
+        edge: {
+          parent_address: this.props.parentAddress,
+          child_address: response.address
+        }
+      })
+    }
     // reset the textarea value to empty
     this.props.updateContent('')
     this.props.closeGoalCreator()
@@ -97,11 +106,13 @@ class GoalForm extends Component {
 // and helps us to understand it more quickly as a developer
 // looking at the code after it was written
 GoalForm.propTypes = {
+  parentAddress: PropTypes.string, // optional
   content: PropTypes.string.isRequired,
   isOpen: PropTypes.bool.isRequired,
   xLoc: PropTypes.number.isRequired,
   yLoc: PropTypes.number.isRequired,
   createGoal: PropTypes.func.isRequired,
+  createEdge: PropTypes.func.isRequired,
   closeGoalCreator: PropTypes.func.isRequired
 }
 
@@ -111,10 +122,11 @@ GoalForm.propTypes = {
 // that component expects
 function mapStateToProps(state) {
   // all the state for this component is store under state->ui->goalCreation
-  const { content, isOpen, xLoc, yLoc } = state.ui.goalCreation
+  const { parentAddress, content, isOpen, xLoc, yLoc } = state.ui.goalCreation
   // the name of the expected proptypes is the same
   // as the name of the properties as stored in state
   return {
+    parentAddress,
     content,
     isOpen,
     xLoc,
@@ -131,7 +143,10 @@ function mapDispatchToProps(dispatch) {
       dispatch(updateContent(content))
     },
     createGoal: (goal) => {
-      dispatch(createGoal.create(goal))
+      return dispatch(createGoal.create(goal))
+    },
+    createEdge: (edge) => {
+      return dispatch(createEdge.create(edge))
     },
     closeGoalCreator: () => {
       dispatch(closeGoalCreator())
