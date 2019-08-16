@@ -38,10 +38,12 @@ function render(store, canvas) {
   // pull the current state from the store
   const state = store.getState()
 
-  const coordinates = layoutFormula(canvas.width, state.goals, state.edges)
+  // converts the goals object to an array
+  const goalsAsArray = Object.keys(state.goals).map(address => state.goals[address])
+  const coordinates = layoutFormula(canvas.width, goalsAsArray, state.edges)
 
   // render each goal to the canvas
-  state.goals.forEach(function(goal, index) {
+  goalsAsArray.forEach(function(goal, index) {
     // use the set of coordinates at the same index
     // in the coordinates array
     drawGoalCard(goal, coordinates[index], ctx)

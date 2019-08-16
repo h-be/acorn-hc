@@ -20,7 +20,7 @@ use hdk::holochain_core_types::{
 };
 
 use hdk::holochain_json_api::{
-    json::JsonString,
+    json::{ JsonString, default_to_json},
     error::JsonError
 };
 
@@ -30,14 +30,16 @@ use hdk::holochain_persistence_api::{
 
 use hdk_proc_macros::zome;
 
+use serde::Serialize;
+use std::fmt::Debug;
+
 // see https://developer.holochain.org/api/latest/hdk/ for info on using the hdk library
 
-#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
 
 // A Goal Card. This is a card on the SoA Tree which can be small or non-small, complete or
 // incomplete, certain or uncertain, and contains text content.
 // user hash and unix timestamp are included to prevent hash collisions.
-
+#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
 pub struct Goal {
     content: String,
     user_hash: Address,
@@ -46,6 +48,18 @@ pub struct Goal {
     certain: bool,
     small: bool,
 }
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct GetResponse<T> {
+    pub goal: T,
+    pub address: Address
+}
+
+impl<T: Into<JsonString> + Debug + Serialize> From<GetResponse<T>> for JsonString {
+    fn from(u: GetResponse<T>) -> JsonString {
+        default_to_json(u)
+    }
+} 
 
 #[zome]
 mod my_zome {
@@ -110,7 +124,7 @@ mod my_zome {
     }
 
     #[zome_fn("hc_public")]
-    fn create_goal(goal: Goal) -> ZomeApiResult<Goal> {
+    fn create_goal(goal: Goal) -> ZomeApiResult<GetResponse<Goal>> {
         let app_entry = Entry::App("goal".into(), goal.clone().into());
         let _ = hdk::commit_entry(&app_entry)?;
 
@@ -122,11 +136,13 @@ mod my_zome {
         let anchor_address = hdk::entry_address(&anchor_entry).unwrap();
 
         hdk::link_entries(&anchor_address, &hdk::entry_address(&app_entry).unwrap(),  "anchor->goal", "")?;
-        Ok(goal)
+
+        // format the response as a GetResponse
+        Ok(GetResponse{goal, address: app_entry.address()})
     }
 
     #[zome_fn("hc_public")]
-    fn fetch_goals() -> ZomeApiResult<Vec<Goal>> {
+    fn fetch_goals() -> ZomeApiResult<Vec<GetResponse<Goal>>> {
         // set up the anchor entry and compute its hash
         let anchor_address = Entry::App(
             "anchor".into(), // app entry type
@@ -134,11 +150,22 @@ mod my_zome {
         ).address();
 
         Ok(
+            // get all the entries linked to a goal anchor (drop entries with wrong type)
             hdk::utils::get_links_and_load_type(
                 &anchor_address,
                 LinkMatch::Exactly("anchor->goal"), // the link type to match
                 LinkMatch::Any,
             )?
+            // scoop all these entries up into an array and return it
+            .into_iter().map(|goal: Goal| {
+                // re-create the goal entry to find its address
+                let address = Entry::App(
+                    "goal".into(),
+                    goal.clone().into(),
+                ).address();
+                // return a response structs with the goal and its address
+                GetResponse{goal, address}
+            }).collect()
         )
     }
 
