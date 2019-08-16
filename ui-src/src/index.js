@@ -15,16 +15,16 @@ import { connect } from '@holochain/hc-web-client'
 import { holochainMiddleware } from '@holochain/hc-redux-middleware'
 
 // Local Imports
+import { DEFAULT_HOLOCHAIN_PORT } from './holochainConfig'
 import setupEventListeners from './event-listeners'
 import acorn from './reducer'
 import render from './drawing'
-import { createGoal, fetchGoals } from './goals/actions'
+import { fetchGoals } from './goals/actions'
+import { fetchEdges, createEdge } from './edges/actions'
 import App from './components/App'
 
-const defaultHolochainPort = '8888'
-
 // this url should use the same port set up by the Holochain Conductor
-const websocketUrl = `ws://localhost:${defaultHolochainPort}`
+const websocketUrl = `ws://localhost:${DEFAULT_HOLOCHAIN_PORT}`
 // attempts to form a websocket (two way messages) connection to a running
 // Holochain Conductor
 const hcWc = connect({ url: websocketUrl })
@@ -42,58 +42,15 @@ let store = createStore(acorn, /* preloadedState, */ composeEnhancers(
   applyMiddleware(...middleware)
 ))
 
+// dispatch fetch goals, and fetch edges functions to pull in all the existing goals and edges
+// on first render
+store.dispatch(fetchEdges.create({}))
+store.dispatch(fetchGoals.create({}))
 /*
   store.subscribe(cb)
   store.getState()
   store.dispatch(action)
 */
-
-/*
-store.dispatch(createGoal.create({ entry: {
-  content: "Small incomplete",
-  user_hash: "Boop",
-  unix_timestamp: 412,
-  complete: false,
-  certain: true,
-  small: true, }}))
-store.dispatch(createGoal.create({ entry: {
-  content: "Small complete",
-  user_hash: "Boop",
-  unix_timestamp: 413,
-  complete: true,
-  certain: true,
-  small: true, }}))
-store.dispatch(createGoal.create({ entry: {
-  content: "Non-small complete certain",
-  user_hash: "Boop",
-  unix_timestamp: 412,
-  complete: true,
-  certain: true,
-  small: false, }}))
-store.dispatch(createGoal.create({ entry: {
-  content: "Non-small complete uncertain",
-  user_hash: "Boop",
-  unix_timestamp: 413,
-  complete: true,
-  certain: false,
-  small: false, }}))
-store.dispatch(createGoal.create({ entry: {
-  content: "Non-small incomplete certain",
-  user_hash: "Boop",
-  unix_timestamp: 413,
-  complete: false,
-  certain: true,
-  small: false, }}))
-store.dispatch(createGoal.create({ entry: {
-  content: "Non-small incomplete uncertain",
-  user_hash: "Boop",
-  unix_timestamp: 413,
-  complete: false,
-  certain: false,
-  small: false, }}))
-
-  */
-
 
 /* SETUP THE REACT CONTAINER, WHERE DOM ELEMENTS WILL BE RENDERED */
 const reactContainer = document.createElement('div')
@@ -130,6 +87,56 @@ ReactDOM.render(
 )
 
 
-// dispatch fetch goals function to pull in all the existing goals
-// on first render
-store.dispatch(fetchGoals.create({}))
+// store.dispatch(createEdge.create({
+//   edge: {
+//     parent_address: 'Qmbu9ydrvGofoV3oYBLGoC62JpJHLdCXM6FfMzBuaPkGV5',
+//     child_address: 'QmdJB96nQSRud1y4AtTeCXedonkaiADjBxkLcPU4xSL44L'
+//   }
+// }))
+
+
+/*
+store.dispatch(createGoal.create({ goal: {
+  content: "Small incomplete",
+  user_hash: "Boop",
+  unix_timestamp: 412,
+  complete: false,
+  certain: true,
+  small: true, }}))
+store.dispatch(createGoal.create({ goal: {
+  content: "Small complete",
+  user_hash: "Boop",
+  unix_timestamp: 413,
+  complete: true,
+  certain: true,
+  small: true, }}))
+store.dispatch(createGoal.create({ goal: {
+  content: "Non-small complete certain",
+  user_hash: "Boop",
+  unix_timestamp: 412,
+  complete: true,
+  certain: true,
+  small: false, }}))
+store.dispatch(createGoal.create({ goal: {
+  content: "Non-small complete uncertain",
+  user_hash: "Boop",
+  unix_timestamp: 413,
+  complete: true,
+  certain: false,
+  small: false, }}))
+store.dispatch(createGoal.create({ goal: {
+  content: "Non-small incomplete certain",
+  user_hash: "Boop",
+  unix_timestamp: 413,
+  complete: false,
+  certain: true,
+  small: false, }}))
+store.dispatch(createGoal.create({ goal: {
+  content: "Non-small incomplete uncertain",
+  user_hash: "Boop",
+  unix_timestamp: 413,
+  complete: false,
+  certain: false,
+  small: false, }}))
+
+  */

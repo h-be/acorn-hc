@@ -1,14 +1,25 @@
 import {
   goalWidth,
-  goalHeight
+  goalHeight,
+  cornerRadius,
+  borderWidth
 } from './dimensions'
-
-const cornerRadius = 30
-const borderWidth = 2
 
 
 // draw rectangle function.
 function drawRect(ctx, x, y, width, height, borderWidth, backgroundColor, borderColor) {
+
+  // override for now, while sorting out dimension issues
+  ctx.beginPath()
+  ctx.fillStyle = borderColor
+  ctx.rect(x, y, width, height)
+  ctx.fill()
+  ctx.beginPath()
+  ctx.fillStyle = backgroundColor
+  ctx.rect(x + 2, y + 2, width - 4, height - 4)
+  ctx.fill()
+  return
+
   // draw border rectangle
   ctx.beginPath()
   ctx.lineWidth = cornerRadius.toString()

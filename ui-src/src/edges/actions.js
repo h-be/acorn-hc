@@ -7,13 +7,17 @@
 
 import { createHolochainZomeCallAsyncAction } from '@holochain/hc-redux-middleware'
 
+import {
+  DEVELOPMENT_INSTANCE_NAME,
+  ZOME_NAME
+} from '../holochainConfig'
+
 /* action creator functions */
 
-const DEVELOPMENT_INSTANCE_NAME = 'test-instance'
-const ZOME_NAME = 'my_zome' // TODO: change this
-
-const createGoal = createHolochainZomeCallAsyncAction(DEVELOPMENT_INSTANCE_NAME, ZOME_NAME, 'create_goal')
+const createEdge = createHolochainZomeCallAsyncAction(DEVELOPMENT_INSTANCE_NAME, ZOME_NAME, 'create_edge')
+const fetchEdges = createHolochainZomeCallAsyncAction(DEVELOPMENT_INSTANCE_NAME, ZOME_NAME, 'fetch_edges')
 
 export {
-  createGoal
+  createEdge,
+  fetchEdges
 }

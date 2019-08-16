@@ -5,24 +5,18 @@
   a new state.
 */
 
-// import { createGoal } from './actions'
+import { createEdge, fetchEdges } from './actions'
 
-const defaultState = [
-  /*{
-    parent: 'Small incomplete',
-    child: 'Small complete'
-  },
-  {
-    parent: 'Small complete',
-    child: 'Other thing'
-  } */
-]
+const defaultState = []
 
 export default function(state = defaultState, action) {
   const { payload, type } = action
   switch (type) {
-    // case createGoal.success().type:
-    //   return state.concat([payload])
+    case createEdge.success().type:
+      return state.concat([payload])
+    case fetchEdges.success().type:
+        // TODO: this isn't perfect, could include duplicates
+        return state.concat(payload)
     default:
       return state
   }

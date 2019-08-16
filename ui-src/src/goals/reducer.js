@@ -10,35 +10,6 @@ import { createGoal, fetchGoals } from './actions'
 
 const defaultState = {}
 
-/*
-[
-  {
-    content: "Small incomplete",
-    user_hash: "Boop",
-    unix_timestamp: 412,
-    complete: false,
-    certain: true,
-    small: true
-  },
-  {
-    content: "Other thing",
-    user_hash: "Boop",
-    unix_timestamp: 412,
-    complete: false,
-    certain: true,
-    small: true
-  },
-  {
-    content: "Small complete",
-    user_hash: "Boop",
-    unix_timestamp: 413,
-    complete: true,
-    certain: true,
-    small: true
-  }
-]
-*/
-
 export default function(state = defaultState, action) {
   const { payload, type } = action
   switch (type) {

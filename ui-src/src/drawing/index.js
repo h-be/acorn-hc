@@ -8,17 +8,18 @@
 
 import layoutFormula from './layoutFormula'
 import drawGoalCard from './drawGoalCard'
+import drawEdge from './drawEdge'
 
 function setupCanvas(canvas) {
   // Get the device pixel ratio, falling back to 1.
-  var dpr = window.devicePixelRatio || 1
+  const dpr = window.devicePixelRatio || 1
   // Get the size of the canvas in CSS pixels.
-  var rect = canvas.getBoundingClientRect()
+  const rect = canvas.getBoundingClientRect()
   // Give the canvas pixel dimensions of their CSS
   // size * the device pixel ratio.
   canvas.width = rect.width * dpr
   canvas.height = rect.height * dpr
-  var ctx = canvas.getContext('2d')
+  const ctx = canvas.getContext('2d')
   // Scale all drawing operations by the dpr, so you
   // don't have to worry about the difference.
   ctx.scale(dpr, dpr)
@@ -39,8 +40,18 @@ function render(store, canvas) {
   const state = store.getState()
 
   // converts the goals object to an array
-  const goalsAsArray = Object.keys(state.goals).map(address => state.goals[address])
+  const addressesArray = Object.keys(state.goals)
+  const goalsAsArray = addressesArray.map(address => state.goals[address])
   const coordinates = layoutFormula(canvas.width, goalsAsArray, state.edges)
+
+  // render each edge to the canvas, basing it off the rendering coordinates of the parent and child nodes
+  state.edges.forEach(function(edge) {
+    const childIndex = addressesArray.indexOf(edge.child_address)
+    const parentIndex = addressesArray.indexOf(edge.parent_address)
+    const childCoords = coordinates[childIndex]
+    const parentCoords = coordinates[parentIndex]
+    if (childCoords && parentCoords) drawEdge(childCoords, parentCoords, ctx)
+  })
 
   // render each goal to the canvas
   goalsAsArray.forEach(function(goal, index) {

@@ -96,6 +96,21 @@ mod my_zome {
     }
 
     #[entry_def]
+     fn edge_def() -> ValidatingEntryType {
+        entry!(
+            name: "edge",
+            description: "this is an entry representing a edge",
+            sharing: Sharing::Public,
+            validation_package: || {
+                hdk::ValidationPackageDefinition::Entry
+            },
+            validation: | _validation_data: hdk::EntryValidationData<Edge>| {
+                Ok(())
+            }
+        )
+    }
+
+    #[entry_def]
      fn goal_def() -> ValidatingEntryType {
         entry!(
             name: "goal",

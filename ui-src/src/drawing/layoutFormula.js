@@ -1,10 +1,10 @@
 import { goalWidth, goalHeight } from './dimensions'
 
 
-function findAParent(edges, content) {
+function findAParent(edges, address) {
   // highly oversimplified
-  const edge = edges.find(e => e.child === content)
-  return edge ? edge.parent : null
+  const edge = edges.find(e => e.child_address === address)
+  return edge ? edge.parent_address : null
 }
 
 
@@ -13,8 +13,9 @@ function mapGoalToHierarchy(goal, edges) {
   // TODO: make this more resilient, highly oversimplified
   let hierarchy = 1
 
-  function checkHierarchy(content) {
-    const parent = findAParent(edges, content)
+  function checkHierarchy(address) {
+    const parent = findAParent(edges, address)
+
     if (parent) {
       // increment the hierarchy var each time an additional parent
       // is found
@@ -23,7 +24,9 @@ function mapGoalToHierarchy(goal, edges) {
     }
   }
 
-  checkHierarchy(goal.content)
+  checkHierarchy(goal.address)
+
+  // console.log(hierarchy)
 
   return {
     hierarchy,
