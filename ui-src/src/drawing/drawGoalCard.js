@@ -5,37 +5,28 @@ import {
   borderWidth
 } from './dimensions'
 
+function roundRect(ctx, x, y, w, h, radius, color, stroke) {
+  const r = x + w
+  const b = y + h
 
-// draw rectangle function.
-function drawRect(ctx, x, y, width, height, borderWidth, backgroundColor, borderColor) {
+  ctx.beginPath()
 
-  // override for now, while sorting out dimension issues
-  ctx.beginPath()
-  ctx.fillStyle = borderColor
-  ctx.rect(x, y, width, height)
-  ctx.fill()
-  ctx.beginPath()
-  ctx.fillStyle = backgroundColor
-  ctx.rect(x + 2, y + 2, width - 4, height - 4)
-  ctx.fill()
-  return
+  if (stroke) ctx.strokeStyle = color
+  else ctx.fillStyle = color
 
-  // draw border rectangle
-  ctx.beginPath()
-  ctx.lineWidth = cornerRadius.toString()
-  ctx.lineJoin = 'round'
-  ctx.strokeStyle = borderColor
-  ctx.rect(x, y, width - cornerRadius + borderWidth, height - cornerRadius + borderWidth)
-  ctx.stroke()
-  // draw fill rectangle
-  ctx.beginPath()
-  ctx.lineWidth = (cornerRadius - borderWidth * 2).toString()
-  ctx.lineJoin = 'round'
-  ctx.strokeStyle = backgroundColor
-  ctx.fillStyle = backgroundColor
-  ctx.rect(x, y, width - cornerRadius + borderWidth, height - cornerRadius + borderWidth)
-  ctx.stroke()
-  ctx.fill()
+  ctx.lineWidth = stroke ? "2": "1"
+  ctx.moveTo(x+radius, y)
+  ctx.lineTo(r-radius, y)
+  ctx.quadraticCurveTo(r, y, r, y+radius)
+  ctx.lineTo(r, y+h-radius)
+  ctx.quadraticCurveTo(r, b, r-radius, b)
+  ctx.lineTo(x+radius, b)
+  ctx.quadraticCurveTo(x, b, x, b-radius)
+  ctx.lineTo(x, y+radius)
+  ctx.quadraticCurveTo(x, y, x+radius, y)
+
+  if (stroke) ctx.stroke()
+  else ctx.fill()
 }
 
 export default function render(goal, { x, y }, ctx) {
@@ -48,8 +39,13 @@ export default function render(goal, { x, y }, ctx) {
   }
   let backgroundColor = '#FFFFFF'
 
-  // draw rectangle
-  drawRect(ctx, x, y, goalWidth, goalHeight, borderWidth, backgroundColor, borderColor)
+  const halfBorder = borderWidth / 2 // for use with 'stroke' of the border
+  const twiceBorder = borderWidth * 2
+  // background
+  roundRect(ctx, x + borderWidth, y + borderWidth, goalWidth - twiceBorder, goalHeight - twiceBorder, cornerRadius, backgroundColor, false)
+  // border
+  roundRect(ctx, x + halfBorder, y + halfBorder, goalWidth - halfBorder, goalHeight - halfBorder, cornerRadius, borderColor, true)
+
 
   // render text
   let goalText = goal.content
