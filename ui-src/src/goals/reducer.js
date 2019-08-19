@@ -6,7 +6,7 @@
 */
 import _ from 'lodash'
 
-import { createGoal, fetchGoals } from './actions'
+import { createGoal, fetchGoals, archiveGoal } from './actions'
 
 const defaultState = {}
 
@@ -37,6 +37,11 @@ export default function(state = defaultState, action) {
         ...state,
         ...newVals
       }
+    case archiveGoal.success().type:
+      // archive the goal
+      return {
+        // return the state without the goal at the specified address
+        }
     default:
       return state
   }
