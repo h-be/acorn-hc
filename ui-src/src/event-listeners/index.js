@@ -71,6 +71,8 @@ export default function setupEventListeners(store, canvas) {
       const addressesArray = Object.keys(state.goals)
       const goalsAsArray = addressesArray.map(address => state.goals[address])
       const coordinates = layoutFormula(canvas.width, goalsAsArray, state.edges)
+      // keep track of whether a goal was selected
+      let selected = false
       coordinates.forEach(({ x, y }, index) => {
         const right = x + goalWidth
         const bottom = y + goalHeight
@@ -78,8 +80,16 @@ export default function setupEventListeners(store, canvas) {
         if (clickX >= x && clickX <= right && clickY >= y && clickY <= bottom) {
           const clickedAddress = addressesArray[index]
           store.dispatch(selectGoal(clickedAddress))
+          selected = true
         }
       })
+      // If nothing was selected, that means empty spaces was clicked:
+      // Close goal creator and deselect everything
+      console.log(selected)
+      if (!selected) {
+        store.dispatch(closeGoalCreator())
+        store.dispatch(unselectAll())
+      }
     }
   })
 }
