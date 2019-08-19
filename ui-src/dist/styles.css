@@ -35,7 +35,17 @@ div.react {
   font-size: 20px;
 }
 
+.instructions_wrapper {
+  position: absolute;
+  width: 300px;
+}
+
+.instructions_wrapper button {
+  margin: 10px;
+}
+
 .instructions {
   font-family: Helvetica, Sans-Serif;
   margin-left: 10px;
+  color: #4D4D4D;
 }
