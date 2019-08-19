@@ -44,7 +44,7 @@ function mapHierarchyToPosition({ goal, hierarchy }, withHierarchies, screenWidt
   const RETINA_HACK_HALFSCREEN = 4
 
   const sameTier = withHierarchies.filter((wH) => wH.hierarchy === hierarchy)
-  const indexInTier = sameTier.map((wH) => wH.goal.content).indexOf(goal.content)
+  const indexInTier = sameTier.map((wH) => wH.goal.address).indexOf(goal.address)
 
   const horizontalHalfScreen = screenWidth / RETINA_HACK_HALFSCREEN
   const halfGoalWidth = goalWidth / 2
