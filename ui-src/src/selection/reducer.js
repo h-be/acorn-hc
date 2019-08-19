@@ -21,7 +21,9 @@ export default function(state = defaultState, action) {
     case SELECT_GOAL:
       return {
         ...state,
-        selectedGoals: [payload]
+        selectedGoals: state.selectedGoals.indexOf(payload) > -1
+          ? state.selectedGoals.slice() // you should create a new copy of the array, regardless, because redux
+          : state.selectedGoals.concat([payload]) // combine the existing list of selected with the new one to add
       }
     case UNSELECT_GOAL:
       return {
