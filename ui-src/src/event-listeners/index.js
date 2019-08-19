@@ -18,10 +18,10 @@ import {
 export default function setupEventListeners(store, canvas) {
   document.body.addEventListener('keydown', event => {
     switch (event.code) {
-      case "KeyG":
+      case 'KeyG':
         store.dispatch(setGKeyDown())
         break
-      case "Escape":
+      case 'Escape':
         store.dispatch(closeGoalCreator())
         store.dispatch(unselectAll())
         break
@@ -34,7 +34,7 @@ export default function setupEventListeners(store, canvas) {
 
   document.body.addEventListener('keyup', event => {
     switch (event.code) {
-      case "KeyG":
+      case 'KeyG':
         store.dispatch(unsetGKeyDown())
         break
       default:
