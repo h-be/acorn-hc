@@ -2,6 +2,7 @@ import { checkForGoalAtCoordinates } from '../drawing/eventDetection'
 
 import {
   selectGoal,
+  unselectGoal,
   unselectAll
 } from '../selection/actions'
 import {
@@ -79,7 +80,17 @@ export default function setupEventListeners(store, canvas) {
       const state = store.getState()
       const clickedAddress = checkForGoalAtCoordinates(canvas.width, state.goals, state.edges, event.clientX, event.clientY)
       if (clickedAddress) {
-        store.dispatch(selectGoal(clickedAddress))
+        // if the shift key is being use, do an 'additive' select
+        // where you add the Goal to the list of selected
+        if (!event.shiftKey) {
+          store.dispatch(unselectAll())
+        }
+        // if using shift, and Goal is already selected, unselect it
+        if (event.shiftKey && state.ui.selection.selectedGoals.indexOf(clickedAddress) > -1) {
+          store.dispatch(unselectGoal(clickedAddress))
+        } else {
+          store.dispatch(selectGoal(clickedAddress))
+        }
       } else {
         // If nothing was selected, that means empty
         // spaces was clicked: deselect everything
