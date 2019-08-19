@@ -1,13 +1,13 @@
-import layoutFormula from '../drawing/layoutFormula'
-import {
-  goalWidth,
-  goalHeight
-} from '../drawing/dimensions'
+import { checkForGoalAtCoordinates } from '../drawing/eventDetection'
 
 import {
   selectGoal,
   unselectAll
 } from '../selection/actions'
+import {
+  hoverGoal,
+  unhoverGoal
+} from '../hover/actions'
 import {
   setGKeyDown,
   unsetGKeyDown,
@@ -43,6 +43,18 @@ export default function setupEventListeners(store, canvas) {
     }
   })
 
+  // TODO: debounce/throttle this so that it doesn't fire crazy frequently and
+  // kill performance
+  canvas.addEventListener('mousemove', event => {
+    const state = store.getState()
+    const goalAddress = checkForGoalAtCoordinates(canvas.width, state.goals, state.edges, event.clientX, event.clientY)
+    if (goalAddress && state.ui.hover.hoveredGoal !== goalAddress) {
+      store.dispatch(hoverGoal(goalAddress))
+    } else if (!goalAddress && state.ui.hover.hoveredGoal) {
+      store.dispatch(unhoverGoal())
+    }
+  })
+
   // This listener is bound to the canvas only so clicks on other parts of
   // the UI like the GoalForm won't trigger it.
   canvas.addEventListener('click', event => {
@@ -64,32 +76,13 @@ export default function setupEventListeners(store, canvas) {
     else {
       // check for node in clicked area
       // select it if so
-      // TODO: move this elsewhere in the code
-      const clickX = event.clientX
-      const clickY = event.clientY
-
-      // pull the current state from the store
       const state = store.getState()
-      // converts the goals object to an array
-      const addressesArray = Object.keys(state.goals)
-      const goalsAsArray = addressesArray.map(address => state.goals[address])
-      const coordinates = layoutFormula(canvas.width, goalsAsArray, state.edges)
-      // keep track of whether a goal was selected
-      let selected = false
-      coordinates.forEach(({ x, y }, index) => {
-        const right = x + goalWidth
-        const bottom = y + goalHeight
-        // if click occurred within the box of a Goal
-        if (clickX >= x && clickX <= right && clickY >= y && clickY <= bottom) {
-          const clickedAddress = addressesArray[index]
-          store.dispatch(selectGoal(clickedAddress))
-          selected = true
-        }
-      })
-      // If nothing was selected, that means empty
-      // spaces was clicked: deselect everything
-      console.log(selected)
-      if (!selected) {
+      const clickedAddress = checkForGoalAtCoordinates(canvas.width, state.goals, state.edges, event.clientX, event.clientY)
+      if (clickedAddress) {
+        store.dispatch(selectGoal(clickedAddress))
+      } else {
+        // If nothing was selected, that means empty
+        // spaces was clicked: deselect everything
         store.dispatch(unselectAll())
       }
     }
