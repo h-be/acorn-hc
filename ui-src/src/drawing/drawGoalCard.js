@@ -30,8 +30,7 @@ function roundRect(ctx, x, y, w, h, radius, color, stroke, strokeWidth) {
 }
 
 export default function render(goal, { x, y }, isSelected, ctx) {
-  // set up border color FOR INITIAL FEATURES SPEC
-
+  // set up border color
   // TODO: refactor these colors to central location specifically for styles/theming
   let borderColor = '#FF5D36'
   if (goal.complete) {

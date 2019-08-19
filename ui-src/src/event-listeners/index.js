@@ -47,10 +47,17 @@ export default function setupEventListeners(store, canvas) {
     }
   })
 
-  document.body.addEventListener('click', event => {
+  // This listener is bound to the canvas only so clicks on other parts of
+  // the UI like the GoalForm won't trigger it.
+  canvas.addEventListener('click', event => {
+    // if the GoalForm is open, any click on the
+    // canvas should close it
+    if (store.getState().ui.goalCreation.isOpen) {
+      store.dispatch(closeGoalCreator())
+    }
     // opening the GoalForm is dependent on
     // holding down the `g` keyboard key modifier
-    if (store.getState().ui.goalCreation.gKeyDown) {
+    else if (store.getState().ui.goalCreation.gKeyDown) {
       let parentAddress
       if (store.getState().ui.selection.selectedGoals.length) {
         // use first
@@ -83,11 +90,10 @@ export default function setupEventListeners(store, canvas) {
           selected = true
         }
       })
-      // If nothing was selected, that means empty spaces was clicked:
-      // Close goal creator and deselect everything
+      // If nothing was selected, that means empty
+      // spaces was clicked: deselect everything
       console.log(selected)
       if (!selected) {
-        store.dispatch(closeGoalCreator())
         store.dispatch(unselectAll())
       }
     }
