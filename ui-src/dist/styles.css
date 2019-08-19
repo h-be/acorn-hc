@@ -49,3 +49,18 @@ div.react {
   margin-left: 10px;
   color: #4D4D4D;
 }
+
+/* Multi Edit Bar */
+
+.multi_edit_bar {
+  position: fixed;
+  bottom: 0px;
+  left: 50%;
+  margin-left: -480px;
+  width: 960px;
+  height: 61px;
+  background: #FFFFFF 0% 0% no-repeat padding-box;
+  box-shadow: 0px 3px 6px #000000;
+  border-radius: 10px 10px 0px 0px;
+  opacity: 1;
+}

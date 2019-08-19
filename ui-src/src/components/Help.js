@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 
 export default function Help() {
     // Declare a new state variable, which we'll call "isOpen"
-    const [isOpen, setIsOpen] = useState(false);
+    const [isOpen, setIsOpen] = useState(false)
 
     return (
         <div className='instructions_wrapper'>
