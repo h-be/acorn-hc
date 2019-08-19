@@ -70,7 +70,8 @@ function render(store, canvas) {
     // use the set of coordinates at the same index
     // in the coordinates array
     const isSelected = state.ui.selection.selectedGoals.indexOf(goal.address) > -1
-    drawGoalCard(goal, coordinates[index], isSelected, ctx)
+    const isHovered = state.ui.hover.hoveredGoal === goal.address
+    drawGoalCard(goal, coordinates[index], isSelected, isHovered, ctx)
   })
 }
 
