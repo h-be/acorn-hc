@@ -15,18 +15,13 @@ import {
   closeGoalCreator
 } from '../goal-creation/actions'
 
-const KEYCODES = {
-  g: 71,
-  esc: 27
-}
-
 export default function setupEventListeners(store, canvas) {
   document.body.addEventListener('keydown', event => {
-    switch (event.keyCode) {
-      case KEYCODES.g:
+    switch (event.code) {
+      case "KeyG":
         store.dispatch(setGKeyDown())
         break
-      case KEYCODES.esc:
+      case "Escape":
         store.dispatch(closeGoalCreator())
         store.dispatch(unselectAll())
         break
@@ -34,11 +29,12 @@ export default function setupEventListeners(store, canvas) {
         // console.log(event)
         break
     }
+    // console.log(event)
   })
 
   document.body.addEventListener('keyup', event => {
-    switch (event.keyCode) {
-      case KEYCODES.g:
+    switch (event.code) {
+      case "KeyG":
         store.dispatch(unsetGKeyDown())
         break
       default:
