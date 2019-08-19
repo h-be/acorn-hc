@@ -53,7 +53,7 @@ class GoalForm extends Component {
       goal: {
         content: this.props.content,
         user_hash: "Boop",
-        unix_timestamp: 413,
+        unix_timestamp: Date.now(),
         complete: false,
         certain: false,
         small: false

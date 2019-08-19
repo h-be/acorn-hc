@@ -51,7 +51,7 @@ pub struct Edge {
 pub struct Goal {
     content: String,
     user_hash: Address,
-    unix_timestamp: u32,
+    unix_timestamp: u128,
     complete: bool,
     certain: bool,
     small: bool,
