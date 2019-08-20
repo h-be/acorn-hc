@@ -245,7 +245,7 @@ mod my_zome {
                     edge.clone().into(),
                 ).address();
                 // return a response structs with the edge and its address
-                GetResponse{entry: edge, address} // TODO: rename goal in GetResponse to something else
+                GetResponse{entry: edge, address}
             }).collect()
         )
     }
