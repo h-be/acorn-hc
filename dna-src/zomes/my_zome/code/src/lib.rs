@@ -67,7 +67,7 @@ impl<T: Into<JsonString> + Debug + Serialize> From<GetResponse<T>> for JsonStrin
     fn from(u: GetResponse<T>) -> JsonString {
         default_to_json(u)
     }
-} 
+}
 
 #[zome]
 mod my_zome {
@@ -224,7 +224,7 @@ mod my_zome {
         )
     }
 
-        #[zome_fn("hc_public")]
+    #[zome_fn("hc_public")]
     fn fetch_edges() -> ZomeApiResult<Vec<Edge>> {
         // set up the anchor entry and compute its hash
         let anchor_address = Entry::App(
@@ -240,6 +240,13 @@ mod my_zome {
                 LinkMatch::Any,
             )?
         )
+    }
+
+    #[zome_fn("hc_public")]
+    fn archive_goal(address: Address) -> ZomeApiResult<Address> {
+        // add the removeEntry
+        hdk::remove_entry(&address)?;
+        Ok(address)
     }
 
 }

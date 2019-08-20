@@ -16,7 +16,7 @@ import {
 } from '../goal-creation/actions'
 import {
   archiveGoal
-} from '../goal-archiving/actions'
+} from '../goals/actions'
 
 export default function setupEventListeners(store, canvas) {
   document.body.addEventListener('keydown', event => {
@@ -30,8 +30,15 @@ export default function setupEventListeners(store, canvas) {
         break
       case 'Backspace':
         // archives one goal for now FIXME: should be able to archive many goals
-        let firstOfSelection = store.getState().ui.selection.selectedGoals[0]
-        store.dispatch(archiveGoal(firstOfSelection))
+        let ui = store.getState().ui
+        // only dispatch if something's selected the createGoal window is
+        // not open
+        if (ui.selection.selectedGoals.length > 0 && !ui.goalCreation.isOpen) {
+          let firstOfSelection = ui.selection.selectedGoals[0]
+          store.dispatch(archiveGoal.create({ address: firstOfSelection }))
+          // deselect all so we aren't left with a removed goal selected
+          store.dispatch(unselectAll())
+        }
       default:
         // console.log(event)
         break
@@ -94,8 +101,7 @@ export default function setupEventListeners(store, canvas) {
         }
       })
       // If nothing was selected, that means empty
-      // spaces was clicked: deselect everything
-      console.log(selected)
+      // space was clicked: deselect everything
       if (!selected) {
         store.dispatch(unselectAll())
       }

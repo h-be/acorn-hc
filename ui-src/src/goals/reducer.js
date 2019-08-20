@@ -38,10 +38,9 @@ export default function(state = defaultState, action) {
         ...newVals
       }
     case archiveGoal.success().type:
-      // archive the goal
-      return {
-        // return the state without the goal at the specified address
-        }
+      // return the state without any goals whose address matches
+      // the one we're deleting
+      return  _.pickBy(state, (value, key) => key !== payload )
     default:
       return state
   }
