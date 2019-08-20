@@ -6,8 +6,12 @@ import layoutFormula from './layoutFormula'
 
 export function checkForGoalAtCoordinates(width, goals, edges, clickX, clickY) {
     // converts the goals object to an array
-    const goalsAsArray = Object.keys(goals).map(address => goals[address])
-    const coordinates = layoutFormula(width, goalsAsArray, edges)
+    const goalsAddressesArray = Object.keys(goals)
+    const goalsAsArray = goalsAddressesArray.map(address => goals[address])
+    const edgeAddressesArray = Object.keys(edges)
+    const edgesAsArray = edgeAddressesArray.map(address => edges[address])
+
+    const coordinates = layoutFormula(width, goalsAsArray, edgesAsArray)
     // keep track of whether a goal was selected
     let clickedAddress
     goalsAsArray.forEach(goal => {

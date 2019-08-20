@@ -41,12 +41,16 @@ function render(store, canvas) {
   const state = store.getState()
 
   // converts the goals object to an array
-  const addressesArray = Object.keys(state.goals)
-  const goalsAsArray = addressesArray.map(address => state.goals[address])
-  const coordinates = layoutFormula(canvas.width, goalsAsArray, state.edges)
+  const goalAddressesArray = Object.keys(state.goals)
+  const goalsAsArray = goalAddressesArray.map(address => state.goals[address])
+
+  const edgeAddressesArray = Object.keys(state.edges)
+  const edgesAsArray = edgeAddressesArray.map(address => state.edges[address])
+
+  const coordinates = layoutFormula(canvas.width, goalsAsArray, edgesAsArray)
 
   // render each edge to the canvas, basing it off the rendering coordinates of the parent and child nodes
-  state.edges.forEach(function(edge) {
+  edgesAsArray.forEach(function (edge) {
     const childCoords = coordinates[edge.child_address]
     const parentCoords = coordinates[edge.parent_address]
     if (childCoords && parentCoords) drawEdge(childCoords, parentCoords, ctx)

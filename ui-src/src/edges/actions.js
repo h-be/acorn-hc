@@ -16,8 +16,10 @@ import {
 
 const createEdge = createHolochainZomeCallAsyncAction(DEVELOPMENT_INSTANCE_NAME, ZOME_NAME, 'create_edge')
 const fetchEdges = createHolochainZomeCallAsyncAction(DEVELOPMENT_INSTANCE_NAME, ZOME_NAME, 'fetch_edges')
+const archiveEdge = createHolochainZomeCallAsyncAction(DEVELOPMENT_INSTANCE_NAME, ZOME_NAME, 'archive_edge')
 
 export {
   createEdge,
-  fetchEdges
+  fetchEdges,
+  archiveEdge
 }

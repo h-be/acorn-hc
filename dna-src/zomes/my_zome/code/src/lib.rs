@@ -59,7 +59,7 @@ pub struct Goal {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GetResponse<T> {
-    pub goal: T,
+    pub entry: T,
     pub address: Address
 }
 
@@ -67,7 +67,7 @@ impl<T: Into<JsonString> + Debug + Serialize> From<GetResponse<T>> for JsonStrin
     fn from(u: GetResponse<T>) -> JsonString {
         default_to_json(u)
     }
-} 
+}
 
 #[zome]
 mod my_zome {
@@ -176,12 +176,11 @@ mod my_zome {
         hdk::link_entries(&anchor_address, &app_entry.address(),  "anchor->goal", "")?;
 
         // format the response as a GetResponse
-        Ok(GetResponse{goal, address: app_entry.address()})
+        Ok(GetResponse{entry: goal, address: app_entry.address()})
     }
 
     #[zome_fn("hc_public")]
-    fn create_edge(edge: Edge) -> ZomeApiResult<Edge> {
-
+    fn create_edge(edge: Edge) -> ZomeApiResult<GetResponse<Edge>> {
         let app_entry = Entry::App("edge".into(), edge.clone().into());
         let _ = hdk::commit_entry(&app_entry)?;
 
@@ -193,7 +192,7 @@ mod my_zome {
 
         hdk::link_entries(&anchor_address, &app_entry.address(),  "anchor->edge", "")?;
 
-        Ok(edge)
+        Ok(GetResponse{entry: edge, address: app_entry.address()})
     }
 
     #[zome_fn("hc_public")]
@@ -219,13 +218,13 @@ mod my_zome {
                     goal.clone().into(),
                 ).address();
                 // return a response structs with the goal and its address
-                GetResponse{goal, address}
+                GetResponse{entry: goal, address}
             }).collect()
         )
     }
 
-        #[zome_fn("hc_public")]
-    fn fetch_edges() -> ZomeApiResult<Vec<Edge>> {
+    #[zome_fn("hc_public")]
+    fn fetch_edges() -> ZomeApiResult<Vec<GetResponse<Edge>>> {
         // set up the anchor entry and compute its hash
         let anchor_address = Entry::App(
             "anchor".into(), // app entry type
@@ -239,7 +238,30 @@ mod my_zome {
                 LinkMatch::Exactly("anchor->edge"), // the link type to match
                 LinkMatch::Any,
             )?
+            .into_iter().map(|edge: Edge| {
+                // re-create the goal entry to find its address
+                let address = Entry::App(
+                    "edge".into(),
+                    edge.clone().into(),
+                ).address();
+                // return a response structs with the edge and its address
+                GetResponse{entry: edge, address}
+            }).collect()
         )
+    }
+
+    #[zome_fn("hc_public")]
+    fn archive_goal(address: Address) -> ZomeApiResult<Address> {
+        // add the removeEntry
+        hdk::remove_entry(&address)?;
+        Ok(address)
+    }
+
+    #[zome_fn("hc_public")]
+    fn archive_edge(address: Address) -> ZomeApiResult<Address> {
+        // add the removeEntry
+        hdk::remove_entry(&address)?;
+        Ok(address)
     }
 
 }
