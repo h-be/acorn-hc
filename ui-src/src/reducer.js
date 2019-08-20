@@ -12,6 +12,7 @@ import goals from './goals/reducer'
 import edges from './edges/reducer'
 import goalCreation from './goal-creation/reducer'
 import selection from './selection/reducer'
+import hover from './hover/reducer'
 // import anotherone from './another/path'
 
 // combine reducers from each feature to create the top-level reducer
@@ -20,7 +21,8 @@ export default combineReducers({
   edges, // edges: edges,
   ui: combineReducers({
     goalCreation,
-    selection
+    selection,
+    hover
   }) // ,
   // anotherone: anotherone
 })
