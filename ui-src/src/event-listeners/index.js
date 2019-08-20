@@ -51,6 +51,9 @@ export default function setupEventListeners(store, canvas) {
           })
           // deselect all so we aren't left with a removed goal selected
           store.dispatch(unselectAll())
+          // if on firefox, and matched this case
+          // prevent the browser from navigating back to the last page
+          event.preventDefault()
         }
       default:
         // console.log(event)
