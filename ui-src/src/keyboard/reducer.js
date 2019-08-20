@@ -6,41 +6,39 @@
 */
 
 import {
-  OPEN_GOAL_CREATOR,
-  CLOSE_GOAL_CREATOR,
-  UPDATE_CONTENT
+  SET_G_KEYDOWN,
+  UNSET_G_KEYDOWN,
+  SET_SHIFT_KEYDOWN,
+  UNSET_SHIFT_KEYDOWN
 } from './actions'
 
 const defaultState = {
-  parentAddress: null,
-  content: '',
-  isOpen: false,
-  xLoc: 2,
-  yLoc: 2
+  shiftKeyDown: false,
+  gKeyDown: false
 }
 
 export default function(state = defaultState, action) {
-  const { payload, type } = action
+  const { type } = action
   switch (type) {
-    case UPDATE_CONTENT:
+    case SET_G_KEYDOWN:
       return {
         ...state,
-        content: payload
+        gKeyDown: true
       }
-    case OPEN_GOAL_CREATOR:
+    case UNSET_G_KEYDOWN:
       return {
         ...state,
-        isOpen: true,
-        xLoc: payload.x,
-        yLoc: payload.y,
-        parentAddress: payload.parentAddress
+        gKeyDown: false
       }
-    case CLOSE_GOAL_CREATOR:
+    case SET_SHIFT_KEYDOWN:
       return {
         ...state,
-        isOpen: false,
-        content: '',
-        parentAddress: null
+        shiftKeyDown: true
+      }
+    case UNSET_SHIFT_KEYDOWN:
+      return {
+        ...state,
+        shiftKeyDown: false
       }
     default:
       return state

@@ -12,6 +12,10 @@ import {
 import {
   setGKeyDown,
   unsetGKeyDown,
+  setShiftKeyDown,
+  unsetShiftKeyDown
+} from '../keyboard/actions'
+import {
   openGoalCreator,
   closeGoalCreator
 } from '../goal-creation/actions'
@@ -27,6 +31,10 @@ export default function setupEventListeners(store, canvas) {
     switch (event.code) {
       case 'KeyG':
         store.dispatch(setGKeyDown())
+        break
+      case 'ShiftLeft':
+      case 'ShiftRight':
+        store.dispatch(setShiftKeyDown())
         break
       case 'Escape':
         store.dispatch(closeGoalCreator())
@@ -68,6 +76,10 @@ export default function setupEventListeners(store, canvas) {
       case 'KeyG':
         store.dispatch(unsetGKeyDown())
         break
+      case 'ShiftLeft':
+      case 'ShiftRight':
+        store.dispatch(unsetShiftKeyDown())
+        break
       default:
         // console.log(event)
         break
@@ -96,7 +108,7 @@ export default function setupEventListeners(store, canvas) {
     }
     // opening the GoalForm is dependent on
     // holding down the `g` keyboard key modifier
-    else if (store.getState().ui.goalCreation.gKeyDown) {
+    else if (store.getState().ui.keyboard.gKeyDown) {
       let parentAddress
       if (store.getState().ui.selection.selectedGoals.length) {
         // use first
