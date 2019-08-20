@@ -17,6 +17,9 @@ import {
 import {
   archiveGoal
 } from '../goals/actions'
+import {
+  archiveEdge
+} from '../edges/actions'
 
 export default function setupEventListeners(store, canvas) {
   document.body.addEventListener('keydown', event => {
@@ -30,12 +33,22 @@ export default function setupEventListeners(store, canvas) {
         break
       case 'Backspace':
         // archives one goal for now FIXME: should be able to archive many goals
-        let ui = store.getState().ui
+        let state = store.getState()
+        let selection = state.ui.selection
         // only dispatch if something's selected the createGoal window is
         // not open
-        if (ui.selection.selectedGoals.length > 0 && !ui.goalCreation.isOpen) {
-          let firstOfSelection = ui.selection.selectedGoals[0]
+        if (selection.selectedGoals.length > 0 && !state.ui.goalCreation.isOpen) {
+          // remove goal
+          let firstOfSelection = selection.selectedGoals[0]
           store.dispatch(archiveGoal.create({ address: firstOfSelection }))
+          // remove all edges connecting to or from the removed goal
+          const edgeAddressesArray = Object.keys(state.edges)
+          const edgesAsArray = edgeAddressesArray.map(address => state.edges[address])
+          edgesAsArray.forEach(({ parent_address, child_address, address }) => {
+            if (firstOfSelection === parent_address  || firstOfSelection === child_address) {
+              store.dispatch(archiveEdge.create({ address }))
+            }
+          })
           // deselect all so we aren't left with a removed goal selected
           store.dispatch(unselectAll())
         }
@@ -84,10 +97,14 @@ export default function setupEventListeners(store, canvas) {
 
       // pull the current state from the store
       const state = store.getState()
+      // TODO: I think some of the following things should be refactored into layoutFormula –Will
       // converts the goals object to an array
-      const addressesArray = Object.keys(state.goals)
-      const goalsAsArray = addressesArray.map(address => state.goals[address])
-      const coordinates = layoutFormula(canvas.width, goalsAsArray, state.edges)
+      const goalAddressesArray = Object.keys(state.goals)
+      const goalsAsArray = goalAddressesArray.map(address => state.goals[address])
+
+      const edgeAddressesArray = Object.keys(state.edges)
+      const edgesAsArray = edgeAddressesArray.map(address => state.edges[address])
+      const coordinates = layoutFormula(canvas.width, goalsAsArray, edgesAsArray)
       // keep track of whether a goal was selected
       let selected = false
       coordinates.forEach(({ x, y }, index) => {
@@ -95,7 +112,7 @@ export default function setupEventListeners(store, canvas) {
         const bottom = y + goalHeight
         // if click occurred within the box of a Goal
         if (clickX >= x && clickX <= right && clickY >= y && clickY <= bottom) {
-          const clickedAddress = addressesArray[index]
+          const clickedAddress = goalAddressesArray[index]
           store.dispatch(selectGoal(clickedAddress))
           selected = true
         }
