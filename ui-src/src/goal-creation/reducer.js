@@ -8,15 +8,12 @@
 import {
   OPEN_GOAL_CREATOR,
   CLOSE_GOAL_CREATOR,
-  SET_G_KEYDOWN,
-  UNSET_G_KEYDOWN,
   UPDATE_CONTENT
 } from './actions'
 
 const defaultState = {
   parentAddress: null,
   content: '',
-  gKeyDown: false,
   isOpen: false,
   xLoc: 2,
   yLoc: 2
@@ -44,16 +41,6 @@ export default function(state = defaultState, action) {
         isOpen: false,
         content: '',
         parentAddress: null
-      }
-    case SET_G_KEYDOWN:
-      return {
-        ...state,
-        gKeyDown: true
-      }
-    case UNSET_G_KEYDOWN:
-      return {
-        ...state,
-        gKeyDown: false
       }
     default:
       return state

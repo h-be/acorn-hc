@@ -10,12 +10,12 @@ import {
   unhoverGoal
 } from '../hover/actions'
 import {
+  setGKeyDown,
+  unsetGKeyDown,
   setShiftKeyDown,
   unsetShiftKeyDown
 } from '../keyboard/actions'
 import {
-  setGKeyDown,
-  unsetGKeyDown,
   openGoalCreator,
   closeGoalCreator
 } from '../goal-creation/actions'
@@ -108,7 +108,7 @@ export default function setupEventListeners(store, canvas) {
     }
     // opening the GoalForm is dependent on
     // holding down the `g` keyboard key modifier
-    else if (store.getState().ui.goalCreation.gKeyDown) {
+    else if (store.getState().ui.keyboard.gKeyDown) {
       let parentAddress
       if (store.getState().ui.selection.selectedGoals.length) {
         // use first
