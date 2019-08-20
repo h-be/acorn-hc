@@ -29,7 +29,7 @@ function roundRect(ctx, x, y, w, h, radius, color, stroke, strokeWidth) {
   else ctx.fill()
 }
 
-export default function render(goal, { x, y }, isSelected, ctx) {
+export default function render(goal, { x, y }, isSelected, isHovered, ctx) {
   // set up border color
   // TODO: refactor these colors to central location specifically for styles/theming
   let borderColor = '#FF5D36'
@@ -40,6 +40,9 @@ export default function render(goal, { x, y }, isSelected, ctx) {
   }
   const selectedColor = '#5F65FF'
   let backgroundColor = '#FFFFFF'
+  if (isHovered) {
+    backgroundColor = '#E8E8E8'
+  }
 
   const halfBorder = borderWidth / 2 // for use with 'stroke' of the border
   const twiceBorder = borderWidth * 2
