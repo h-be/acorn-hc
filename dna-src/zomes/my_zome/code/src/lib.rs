@@ -59,7 +59,7 @@ pub struct Goal {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GetResponse<T> {
-    pub goal: T,
+    pub entry: T,
     pub address: Address
 }
 
@@ -176,7 +176,7 @@ mod my_zome {
         hdk::link_entries(&anchor_address, &app_entry.address(),  "anchor->goal", "")?;
 
         // format the response as a GetResponse
-        Ok(GetResponse{goal, address: app_entry.address()})
+        Ok(GetResponse{entry: goal, address: app_entry.address()})
     }
 
     #[zome_fn("hc_public")]
@@ -219,7 +219,7 @@ mod my_zome {
                     goal.clone().into(),
                 ).address();
                 // return a response structs with the goal and its address
-                GetResponse{goal, address}
+                GetResponse{entry: goal, address}
             }).collect()
         )
     }
