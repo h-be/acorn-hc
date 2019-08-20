@@ -15,17 +15,47 @@ import {
   openGoalCreator,
   closeGoalCreator
 } from '../goal-creation/actions'
+import {
+  archiveGoal
+} from '../goals/actions'
+import {
+  archiveEdge
+} from '../edges/actions'
 
 export default function setupEventListeners(store, canvas) {
   document.body.addEventListener('keydown', event => {
     switch (event.code) {
-      case "KeyG":
+      case 'KeyG':
         store.dispatch(setGKeyDown())
         break
-      case "Escape":
+      case 'Escape':
         store.dispatch(closeGoalCreator())
         store.dispatch(unselectAll())
         break
+      case 'Backspace':
+        // archives one goal for now FIXME: should be able to archive many goals
+        let state = store.getState()
+        let selection = state.ui.selection
+        // only dispatch if something's selected and the createGoal window is
+        // not open
+        if (selection.selectedGoals.length > 0 && !state.ui.goalCreation.isOpen) {
+          // remove goal
+          let firstOfSelection = selection.selectedGoals[0]
+          store.dispatch(archiveGoal.create({ address: firstOfSelection }))
+          // remove all edges connecting to or from the removed goal
+          const edgeAddressesArray = Object.keys(state.edges)
+          const edgesAsArray = edgeAddressesArray.map(address => state.edges[address])
+          edgesAsArray.forEach(({ parent_address, child_address, address }) => {
+            if (firstOfSelection === parent_address  || firstOfSelection === child_address) {
+              store.dispatch(archiveEdge.create({ address }))
+            }
+          })
+          // deselect all so we aren't left with a removed goal selected
+          store.dispatch(unselectAll())
+          // if on firefox, and matched this case
+          // prevent the browser from navigating back to the last page
+          event.preventDefault()
+        }
       default:
         // console.log(event)
         break
@@ -35,7 +65,7 @@ export default function setupEventListeners(store, canvas) {
 
   document.body.addEventListener('keyup', event => {
     switch (event.code) {
-      case "KeyG":
+      case 'KeyG':
         store.dispatch(unsetGKeyDown())
         break
       default:

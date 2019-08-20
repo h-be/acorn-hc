@@ -16,8 +16,10 @@ import {
 
 const createGoal = createHolochainZomeCallAsyncAction(DEVELOPMENT_INSTANCE_NAME, ZOME_NAME, 'create_goal')
 const fetchGoals = createHolochainZomeCallAsyncAction(DEVELOPMENT_INSTANCE_NAME, ZOME_NAME, 'fetch_goals')
+const archiveGoal = createHolochainZomeCallAsyncAction(DEVELOPMENT_INSTANCE_NAME, ZOME_NAME, 'archive_goal')
 
 export {
   createGoal,
-  fetchGoals
+  fetchGoals,
+  archiveGoal
 }
