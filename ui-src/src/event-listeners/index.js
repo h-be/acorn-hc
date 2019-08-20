@@ -35,7 +35,7 @@ export default function setupEventListeners(store, canvas) {
         // archives one goal for now FIXME: should be able to archive many goals
         let state = store.getState()
         let selection = state.ui.selection
-        // only dispatch if something's selected the createGoal window is
+        // only dispatch if something's selected and the createGoal window is
         // not open
         if (selection.selectedGoals.length > 0 && !state.ui.goalCreation.isOpen) {
           // remove goal
