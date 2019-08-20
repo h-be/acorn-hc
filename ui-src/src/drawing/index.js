@@ -9,6 +9,7 @@
 import layoutFormula from './layoutFormula'
 import drawGoalCard from './drawGoalCard'
 import drawEdge from './drawEdge'
+import drawOverlay from './drawOverlay'
 
 function setupCanvas(canvas) {
   // Get the device pixel ratio, falling back to 1.
@@ -46,17 +47,14 @@ function render(store, canvas) {
 
   // render each edge to the canvas, basing it off the rendering coordinates of the parent and child nodes
   state.edges.forEach(function(edge) {
-    const childIndex = addressesArray.indexOf(edge.child_address)
-    const parentIndex = addressesArray.indexOf(edge.parent_address)
-    const childCoords = coordinates[childIndex]
-    const parentCoords = coordinates[parentIndex]
+    const childCoords = coordinates[edge.child_address]
+    const parentCoords = coordinates[edge.parent_address]
     if (childCoords && parentCoords) drawEdge(childCoords, parentCoords, ctx)
   })
 
   if (state.ui.goalCreation.isOpen) {
     if (state.ui.goalCreation.parentAddress) {
-      const parentIndex = addressesArray.indexOf(state.ui.goalCreation.parentAddress)
-      const parentCoords = coordinates[parentIndex]
+      const parentCoords = coordinates[state.ui.goalCreation.parentAddress]
       const newGoalCoords = {
         x: state.ui.goalCreation.xLoc,
         y: state.ui.goalCreation.yLoc
@@ -65,13 +63,32 @@ function render(store, canvas) {
     }
   }
 
-  // render each goal to the canvas
-  goalsAsArray.forEach(function(goal, index) {
+  // create layers behind and in front of the editing highlight overlay
+  const unselectedGoals = goalsAsArray.filter(goal => state.ui.selection.selectedGoals.indexOf(goal.address) === -1)
+  const selectedGoals = goalsAsArray.filter(goal => state.ui.selection.selectedGoals.indexOf(goal.address) > -1)
+
+  // render each unselected goal to the canvas
+  unselectedGoals.forEach(goal => {
     // use the set of coordinates at the same index
     // in the coordinates array
-    const isSelected = state.ui.selection.selectedGoals.indexOf(goal.address) > -1
     const isHovered = state.ui.hover.hoveredGoal === goal.address
-    drawGoalCard(goal, coordinates[index], isSelected, isHovered, ctx)
+    const isSelected = false
+    drawGoalCard(goal, coordinates[goal.address], isSelected, isHovered, ctx)
+  })
+
+  // draw the editing highlight overlay
+  /* if shift key not held down and there are more than 1 Goals selected */
+  if (state.ui.selection.selectedGoals.length > 1 && !state.ui.keyboard.shiftKeyDown) {
+    drawOverlay(ctx, canvas.width, canvas.height)
+  }
+
+  // render each selected goal to the canvas
+  selectedGoals.forEach(goal => {
+    // use the set of coordinates at the same index
+    // in the coordinates array
+    const isHovered = state.ui.hover.hoveredGoal === goal.address
+    const isSelected = true
+    drawGoalCard(goal, coordinates[goal.address], isSelected, isHovered, ctx)
   })
 }
 

@@ -10,6 +10,10 @@ import {
   unhoverGoal
 } from '../hover/actions'
 import {
+  setShiftKeyDown,
+  unsetShiftKeyDown
+} from '../keyboard/actions'
+import {
   setGKeyDown,
   unsetGKeyDown,
   openGoalCreator,
@@ -21,6 +25,10 @@ export default function setupEventListeners(store, canvas) {
     switch (event.code) {
       case "KeyG":
         store.dispatch(setGKeyDown())
+        break
+      case "ShiftLeft":
+      case "ShiftRight":
+        store.dispatch(setShiftKeyDown())
         break
       case "Escape":
         store.dispatch(closeGoalCreator())
@@ -37,6 +45,10 @@ export default function setupEventListeners(store, canvas) {
     switch (event.code) {
       case "KeyG":
         store.dispatch(unsetGKeyDown())
+        break
+      case "ShiftLeft":
+      case "ShiftRight":
+        store.dispatch(unsetShiftKeyDown())
         break
       default:
         // console.log(event)

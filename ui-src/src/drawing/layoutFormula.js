@@ -49,14 +49,17 @@ function mapHierarchyToPosition({ goal, hierarchy }, withHierarchies, screenWidt
   const horizontalHalfScreen = screenWidth / RETINA_HACK_HALFSCREEN
   const halfGoalWidth = goalWidth / 2
   const totalWidth = goalWidth + horizontalSpacing
-  const x = horizontalHalfScreen + (indexInTier * totalWidth) - ((sameTier.length - 1) * totalWidth)/2 - halfGoalWidth
+  const x = horizontalHalfScreen + (indexInTier * totalWidth) - ((sameTier.length - 1) * totalWidth) / 2 - halfGoalWidth
 
   // default position is a function of the hierarchical status of the goal
   const y = verticalOffset + hierarchy * (goalHeight + verticalSpacing)
 
   return {
-    x,
-    y
+    address: goal.address,
+    coordinate: {
+      x,
+      y
+    }
   }
 }
 
@@ -65,5 +68,10 @@ export default function layoutFormula(screenWidth, goals, edges) {
   const withHierarchies = goals.map(g => mapGoalToHierarchy(g, edges))
 
   // use positions in the hierarchy to determine coordinates
-  return withHierarchies.map(wH => mapHierarchyToPosition(wH, withHierarchies, screenWidth))
+  const coordinates = {}
+  withHierarchies.forEach(wH => {
+    const { address, coordinate } = mapHierarchyToPosition(wH, withHierarchies, screenWidth)
+    coordinates[address] = coordinate
+  })
+  return coordinates
 }
