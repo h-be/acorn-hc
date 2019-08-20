@@ -17,7 +17,7 @@ export default function(state = defaultState, action) {
       return {
         ...state,
         [payload.address]: {
-          ...payload.goal,
+          ...payload.entry,
           address: payload.address
         }
       }
@@ -25,7 +25,7 @@ export default function(state = defaultState, action) {
       // payload is [ { goal: { key: val }, address: 'asdfy' }, ... ]
       const mapped = payload.map(r => {
         return {
-          ...r.goal,
+          ...r.entry,
           address: r.address
         }
       })
