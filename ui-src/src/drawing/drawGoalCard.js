@@ -34,6 +34,29 @@ function roundRect(ctx, x, y, w, h, radius, color, stroke, strokeWidth) {
   else ctx.fill()
 }
 
+// line wrapping code from https://stackoverflow.com/questions/2936112/
+function getLines(ctx, text, maxWidth) {
+  var words = text.split(' ')
+  var lines = []
+  var currentLine = words[0]
+
+  for (var i = 1; i < words.length; i++) {
+    var word = words[i]
+    var width = ctx.measureText(currentLine + ' ' + word).width
+    if (width < maxWidth) {
+      currentLine += ' ' + word
+    } else {
+      lines.push(currentLine)
+      currentLine = word
+    }
+  }
+  lines.push(currentLine)
+  return lines
+}
+function getLinesForParagraphs(ctx, textWithParagraphs, maxWidth) {
+  return textWithParagraphs.split("\n").map(para => getLines(ctx, para, maxWidth)).reduce((a, b) => a.concat(b)) }
+
+// render a goal card
 export default function render(goal, { x, y }, isSelected, isHovered, ctx) {
   // set up border color
   // TODO: refactor these colors to central location specifically for styles/theming
@@ -63,8 +86,21 @@ export default function render(goal, { x, y }, isSelected, isHovered, ctx) {
 
   // render text
   let goalText = goal.content
+  let lines = getLinesForParagraphs(ctx, goalText, textBoxWidth)
+  console.log(lines)
+  console.log(goalText);
+  console.log(ctx.measureText(lines));
+
   ctx.fillStyle = '#4D4D4D'
   ctx.font = fontSize + ' ' + fontFamily
   ctx.textBaseline = 'top'
-  ctx.fillText(goalText, x + textBoxMarginLeft, y + textBoxMarginTop)
+
+  let fontSizeInt = Number(fontSize.slice(0, -2)) // slice off px from font size to get font height as number
+  let lineSpacing = fontSizeInt / 5
+  let textBoxLeft = x + textBoxMarginLeft
+  let textBoxTop = y + textBoxMarginTop
+  lines.forEach((line, index) => {
+    let linePosition = index * (fontSizeInt + lineSpacing)
+    ctx.fillText(line, textBoxLeft, textBoxTop + linePosition )
+  })
 }
