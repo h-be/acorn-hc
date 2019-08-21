@@ -2,7 +2,12 @@ import {
   goalWidth,
   goalHeight,
   cornerRadius,
-  borderWidth
+  borderWidth,
+  textBoxMarginLeft,
+  textBoxMarginTop,
+  textBoxWidth,
+  fontSize,
+  fontFamily
 } from './dimensions'
 
 function roundRect(ctx, x, y, w, h, radius, color, stroke, strokeWidth) {
@@ -29,6 +34,29 @@ function roundRect(ctx, x, y, w, h, radius, color, stroke, strokeWidth) {
   else ctx.fill()
 }
 
+// line wrapping code from https://stackoverflow.com/questions/2936112/
+function getLines(ctx, text, maxWidth) {
+  const words = text.split(' ')
+  let lines = []
+  let currentLine = words[0]
+
+  for (let i = 1; i < words.length; i++) {
+    let word = words[i]
+    let width = ctx.measureText(currentLine + ' ' + word).width
+    if (width < maxWidth) {
+      currentLine += ' ' + word
+    } else {
+      lines.push(currentLine)
+      currentLine = word
+    }
+  }
+  lines.push(currentLine)
+  return lines
+}
+function getLinesForParagraphs(ctx, textWithParagraphs, maxWidth) {
+  return textWithParagraphs.split("\n").map(para => getLines(ctx, para, maxWidth)).reduce((a, b) => a.concat(b)) }
+
+// render a goal card
 export default function render(goal, { x, y }, isSelected, isHovered, ctx) {
   // set up border color
   // TODO: refactor these colors to central location specifically for styles/theming
@@ -58,8 +86,21 @@ export default function render(goal, { x, y }, isSelected, isHovered, ctx) {
 
   // render text
   let goalText = goal.content
+
   ctx.fillStyle = '#4D4D4D'
-  ctx.font = '20px Helvetica'
+  ctx.font = fontSize + ' ' + fontFamily
   ctx.textBaseline = 'top'
-  ctx.fillText(goalText, x + 29, y + 27)
+
+  // get lines after font and font size are set up, since ctx.measureText()
+  // takes font and font size into account
+  let lines = getLinesForParagraphs(ctx, goalText, textBoxWidth)
+
+  let fontSizeInt = Number(fontSize.slice(0, -2)) // slice off px from font size to get font height as number
+  let lineSpacing = fontSizeInt / 5
+  let textBoxLeft = x + textBoxMarginLeft
+  let textBoxTop = y + textBoxMarginTop
+  lines.forEach((line, index) => {
+    let linePosition = index * (fontSizeInt + lineSpacing)
+    ctx.fillText(line, textBoxLeft, textBoxTop + linePosition )
+  })
 }
