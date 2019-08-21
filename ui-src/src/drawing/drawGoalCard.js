@@ -2,7 +2,12 @@ import {
   goalWidth,
   goalHeight,
   cornerRadius,
-  borderWidth
+  borderWidth,
+  textBoxMarginLeft,
+  textBoxMarginTop,
+  textBoxWidth,
+  fontSize,
+  fontFamily
 } from './dimensions'
 
 function roundRect(ctx, x, y, w, h, radius, color, stroke, strokeWidth) {
@@ -59,7 +64,7 @@ export default function render(goal, { x, y }, isSelected, isHovered, ctx) {
   // render text
   let goalText = goal.content
   ctx.fillStyle = '#4D4D4D'
-  ctx.font = '20px Helvetica'
+  ctx.font = fontSize + ' ' + fontFamily
   ctx.textBaseline = 'top'
-  ctx.fillText(goalText, x + 29, y + 27)
+  ctx.fillText(goalText, x + textBoxMarginLeft, y + textBoxMarginTop)
 }
