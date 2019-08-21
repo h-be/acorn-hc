@@ -34,20 +34,19 @@ function render(store, canvas) {
   // Get the 2 dimensional drawing context of the canvas (there is also 3 dimensional, e.g.)
   const ctx = setupCanvas(canvas)
 
-  // clear the entirety of the canvas
-  ctx.clearRect(0, 0, canvas.width, canvas.height)
-
   // pull the current state from the store
   const state = store.getState()
 
+  // clear the entirety of the canvas
+  ctx.clearRect(0, 0, state.ui.screensize.width, state.ui.screensize.height)
+
+
   // converts the goals object to an array
-  const goalAddressesArray = Object.keys(state.goals)
-  const goalsAsArray = goalAddressesArray.map(address => state.goals[address])
+  const goalsAsArray = Object.keys(state.goals).map(address => state.goals[address])
+  // convert the edges object to an array
+  const edgesAsArray = Object.keys(state.edges).map(address => state.edges[address])
 
-  const edgeAddressesArray = Object.keys(state.edges)
-  const edgesAsArray = edgeAddressesArray.map(address => state.edges[address])
-
-  const coordinates = layoutFormula(canvas.width, goalsAsArray, edgesAsArray)
+  const coordinates = layoutFormula(state.ui.screensize.width, state.goals, state.edges)
 
   // render each edge to the canvas, basing it off the rendering coordinates of the parent and child nodes
   edgesAsArray.forEach(function (edge) {
@@ -56,12 +55,12 @@ function render(store, canvas) {
     if (childCoords && parentCoords) drawEdge(childCoords, parentCoords, ctx)
   })
 
-  if (state.ui.goalCreation.isOpen) {
-    if (state.ui.goalCreation.parentAddress) {
-      const parentCoords = coordinates[state.ui.goalCreation.parentAddress]
+  if (state.ui.goalForm.isOpen) {
+    if (state.ui.goalForm.parentAddress) {
+      const parentCoords = coordinates[state.ui.goalForm.parentAddress]
       const newGoalCoords = {
-        x: state.ui.goalCreation.xLoc,
-        y: state.ui.goalCreation.yLoc
+        x: state.ui.goalForm.xLoc,
+        y: state.ui.goalForm.yLoc
       }
       drawEdge(newGoalCoords, parentCoords, ctx)
     }
@@ -82,8 +81,8 @@ function render(store, canvas) {
 
   // draw the editing highlight overlay
   /* if shift key not held down and there are more than 1 Goals selected */
-  if (state.ui.selection.selectedGoals.length > 1 && !state.ui.keyboard.shiftKeyDown) {
-    drawOverlay(ctx, canvas.width, canvas.height)
+  if (state.ui.goalForm.editAddress || (state.ui.selection.selectedGoals.length > 1 && !state.ui.keyboard.shiftKeyDown)) {
+    drawOverlay(ctx, state.ui.screensize.width, state.ui.screensize.height)
   }
 
   // render each selected goal to the canvas

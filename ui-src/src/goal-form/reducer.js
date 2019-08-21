@@ -6,17 +6,18 @@
 */
 
 import {
-  OPEN_GOAL_CREATOR,
-  CLOSE_GOAL_CREATOR,
+  OPEN_GOAL_FORM,
+  CLOSE_GOAL_FORM,
   UPDATE_CONTENT
 } from './actions'
 
 const defaultState = {
+  editAddress: null,
   parentAddress: null,
   content: '',
   isOpen: false,
-  xLoc: 2,
-  yLoc: 2
+  xLoc: 0,
+  yLoc: 0
 }
 
 export default function(state = defaultState, action) {
@@ -27,20 +28,22 @@ export default function(state = defaultState, action) {
         ...state,
         content: payload
       }
-    case OPEN_GOAL_CREATOR:
+    case OPEN_GOAL_FORM:
       return {
         ...state,
         isOpen: true,
         xLoc: payload.x,
         yLoc: payload.y,
-        parentAddress: payload.parentAddress
+        parentAddress: payload.parentAddress,
+        editAddress: payload.editAddress
       }
-    case CLOSE_GOAL_CREATOR:
+    case CLOSE_GOAL_FORM:
       return {
         ...state,
         isOpen: false,
         content: '',
-        parentAddress: null
+        parentAddress: null,
+        editAddress: null
       }
     default:
       return state

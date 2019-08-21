@@ -64,8 +64,14 @@ function mapHierarchyToPosition({ goal, hierarchy }, withHierarchies, screenWidt
 }
 
 export default function layoutFormula(screenWidth, goals, edges) {
+  // convert objects to arrays for iterating
+  const goalsAddressesArray = Object.keys(goals)
+  const goalsAsArray = goalsAddressesArray.map(address => goals[address])
+  const edgeAddressesArray = Object.keys(edges)
+  const edgesAsArray = edgeAddressesArray.map(address => edges[address])
+
   // assign hierarchical statuses to things
-  const withHierarchies = goals.map(g => mapGoalToHierarchy(g, edges))
+  const withHierarchies = goalsAsArray.map(g => mapGoalToHierarchy(g, edgesAsArray))
 
   // use positions in the hierarchy to determine coordinates
   const coordinates = {}

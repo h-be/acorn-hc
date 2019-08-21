@@ -180,6 +180,17 @@ mod my_zome {
     }
 
     #[zome_fn("hc_public")]
+    fn update_goal(goal: Goal, address: Address) -> ZomeApiResult<GetResponse<Goal>> {
+        let app_entry = Entry::App("goal".into(), goal.clone().into());
+        let _ = hdk::update_entry(app_entry, &address)?;
+
+        // format the response as a GetResponse
+        // pass the OLD address back
+        // and allow the UI to continue to use it
+        Ok(GetResponse{entry: goal, address})
+    }
+
+    #[zome_fn("hc_public")]
     fn create_edge(edge: Edge) -> ZomeApiResult<GetResponse<Edge>> {
         let app_entry = Entry::App("edge".into(), edge.clone().into());
         let _ = hdk::commit_entry(&app_entry)?;

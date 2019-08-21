@@ -6,14 +6,15 @@
 */
 import _ from 'lodash'
 
-import { createGoal, fetchGoals, archiveGoal } from './actions'
+import { createGoal, fetchGoals, archiveGoal, updateGoal } from './actions'
 
 const defaultState = {}
 
-export default function(state = defaultState, action) {
+export default function (state = defaultState, action) {
   const { payload, type } = action
   switch (type) {
     case createGoal.success().type:
+    case updateGoal.success().type:
       return {
         ...state,
         [payload.address]: {
@@ -40,7 +41,7 @@ export default function(state = defaultState, action) {
     case archiveGoal.success().type:
       // return the state without any goals whose address matches
       // the one we're deleting
-      return  _.pickBy(state, (value, key) => key !== payload )
+      return _.pickBy(state, (value, key) => key !== payload)
     default:
       return state
   }

@@ -10,10 +10,11 @@ import { combineReducers } from 'redux'
 
 import goals from './goals/reducer'
 import edges from './edges/reducer'
-import goalCreation from './goal-creation/reducer'
+import goalForm from './goal-form/reducer'
 import selection from './selection/reducer'
 import hover from './hover/reducer'
 import keyboard from './keyboard/reducer'
+import screensize from './screensize/reducer'
 // import anotherone from './another/path'
 
 // combine reducers from each feature to create the top-level reducer
@@ -21,10 +22,11 @@ export default combineReducers({
   goals, // goals: goals,
   edges, // edges: edges,
   ui: combineReducers({
-    goalCreation,
+    goalForm,
     selection,
     hover,
-    keyboard
+    keyboard,
+    screensize
   }) // ,
   // anotherone: anotherone
 })

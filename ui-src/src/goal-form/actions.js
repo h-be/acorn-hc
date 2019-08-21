@@ -6,17 +6,18 @@
 */
 
 /* constants */
-const OPEN_GOAL_CREATOR = 'OPEN_GOAL_CREATOR'
-const CLOSE_GOAL_CREATOR = 'CLOSE_GOAL_CREATOR'
+const OPEN_GOAL_FORM = 'OPEN_GOAL_FORM'
+const CLOSE_GOAL_FORM = 'CLOSE_GOAL_FORM'
 const UPDATE_CONTENT = 'UPDATE_CONTENT'
 
 /* action creator functions */
 
 // parentAddress is optional
-function openGoalCreator(x, y, parentAddress) {
+function openGoalForm(x, y, editAddress, parentAddress) {
    return {
-    type: OPEN_GOAL_CREATOR,
+    type: OPEN_GOAL_FORM,
     payload: {
+      editAddress,
       x,
       y,
       parentAddress
@@ -24,9 +25,9 @@ function openGoalCreator(x, y, parentAddress) {
   }
 }
 
-function closeGoalCreator() {
+function closeGoalForm() {
    return {
-    type: CLOSE_GOAL_CREATOR
+    type: CLOSE_GOAL_FORM
   }
 }
 
@@ -38,10 +39,10 @@ function updateContent(content) {
 }
 
 export {
-  OPEN_GOAL_CREATOR,
-  CLOSE_GOAL_CREATOR,
+  OPEN_GOAL_FORM,
+  CLOSE_GOAL_FORM,
   UPDATE_CONTENT,
-  openGoalCreator,
-  closeGoalCreator,
+  openGoalForm,
+  closeGoalForm,
   updateContent
 }
