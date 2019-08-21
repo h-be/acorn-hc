@@ -10,9 +10,22 @@ import {
   UNSELECT_GOAL,
   UNSELECT_ALL
 } from './actions'
+import {
+ archiveGoal
+} from '../goals/actions'
 
 const defaultState = {
   selectedGoals: []
+}
+
+// removes an item from an array without mutating original array
+function arrayWithoutElement(array, elem) {
+    var newArray = array.slice()
+    var index = newArray.indexOf(elem)
+    if (index > -1) {
+        newArray.splice(index, 1)
+    }
+    return newArray
 }
 
 export default function(state = defaultState, action) {
@@ -35,6 +48,12 @@ export default function(state = defaultState, action) {
         ...state,
         selectedGoals: []
       }
+    case archiveGoal.success().type:
+      // unselect if the archived Goal was selected
+      return state.selectedGoals.includes(payload) ? {
+        ...state,
+        selectedGoals: arrayWithoutElement(state.selectedGoals, payload)
+      } : { ...state }
     default:
       return state
   }
