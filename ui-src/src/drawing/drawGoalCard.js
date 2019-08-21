@@ -36,13 +36,13 @@ function roundRect(ctx, x, y, w, h, radius, color, stroke, strokeWidth) {
 
 // line wrapping code from https://stackoverflow.com/questions/2936112/
 function getLines(ctx, text, maxWidth) {
-  var words = text.split(' ')
-  var lines = []
-  var currentLine = words[0]
+  let words = text.split(' ')
+  let lines = []
+  let currentLine = words[0]
 
-  for (var i = 1; i < words.length; i++) {
-    var word = words[i]
-    var width = ctx.measureText(currentLine + ' ' + word).width
+  for (let i = 1; i < words.length; i++) {
+    let word = words[i]
+    let width = ctx.measureText(currentLine + ' ' + word).width
     if (width < maxWidth) {
       currentLine += ' ' + word
     } else {
