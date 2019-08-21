@@ -20,7 +20,7 @@ const defaultState = {
 
 // removes an item from an array without mutating original array
 function arrayWithoutElement(array, elem) {
-    var newArray = array.slice()
+    const newArray = array.slice()
     var index = newArray.indexOf(elem)
     if (index > -1) {
         newArray.splice(index, 1)
