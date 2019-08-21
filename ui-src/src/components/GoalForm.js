@@ -54,14 +54,14 @@ class GoalForm extends Component {
     if (this.props.editAddress) {
       this.updateGoal()
     } else {
-      this.createGoal()
+      this.createGoal(this.props.parentAddress)
     }
 
     // reset the textarea value to empty
     this.props.updateContent('')
     this.props.closeGoalForm()
   }
-  async createGoal() {
+  async createGoal(parentAddress) {
     // dispatch the action to create a goal
     // with the contents from the form
     // inserted into it
@@ -73,9 +73,9 @@ class GoalForm extends Component {
       certain: false,
       small: false
     })
-    if (this.props.parentAddress) {
+    if (parentAddress) {
       this.props.createEdge({
-        parent_address: this.props.parentAddress,
+        parent_address: parentAddress,
         child_address: response.address
       })
     }
