@@ -16,17 +16,31 @@ import {
   unsetShiftKeyDown
 } from '../keyboard/actions'
 import {
-  openGoalCreator,
-  closeGoalCreator
-} from '../goal-creation/actions'
+  openGoalForm,
+  closeGoalForm
+} from '../goal-form/actions'
 import {
   archiveGoal
 } from '../goals/actions'
 import {
   archiveEdge
 } from '../edges/actions'
+import {
+  setScreenDimensions
+} from '../screensize/actions'
 
 export default function setupEventListeners(store, canvas) {
+
+  window.addEventListener('resize', event => {
+    // Get the device pixel ratio, falling back to 1.
+    const dpr = window.devicePixelRatio || 1
+    // Get the size of the canvas in CSS pixels.
+    const rect = canvas.getBoundingClientRect()
+    // Give the canvas pixel dimensions of their CSS
+    // size * the device pixel ratio.
+    store.dispatch(setScreenDimensions(rect.width * dpr, rect.height * dpr))
+  })
+
   document.body.addEventListener('keydown', event => {
     switch (event.code) {
       case 'KeyG':
@@ -37,7 +51,7 @@ export default function setupEventListeners(store, canvas) {
         store.dispatch(setShiftKeyDown())
         break
       case 'Escape':
-        store.dispatch(closeGoalCreator())
+        store.dispatch(closeGoalForm())
         store.dispatch(unselectAll())
         break
       case 'Backspace':
@@ -46,7 +60,7 @@ export default function setupEventListeners(store, canvas) {
         let selection = state.ui.selection
         // only dispatch if something's selected and the createGoal window is
         // not open
-        if (selection.selectedGoals.length > 0 && !state.ui.goalCreation.isOpen) {
+        if (selection.selectedGoals.length > 0 && !state.ui.goalForm.isOpen) {
           // remove goal
           let firstOfSelection = selection.selectedGoals[0]
           store.dispatch(archiveGoal.create({ address: firstOfSelection }))
@@ -88,7 +102,7 @@ export default function setupEventListeners(store, canvas) {
   // kill performance
   canvas.addEventListener('mousemove', event => {
     const state = store.getState()
-    const goalAddress = checkForGoalAtCoordinates(canvas.width, state.goals, state.edges, event.clientX, event.clientY)
+    const goalAddress = checkForGoalAtCoordinates(state.ui.screensize.width, state.goals, state.edges, event.clientX, event.clientY)
     if (goalAddress && state.ui.hover.hoveredGoal !== goalAddress) {
       store.dispatch(hoverGoal(goalAddress))
     } else if (!goalAddress && state.ui.hover.hoveredGoal) {
@@ -101,8 +115,8 @@ export default function setupEventListeners(store, canvas) {
   canvas.addEventListener('click', event => {
     // if the GoalForm is open, any click on the
     // canvas should close it
-    if (store.getState().ui.goalCreation.isOpen) {
-      store.dispatch(closeGoalCreator())
+    if (store.getState().ui.goalForm.isOpen) {
+      store.dispatch(closeGoalForm())
     }
     // opening the GoalForm is dependent on
     // holding down the `g` keyboard key modifier
@@ -112,13 +126,13 @@ export default function setupEventListeners(store, canvas) {
         // use first
         parentAddress = store.getState().ui.selection.selectedGoals[0]
       }
-      store.dispatch(openGoalCreator(event.clientX, event.clientY, parentAddress))
+      store.dispatch(openGoalForm(event.clientX, event.clientY, null, parentAddress))
     }
     else {
       // check for node in clicked area
       // select it if so
       const state = store.getState()
-      const clickedAddress = checkForGoalAtCoordinates(canvas.width, state.goals, state.edges, event.clientX, event.clientY)
+      const clickedAddress = checkForGoalAtCoordinates(state.ui.screensize.width, state.goals, state.edges, event.clientX, event.clientY)
       if (clickedAddress) {
         // if the shift key is being use, do an 'additive' select
         // where you add the Goal to the list of selected

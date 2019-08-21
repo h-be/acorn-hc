@@ -20,7 +20,8 @@ import setupEventListeners from './event-listeners'
 import acorn from './reducer'
 import render from './drawing'
 import { fetchGoals } from './goals/actions'
-import { fetchEdges, createEdge } from './edges/actions'
+import { fetchEdges } from './edges/actions'
+import { setScreenDimensions } from './screensize/actions'
 import App from './components/App'
 
 // this url should use the same port set up by the Holochain Conductor
@@ -66,6 +67,14 @@ canvas.height = document.body.clientHeight
 document.body.appendChild(canvas)
 document.body.appendChild(reactContainer)
 
+// Get the device pixel ratio, falling back to 1.
+const dpr = window.devicePixelRatio || 1
+// Get the size of the canvas in CSS pixels.
+const rect = canvas.getBoundingClientRect()
+// Give the canvas pixel dimensions of their CSS
+// size * the device pixel ratio.
+store.dispatch(setScreenDimensions(rect.width * dpr, rect.height * dpr))
+
 // attach keyboard and mouse events
 setupEventListeners(store, canvas)
 
@@ -85,58 +94,3 @@ ReactDOM.render(
   </Provider>,
   reactContainer
 )
-
-
-// store.dispatch(createEdge.create({
-//   edge: {
-//     parent_address: 'Qmbu9ydrvGofoV3oYBLGoC62JpJHLdCXM6FfMzBuaPkGV5',
-//     child_address: 'QmdJB96nQSRud1y4AtTeCXedonkaiADjBxkLcPU4xSL44L'
-//   }
-// }))
-
-
-/*
-store.dispatch(createGoal.create({ goal: {
-  content: "Small incomplete",
-  user_hash: "Boop",
-  unix_timestamp: 412,
-  complete: false,
-  certain: true,
-  small: true, }}))
-store.dispatch(createGoal.create({ goal: {
-  content: "Small complete",
-  user_hash: "Boop",
-  unix_timestamp: 413,
-  complete: true,
-  certain: true,
-  small: true, }}))
-store.dispatch(createGoal.create({ goal: {
-  content: "Non-small complete certain",
-  user_hash: "Boop",
-  unix_timestamp: 412,
-  complete: true,
-  certain: true,
-  small: false, }}))
-store.dispatch(createGoal.create({ goal: {
-  content: "Non-small complete uncertain",
-  user_hash: "Boop",
-  unix_timestamp: 413,
-  complete: true,
-  certain: false,
-  small: false, }}))
-store.dispatch(createGoal.create({ goal: {
-  content: "Non-small incomplete certain",
-  user_hash: "Boop",
-  unix_timestamp: 413,
-  complete: false,
-  certain: true,
-  small: false, }}))
-store.dispatch(createGoal.create({ goal: {
-  content: "Non-small incomplete uncertain",
-  user_hash: "Boop",
-  unix_timestamp: 413,
-  complete: false,
-  certain: false,
-  small: false, }}))
-
-  */

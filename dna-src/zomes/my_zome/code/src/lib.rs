@@ -11,7 +11,7 @@ extern crate holochain_json_derive;
 
 use hdk::{
     entry_definition::ValidatingEntryType,
-    error::ZomeApiResult,
+    error::{ ZomeApiResult, ZomeApiError },
 };
 use hdk::holochain_core_types::{
     entry::Entry,
@@ -32,6 +32,7 @@ use hdk_proc_macros::zome;
 
 use serde::Serialize;
 use std::fmt::Debug;
+use std::convert::TryFrom;
 
 // see https://developer.holochain.org/api/latest/hdk/ for info on using the hdk library
 
@@ -180,6 +181,17 @@ mod my_zome {
     }
 
     #[zome_fn("hc_public")]
+    fn update_goal(goal: Goal, address: Address) -> ZomeApiResult<GetResponse<Goal>> {
+        let app_entry = Entry::App("goal".into(), goal.clone().into());
+        let _ = hdk::update_entry(app_entry, &address)?;
+
+        // format the response as a GetResponse
+        // pass the OLD address back
+        // and allow the UI to continue to use it
+        Ok(GetResponse{entry: goal, address})
+    }
+
+    #[zome_fn("hc_public")]
     fn create_edge(edge: Edge) -> ZomeApiResult<GetResponse<Edge>> {
         let app_entry = Entry::App("edge".into(), edge.clone().into());
         let _ = hdk::commit_entry(&app_entry)?;
@@ -205,22 +217,42 @@ mod my_zome {
 
         Ok(
             // return all the Goal objects from the entries linked to the edge anchor (drop entries with wrong type)
-            hdk::utils::get_links_and_load_type(
+            hdk::get_links(
                 &anchor_address,
                 LinkMatch::Exactly("anchor->goal"), // the link type to match
                 LinkMatch::Any,
             )?
             // scoop all these entries up into an array and return it
-            .into_iter().map(|goal: Goal| {
-                // re-create the goal entry to find its address
-                let address = Entry::App(
-                    "goal".into(),
-                    goal.clone().into(),
-                ).address();
-                // return a response structs with the goal and its address
-                GetResponse{entry: goal, address}
-            }).collect()
-        )
+            .addresses()
+            .into_iter().map(|address: Address| {
+                match hdk::get_entry(&address) {
+                    Ok(maybe_entry) => {
+                        match maybe_entry {
+                            Some(entry) => match entry {
+                                Entry::App(_, entry_value) => {
+                                    let goal = Goal::try_from(entry_value.to_owned()).map_err(|_| {
+                                        ZomeApiError::Internal(
+                                            "Could not convert get_links result to requested type".to_string(),
+                                        )
+                                    })?;
+                                    Ok(GetResponse{ entry: goal, address })
+                                }
+                                _ => Err(ZomeApiError::Internal(
+                                    "get_links did not return an app entry".to_string(),
+                                )),
+                            },
+                            _ => Err(ZomeApiError::Internal(
+                                "get_links did not return an app entry".to_string(),
+                            )),
+                        }
+                    },
+                    _ => Err(ZomeApiError::Internal(
+                        "get_links did not return an app entry".to_string(),
+                    ))
+                }
+            })
+            .filter_map(Result::ok)
+            .collect())
     }
 
     #[zome_fn("hc_public")]

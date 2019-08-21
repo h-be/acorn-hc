@@ -9,12 +9,15 @@ import {
   HOVER_GOAL,
   UNHOVER_GOAL,
 } from './actions'
+import {
+  archiveGoal
+} from '../goals/actions'
 
 const defaultState = {
   hoveredGoal: null
 }
 
-export default function(state = defaultState, action) {
+export default function (state = defaultState, action) {
   const { payload, type } = action
   switch (type) {
     case HOVER_GOAL:
@@ -27,6 +30,12 @@ export default function(state = defaultState, action) {
         ...state,
         hoveredGoal: null
       }
+    case archiveGoal.success().type:
+      // unhover if the archived Goal was hovered over
+      return state.hoveredGoal === payload ? {
+        ...state,
+        hoveredGoal: null
+      } : { ...state }
     default:
       return state
   }

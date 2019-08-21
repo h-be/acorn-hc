@@ -2,9 +2,9 @@ import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 
-import { createGoal } from '../goals/actions'
+import { createGoal, updateGoal } from '../goals/actions'
 import { createEdge } from '../edges/actions'
-import { closeGoalCreator, updateContent } from '../goal-creation/actions'
+import { closeGoalForm, updateContent } from '../goal-form/actions'
 
 
 // a React Component is defined as a class that extends the basic
@@ -24,6 +24,8 @@ class GoalForm extends Component {
     this.handleChange = this.handleChange.bind(this)
     this.handleKeyDown = this.handleKeyDown.bind(this)
     this.handleSubmit = this.handleSubmit.bind(this)
+    this.createGoal = this.createGoal.bind(this)
+    this.updateGoal = this.updateGoal.bind(this)
   }
 
   /*
@@ -33,12 +35,12 @@ class GoalForm extends Component {
     this.props.updateContent(event.target.value)
   }
   handleKeyDown(event) {
-    if (event.key === 'Enter') {
+    if (event.key === 'Enter' && !this.props.editAddress) {
       event.preventDefault()
       this.handleSubmit()
     }
   }
-  async handleSubmit(event) {
+  handleSubmit(event) {
     if (event) {
       // this is to prevent the page from refreshing
       // when the form is submitted, which is the
@@ -46,30 +48,47 @@ class GoalForm extends Component {
       event.preventDefault()
     }
 
+    // depending on editAddress, this
+    // might be an update to an existing...
+    // otherwise its a new Goal being created
+    if (this.props.editAddress) {
+      this.updateGoal()
+    } else {
+      this.createGoal(this.props.parentAddress)
+    }
+
+    // reset the textarea value to empty
+    this.props.updateContent('')
+    this.props.closeGoalForm()
+  }
+  async createGoal(parentAddress) {
     // dispatch the action to create a goal
     // with the contents from the form
     // inserted into it
     const response = await this.props.createGoal({
-      goal: {
-        content: this.props.content,
-        user_hash: "Boop",
-        unix_timestamp: Date.now(),
-        complete: false,
-        certain: false,
-        small: false
-      }
+      content: this.props.content,
+      user_hash: "Boop",
+      unix_timestamp: Date.now(),
+      complete: false,
+      certain: false,
+      small: false
     })
-    if (this.props.parentAddress) {
+    if (parentAddress) {
       this.props.createEdge({
-        edge: {
-          parent_address: this.props.parentAddress,
-          child_address: response.address
-        }
+        parent_address: parentAddress,
+        child_address: response.address
       })
     }
-    // reset the textarea value to empty
-    this.props.updateContent('')
-    this.props.closeGoalCreator()
+  }
+  updateGoal() {
+    this.props.updateGoal({
+      content: this.props.content,
+      user_hash: "Boop",
+      unix_timestamp: Date.now(),
+      complete: false,
+      certain: false,
+      small: false
+    }, this.props.editAddress)
   }
 
   /*
@@ -80,14 +99,14 @@ class GoalForm extends Component {
     // is the strict definition of what HTML should appear on screen
     // depending on the data that is given to the component
 
-    const { content, isOpen, xLoc, yLoc } = this.props
+    const { editAddress, content, isOpen, xLoc, yLoc } = this.props
 
     // use the xLoc and yLoc to position the form anywhere on the screen
     // using a position relative to its container
 
     // optionally render the form dependent on whether the `isOpen` prop
     // is true, else render nothing
-    return (<div style={{ position:'absolute', top:`${yLoc}px`, left:`${xLoc}px`}}>
+    return (<div style={{ position: 'absolute', top: `${yLoc}px`, left: `${xLoc}px` }}>
       {isOpen ? <form className='goal_form' onSubmit={this.handleSubmit}>
         <textarea
           placeholder='Add a title...'
@@ -96,6 +115,7 @@ class GoalForm extends Component {
           onKeyDown={this.handleKeyDown}
           autoFocus
         />
+        {editAddress && <button type='submit' className='goal_form_save'>Save Changes</button>}
       </form> : null}
     </div>)
   }
@@ -112,8 +132,9 @@ GoalForm.propTypes = {
   xLoc: PropTypes.number.isRequired,
   yLoc: PropTypes.number.isRequired,
   createGoal: PropTypes.func.isRequired,
+  updateGoal: PropTypes.func.isRequired,
   createEdge: PropTypes.func.isRequired,
-  closeGoalCreator: PropTypes.func.isRequired
+  closeGoalForm: PropTypes.func.isRequired
 }
 
 // https://react-redux.js.org/using-react-redux/connect-mapstate
@@ -121,11 +142,12 @@ GoalForm.propTypes = {
 // to pass it to a component for rendering, as specific properties that
 // that component expects
 function mapStateToProps(state) {
-  // all the state for this component is store under state->ui->goalCreation
-  const { parentAddress, content, isOpen, xLoc, yLoc } = state.ui.goalCreation
+  // all the state for this component is store under state->ui->goalForm
+  const { parentAddress, editAddress, content, isOpen, xLoc, yLoc } = state.ui.goalForm
   // the name of the expected proptypes is the same
   // as the name of the properties as stored in state
   return {
+    editAddress,
     parentAddress,
     content,
     isOpen,
@@ -143,13 +165,16 @@ function mapDispatchToProps(dispatch) {
       dispatch(updateContent(content))
     },
     createGoal: (goal) => {
-      return dispatch(createGoal.create(goal))
+      return dispatch(createGoal.create({ goal }))
+    },
+    updateGoal: (goal, address) => {
+      return dispatch(updateGoal.create({ goal, address }))
     },
     createEdge: (edge) => {
-      return dispatch(createEdge.create(edge))
+      return dispatch(createEdge.create({ edge }))
     },
-    closeGoalCreator: () => {
-      dispatch(closeGoalCreator())
+    closeGoalForm: () => {
+      dispatch(closeGoalForm())
     }
   }
 }
