@@ -86,14 +86,14 @@ export default function render(goal, { x, y }, isSelected, isHovered, ctx) {
 
   // render text
   let goalText = goal.content
-  let lines = getLinesForParagraphs(ctx, goalText, textBoxWidth)
-  console.log(lines)
-  console.log(goalText);
-  console.log(ctx.measureText(lines));
 
   ctx.fillStyle = '#4D4D4D'
   ctx.font = fontSize + ' ' + fontFamily
   ctx.textBaseline = 'top'
+
+  // get lines after font and font size are set up, since ctx.measureText()
+  // takes font and font size into account
+  let lines = getLinesForParagraphs(ctx, goalText, textBoxWidth)
 
   let fontSizeInt = Number(fontSize.slice(0, -2)) // slice off px from font size to get font height as number
   let lineSpacing = fontSizeInt / 5
