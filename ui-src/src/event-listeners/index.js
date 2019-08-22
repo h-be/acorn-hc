@@ -42,9 +42,14 @@ export default function setupEventListeners(store, canvas) {
   })
 
   document.body.addEventListener('keydown', event => {
+    let state = store.getState()
     switch (event.code) {
       case 'KeyG':
-        store.dispatch(setGKeyDown())
+        console.log(state.ui.keyboard.gKeyDown)
+        // only dispatch SET_G_KEYDOWN if it's not already down
+        if (!state.ui.keyboard.gKeyDown) {
+          store.dispatch(setGKeyDown())
+        }
         break
       case 'ShiftLeft':
       case 'ShiftRight':
@@ -56,7 +61,6 @@ export default function setupEventListeners(store, canvas) {
         break
       case 'Backspace':
         // archives one goal for now FIXME: should be able to archive many goals
-        let state = store.getState()
         let selection = state.ui.selection
         // only dispatch if something's selected and the createGoal window is
         // not open
