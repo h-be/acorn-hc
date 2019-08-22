@@ -45,7 +45,6 @@ export default function setupEventListeners(store, canvas) {
     let state = store.getState()
     switch (event.code) {
       case 'KeyG':
-        console.log(state.ui.keyboard.gKeyDown)
         // only dispatch SET_G_KEYDOWN if it's not already down
         if (!state.ui.keyboard.gKeyDown) {
           store.dispatch(setGKeyDown())
