@@ -28,7 +28,7 @@ function mapStateToProps(state) {
   return {
     // map from an array type (the selectedGoals) to a simple boolean type
     hasSelection: state.ui.selection.selectedGoals.length > 0,
-    hasHover: !!state.ui.hover.hoveredGoal // converts (null or an address) to a boolean
+    hasHover: state.ui.hover.hoveredGoal && state.ui.hover.hoveredGoal !== state.ui.goalForm.editAddress
   }
 }
 
