@@ -69,11 +69,6 @@ impl<T: Into<JsonString> + Debug + Serialize> From<GetResponse<T>> for JsonStrin
         default_to_json(u)
     }
 }
-impl<T: Into<JsonString> + Debug + Serialize> From<(GetResponse<T>, Option<GetResponse<T>>)> for JsonString {
-    fn from(u: (GetResponse<T>, Option<GetResponse<T>>)) -> JsonString {
-        default_to_json(u)
-    }
-}
 
 #[zome]
 mod my_zome {
