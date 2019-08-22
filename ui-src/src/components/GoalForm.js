@@ -67,7 +67,7 @@ class GoalForm extends Component {
     // inserted into it
     const response = await this.props.createGoal({
       content: this.props.content,
-      user_hash: "Boop",
+      user_hash: 'Boop',
       unix_timestamp: Date.now(),
       complete: false,
       certain: false,
@@ -83,7 +83,7 @@ class GoalForm extends Component {
   updateGoal() {
     this.props.updateGoal({
       content: this.props.content,
-      user_hash: "Boop",
+      user_hash: 'Boop',
       unix_timestamp: Date.now(),
       complete: false,
       certain: false,
