@@ -166,7 +166,7 @@ mod my_zome {
     #[zome_fn("hc_public")]
     fn create_goal(goal: Goal) -> ZomeApiResult<GetResponse<Goal>> {
         let app_entry = Entry::App("goal".into(), goal.clone().into());
-        let _ = hdk::commit_entry(&app_entry)?;
+        let entry_address = hdk::commit_entry(&app_entry)?;
 
         // link each new goal to the anchor
         let anchor_address = Entry::App(
@@ -177,7 +177,7 @@ mod my_zome {
         hdk::link_entries(&anchor_address, &app_entry.address(),  "anchor->goal", "")?;
 
         // format the response as a GetResponse
-        Ok(GetResponse{entry: goal, address: app_entry.address()})
+        Ok(GetResponse{entry: goal, address: entry_address})
     }
 
     #[zome_fn("hc_public")]
