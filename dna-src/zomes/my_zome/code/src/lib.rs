@@ -164,17 +164,24 @@ mod my_zome {
     }
 
     #[zome_fn("hc_public")]
-    fn create_goal(goal: Goal) -> ZomeApiResult<GetResponse<Goal>> {
+    fn create_goal(goal: Goal, parent_address: Address) -> ZomeApiResult<GetResponse<Goal>> {
         let app_entry = Entry::App("goal".into(), goal.clone().into());
         let entry_address = hdk::commit_entry(&app_entry)?;
 
-        // link each new goal to the anchor
+        // link new goal to the anchor
         let anchor_address = Entry::App(
             "anchor".into(), // app entry type
             "goals".into() // app entry value
         ).address();
 
         hdk::link_entries(&anchor_address, &app_entry.address(),  "anchor->goal", "")?;
+
+        // if a parent address was provided, link the goal with its parent
+        // if parent_address != None {
+        if true {
+            let edge: Edge = Edge { parent_address: parent_address, child_address:entry_address};
+            create_edge(edge); // FIXME this doesn't work, gives weird error about u64. Maybe can't call a zome function from another zome function?
+        }
 
         // format the response as a GetResponse
         Ok(GetResponse{entry: goal, address: entry_address})

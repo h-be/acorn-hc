@@ -72,13 +72,8 @@ class GoalForm extends Component {
       complete: false,
       certain: false,
       small: false
-    })
-    if (parentAddress) {
-      this.props.createEdge({
-        parent_address: parentAddress,
-        child_address: response.address
-      })
-    }
+    }, parentAddress)
+    console.log('parentAddress:', parentAddress)
   }
   updateGoal() {
     this.props.updateGoal({
