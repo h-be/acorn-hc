@@ -75,7 +75,7 @@ export default function render(goal, { x, y }, isSelected, isHovered, ctx) {
   const halfBorder = borderWidth / 2 // for use with 'stroke' of the border
   const twiceBorder = borderWidth * 2
 
-  const selectedOutlineMargin = 2
+  const selectedOutlineMargin = 1
   const selectedOutlineWidth = '4'
 
   // background
@@ -89,7 +89,7 @@ export default function render(goal, { x, y }, isSelected, isHovered, ctx) {
     let yStart = y - selectedOutlineMargin + 1 - halfBorder - (selectedOutlineWidth / 2)
     let w = goalWidth + 2 * (selectedOutlineMargin - 1) + borderWidth + Number(selectedOutlineWidth)
     let h = goalHeight + 2 * (selectedOutlineMargin - 1) + borderWidth + Number(selectedOutlineWidth)
-    let cr = cornerRadius + (selectedOutlineMargin * 2)
+    let cr = cornerRadius + (selectedOutlineMargin * 2) + 2
     roundRect(ctx, xStart, yStart, w, h, cr, selectedColor, true, selectedOutlineWidth)
   }
 
