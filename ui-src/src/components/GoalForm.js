@@ -6,7 +6,6 @@ import { createGoal, updateGoal } from '../goals/actions'
 import { createEdge } from '../edges/actions'
 import { closeGoalForm, updateContent } from '../goal-form/actions'
 
-
 // a React Component is defined as a class that extends the basic
 // React Component class. Usually of the form
 // class MyComponent extends Component

@@ -74,6 +74,7 @@ export default function render(goal, { x, y }, isSelected, isHovered, ctx) {
 
   const halfBorder = borderWidth / 2 // for use with 'stroke' of the border
   const twiceBorder = borderWidth * 2
+
   // background
   roundRect(ctx, x + borderWidth, y + borderWidth, goalWidth - twiceBorder, goalHeight - twiceBorder, cornerRadius, backgroundColor, false)
   // border
@@ -82,7 +83,6 @@ export default function render(goal, { x, y }, isSelected, isHovered, ctx) {
   if (isSelected) {
     roundRect(ctx, x - 3, y - 3, goalWidth + 7, goalHeight + 7, cornerRadius + 4, selectedColor, true, '4')
   }
-
 
   // render text
   let goalText = goal.content
