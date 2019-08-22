@@ -35,12 +35,16 @@ div.react {
   color: #4D4D4D;
   font-family: Helvetica, Sans-Serif;
   font-size: 20px;
+  line-height: 24px;
+}
+
+.goal_form ::selection {
+  background: #77FFF5;
 }
 
 .goal_form_save {
   margin-top: 14px;
-  width: 143px;
-  height: 45px;
+  padding: 11px 22px;
   background: #77FFF5 0% 0% no-repeat padding-box;
   box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.16);
   opacity: 1;
