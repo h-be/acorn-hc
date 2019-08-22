@@ -100,10 +100,27 @@ div.react {
   display: flex;
   flex-direction: row;
   list-style: none;
+  margin: 0 0 0 -49px;
+  padding: 0;
 }
 
 .hover_overlay li {
-  margin-right: 10px;
-  font-family: Helvetica, Sans-Serif;
   cursor: pointer;
+}
+
+/* Icon */
+
+.icon {
+  width: 39px;
+  height: 39px;
+  border-radius: 8px;
+  box-sizing: border-box;
+  padding: 6px;
+}
+
+.icon.with_background {
+  background-color: rgba(44, 44, 44, 0.51)
+}
+.icon.with_background:hover {
+  background-color: rgba(44, 44, 44, 0.75)
 }
