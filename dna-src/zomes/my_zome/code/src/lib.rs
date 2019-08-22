@@ -69,6 +69,11 @@ impl<T: Into<JsonString> + Debug + Serialize> From<GetResponse<T>> for JsonStrin
         default_to_json(u)
     }
 }
+impl<T: Into<JsonString> + Debug + Serialize> From<(GetResponse<T>, Option<GetResponse<T>>)> for JsonString {
+    fn from(u: (GetResponse<T>, Option<GetResponse<T>>)) -> JsonString {
+        default_to_json(u)
+    }
+}
 
 #[zome]
 mod my_zome {
@@ -164,7 +169,7 @@ mod my_zome {
     }
 
     #[zome_fn("hc_public")]
-    fn create_goal(goal: Goal, parent_address: Option<Address>) -> ZomeApiResult<GetResponse<Goal>> {
+    fn create_goal(goal: Goal, maybe_parent_address: Option<Address>) -> ZomeApiResult<(GetResponse<Goal>, Option<GetResponse<Edge>>)> {
         let app_entry = Entry::App("goal".into(), goal.clone().into());
         let entry_address = hdk::commit_entry(&app_entry)?;
 
@@ -177,16 +182,17 @@ mod my_zome {
         hdk::link_entries(&anchor_address, &app_entry.address(),  "anchor->goal", "")?;
 
         // if a parent address was provided, link the goal with its parent
-        match parent_address {
+        let maybe_edge = match maybe_parent_address {
             Some(parent_address) => {
                 let edge: Edge = Edge{parent_address: parent_address, child_address: entry_address.clone()};
-                inner_create_edge(&edge)?;
+                let edge_address = inner_create_edge(&edge)?;
+                Some(GetResponse{ entry: edge, address: edge_address })
             },
-            None => (),
-        }
+            None => None,
+        };
 
         // format the response as a GetResponse
-        Ok(GetResponse{entry: goal, address: entry_address})
+        Ok((GetResponse{entry: goal, address: entry_address}, maybe_edge))
     }
 
     fn inner_create_edge(edge: &Edge) -> ZomeApiResult<Address> {
@@ -217,7 +223,7 @@ mod my_zome {
 
     #[zome_fn("hc_public")]
     fn create_edge(edge: Edge) -> ZomeApiResult<GetResponse<Edge>> {
-        let entry_address = inner_create_edge(&edge).unwrap();
+        let entry_address = inner_create_edge(&edge)?;
         Ok(GetResponse{entry: edge, address: entry_address})
     }
 
