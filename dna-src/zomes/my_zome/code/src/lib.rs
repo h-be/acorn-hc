@@ -58,6 +58,12 @@ pub struct Goal {
     small: bool,
 }
 
+#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
+pub struct GoalMaybeWithEdge {
+    goal: GetResponse<Goal>,
+    maybe_edge: Option<GetResponse<Edge>>,
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GetResponse<T> {
     pub entry: T,
@@ -164,7 +170,7 @@ mod my_zome {
     }
 
     #[zome_fn("hc_public")]
-    fn create_goal(goal: Goal, maybe_parent_address: Option<Address>) -> ZomeApiResult<(GetResponse<Goal>, Option<GetResponse<Edge>>)> {
+    fn create_goal(goal: Goal, maybe_parent_address: Option<Address>) -> ZomeApiResult<GoalMaybeWithEdge> {
         let app_entry = Entry::App("goal".into(), goal.clone().into());
         let entry_address = hdk::commit_entry(&app_entry)?;
 
@@ -187,7 +193,7 @@ mod my_zome {
         };
 
         // format the response as a GetResponse
-        Ok((GetResponse{entry: goal, address: entry_address}, maybe_edge))
+        Ok(GoalMaybeWithEdge{ goal: GetResponse{ entry: goal, address: entry_address }, maybe_edge })
     }
 
     fn inner_create_edge(edge: &Edge) -> ZomeApiResult<Address> {
