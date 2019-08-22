@@ -58,6 +58,8 @@ pub struct Goal {
     small: bool,
 }
 
+// The GetResponse struct allows our zome functions to return an entry along with its
+// address so that Redux can know the address of goals and edges
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GetResponse<T> {
     pub entry: T,
@@ -126,6 +128,9 @@ mod my_zome {
         )
     }
 
+    // The anchor type. Anchors are app entries with type anchor. The value is how we find
+    // the anchor again, for example, we create an anchor with app entry value 'goals' and
+    // link all goals to that anchor.
     #[entry_def]
      fn anchor_def() -> ValidatingEntryType {
         entry!(
@@ -168,7 +173,7 @@ mod my_zome {
         let app_entry = Entry::App("goal".into(), goal.clone().into());
         let _ = hdk::commit_entry(&app_entry)?;
 
-        // link each new goal to the anchor
+        // link new goal to the goals anchor
         let anchor_address = Entry::App(
             "anchor".into(), // app entry type
             "goals".into() // app entry value
@@ -186,17 +191,16 @@ mod my_zome {
         let _ = hdk::update_entry(app_entry, &address)?;
 
         // format the response as a GetResponse
-        // pass the OLD address back
-        // and allow the UI to continue to use it
+        // pass the OLD address back and allow the UI to continue to use it
         Ok(GetResponse{entry: goal, address})
     }
 
     #[zome_fn("hc_public")]
     fn create_edge(edge: Edge) -> ZomeApiResult<GetResponse<Edge>> {
         let app_entry = Entry::App("edge".into(), edge.clone().into());
-        let _ = hdk::commit_entry(&app_entry)?;
+        let entry_address = hdk::commit_entry(&app_entry)?;
 
-        // link each new goal to the anchor
+        // link new edge to the edges anchor
         let anchor_address = Entry::App(
             "anchor".into(), // app entry type
             "edges".into() // app entry value
@@ -204,15 +208,16 @@ mod my_zome {
 
         hdk::link_entries(&anchor_address, &app_entry.address(),  "anchor->edge", "")?;
 
-        Ok(GetResponse{entry: edge, address: app_entry.address()})
+        // format the response as a GetResponse
+        Ok(GetResponse{entry: edge, address: entry_address})
     }
 
     #[zome_fn("hc_public")]
     fn fetch_goals() -> ZomeApiResult<Vec<GetResponse<Goal>>> {
-        // set up the anchor entry and compute its hash
+        // set up the anchor entry and compute its address
         let anchor_address = Entry::App(
             "anchor".into(), // app entry type
-            "goals".into(),
+            "goals".into(), // app entry value
         ).address();
 
         Ok(
@@ -257,10 +262,10 @@ mod my_zome {
 
     #[zome_fn("hc_public")]
     fn fetch_edges() -> ZomeApiResult<Vec<GetResponse<Edge>>> {
-        // set up the anchor entry and compute its hash
+        // set up the anchor entry and compute its address
         let anchor_address = Entry::App(
             "anchor".into(), // app entry type
-            "edges".into(),
+            "edges".into(), // app entry value
         ).address();
 
         Ok(
@@ -284,14 +289,14 @@ mod my_zome {
 
     #[zome_fn("hc_public")]
     fn archive_goal(address: Address) -> ZomeApiResult<Address> {
-        // add the removeEntry
+        // commit the removeEntry. Returns the address of the removeEntry
         hdk::remove_entry(&address)?;
+        // return the address of the archived goal for the UI to use
         Ok(address)
     }
 
     #[zome_fn("hc_public")]
     fn archive_edge(address: Address) -> ZomeApiResult<Address> {
-        // add the removeEntry
         hdk::remove_entry(&address)?;
         Ok(address)
     }
