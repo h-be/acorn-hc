@@ -93,7 +93,6 @@ export default function render(goal, { x, y }, isSelected, isHovered, ctx) {
     roundRect(ctx, xStart, yStart, w, h, cr, selectedColor, true, selectedOutlineWidth)
   }
 
-
   // render text
   let goalText = goal.content
 

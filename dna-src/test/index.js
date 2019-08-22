@@ -8,7 +8,7 @@ process.on('unhandledRejection', error => {
   console.error('got unhandledRejection:', error);
 });
 
-const dnaPath = path.join(__dirname, "../dist/acorn.dna.json")
+const dnaPath = path.join(__dirname, '../dist/acorn.dna.json')
 const dna = Diorama.dna(dnaPath, 'acorn')
 
 const diorama = new Diorama({
@@ -22,11 +22,11 @@ const diorama = new Diorama({
   middleware: backwardCompatibilityMiddleware,
 })
 
-diorama.registerScenario("description of example test", async (s, t, { alice }) => {
+diorama.registerScenario('description of example test', async (s, t, { alice }) => {
   // Make a call to a Zome function
   // indicating the function, and passing it an input
-  const addr = await alice.call("my_zome", "create_my_entry", {"entry" : {"content":"sample content"}})
-  const result = await alice.call("my_zome", "get_my_entry", {"address": addr.Ok})
+  const addr = await alice.call('my_zome', 'create_my_entry', {'entry' : {'content':'sample content'}})
+  const result = await alice.call('my_zome', 'get_my_entry', {'address': addr.Ok})
 
   // check for equality of the actual and expected results
   t.deepEqual(result, { Ok: { App: [ 'my_entry', '{"content":"sample content"}' ] } })

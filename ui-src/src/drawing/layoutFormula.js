@@ -1,12 +1,10 @@
 import { goalWidth, goalHeight } from './dimensions'
 
-
 function findAParent(edges, address) {
   // highly oversimplified
   const edge = edges.find(e => e.child_address === address)
   return edge ? edge.parent_address : null
 }
-
 
 function mapGoalToHierarchy(goal, edges) {
   // setup and run a recursive call to find depth/hierarchy in the graph
@@ -25,7 +23,6 @@ function mapGoalToHierarchy(goal, edges) {
   }
 
   checkHierarchy(goal.address)
-
   // console.log(hierarchy)
 
   return {
@@ -33,7 +30,6 @@ function mapGoalToHierarchy(goal, edges) {
     goal
   }
 }
-
 
 function mapHierarchyToPosition({ goal, hierarchy }, withHierarchies, screenWidth) {
   const verticalOffset = 10
