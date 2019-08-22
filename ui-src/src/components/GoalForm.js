@@ -20,6 +20,7 @@ class GoalForm extends Component {
     // have the proper `this` scope attached to them.
     // its a weird oddity of JS and React,
     // don't question it, just do it.
+    this.handleFocus = this.handleFocus.bind(this)
     this.handleChange = this.handleChange.bind(this)
     this.handleKeyDown = this.handleKeyDown.bind(this)
     this.handleSubmit = this.handleSubmit.bind(this)
@@ -30,6 +31,9 @@ class GoalForm extends Component {
   /*
     EVENT HANDLERS
   */
+  handleFocus(event) {
+    event.target.select()
+  }
   handleChange(event) {
     this.props.updateContent(event.target.value)
   }
@@ -113,8 +117,9 @@ class GoalForm extends Component {
           onChange={this.handleChange}
           onKeyDown={this.handleKeyDown}
           autoFocus
+          onFocus={this.handleFocus}
         />
-        {editAddress && <button type='submit' className='goal_form_save'>Save Changes</button>}
+        {editAddress && <button type='submit' className='goal_form_save'>Save</button>}
       </form> : null}
     </div>)
   }
