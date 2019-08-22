@@ -1,4 +1,4 @@
-'const path = require('path')
+const path = require('path')
 const tape = require('tape')
 
 const { Diorama, tapeExecutor, backwardCompatibilityMiddleware } = require('@holochain/diorama')
