@@ -4,16 +4,18 @@ import {
 } from './dimensions'
 import layoutFormula from './layoutFormula'
 
-export function checkForGoalAtCoordinates(width, goals, edges, clickX, clickY) {
+export function checkForGoalAtCoordinates(translate, width, goals, edges, clickX, clickY) {
     const coordinates = layoutFormula(width, goals, edges)
     // keep track of whether a goal was selected
     let clickedAddress
     Object.keys(goals).map(address => goals[address]).forEach(goal => {
         const { x, y } = coordinates[goal.address]
-        const right = x + goalWidth
-        const bottom = y + goalHeight
+        const left = x + translate.x
+        const top = y + translate.y
+        const right = left + goalWidth
+        const bottom = top + goalHeight
         // if click occurred within the box of a Goal
-        if (clickX >= x && clickX <= right && clickY >= y && clickY <= bottom) {
+        if (clickX >= left && clickX <= right && clickY >= top && clickY <= bottom) {
             clickedAddress = goal.address
         }
     })

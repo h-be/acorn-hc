@@ -15,6 +15,7 @@ import selection from './selection/reducer'
 import hover from './hover/reducer'
 import keyboard from './keyboard/reducer'
 import screensize from './screensize/reducer'
+import viewport from './viewport/reducer'
 // import anotherone from './another/path'
 
 // combine reducers from each feature to create the top-level reducer
@@ -26,7 +27,8 @@ export default combineReducers({
     selection,
     hover,
     keyboard,
-    screensize
+    screensize,
+    viewport
   }) // ,
   // anotherone: anotherone
 })

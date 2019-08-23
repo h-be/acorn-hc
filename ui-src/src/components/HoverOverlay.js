@@ -48,8 +48,8 @@ function mapStateToProps(state) {
     if (hoveredAddress) {
         goalCoord = layoutFormula(state.ui.screensize.width, state.goals, state.edges)[hoveredAddress]
         position = {
-            x: goalCoord.x + goalWidth,
-            y: goalCoord.y + 10
+            x: goalCoord.x + goalWidth + state.ui.viewport.translate.x,
+            y: goalCoord.y + 10 + state.ui.viewport.translate.y
         }
         goalContent = state.goals[hoveredAddress].content
     }

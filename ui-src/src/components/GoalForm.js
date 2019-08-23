@@ -150,8 +150,8 @@ function mapStateToProps(state) {
     editAddress,
     parentAddress,
     content,
-    xLoc,
-    yLoc
+    xLoc: xLoc + state.ui.viewport.translate.x,
+    yLoc: yLoc + state.ui.viewport.translate.y
   }
 }
 
