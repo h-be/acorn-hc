@@ -41,8 +41,6 @@ export default function(state = defaultState, action) {
     case archiveEdge.success().type:
         return  _.pickBy(state, (value, key) => key !== payload )
     case createGoal.success().type:
-        console.log(payload);
-        console.log(payload.maybe_edge)
         if (payload.maybe_edge) {
           return {
             ...state,

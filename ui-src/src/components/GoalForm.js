@@ -73,7 +73,6 @@ class GoalForm extends Component {
       certain: false,
       small: false
     }, this.props.parentAddress)
-    console.log('parentAddress:', parentAddress) // TODO: Remove this
   }
   updateGoal() {
     this.props.updateGoal({
