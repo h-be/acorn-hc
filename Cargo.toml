@@ -1,0 +1,5 @@
+# Cargo.toml
+[workspace]
+members = [
+    "dna-src/zomes/my_zome/code",
+]
