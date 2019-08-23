@@ -19,12 +19,7 @@ import {
   openGoalForm,
   closeGoalForm
 } from '../goal-form/actions'
-import {
-  archiveGoal
-} from '../goals/actions'
-import {
-  archiveEdge
-} from '../edges/actions'
+import archiveHelper from '../goals/archiveHelper'
 import {
   setScreenDimensions
 } from '../screensize/actions'
@@ -64,17 +59,8 @@ export default function setupEventListeners(store, canvas) {
         // only dispatch if something's selected and the createGoal window is
         // not open
         if (selection.selectedGoals.length > 0 && !state.ui.goalForm.isOpen) {
-          // remove goal
           let firstOfSelection = selection.selectedGoals[0]
-          store.dispatch(archiveGoal.create({ address: firstOfSelection }))
-          // remove all edges connecting to or from the removed goal
-          const edgeAddressesArray = Object.keys(state.edges)
-          const edgesAsArray = edgeAddressesArray.map(address => state.edges[address])
-          edgesAsArray.forEach(({ parent_address, child_address, address }) => {
-            if (firstOfSelection === parent_address  || firstOfSelection === child_address) {
-              store.dispatch(archiveEdge.create({ address }))
-            }
-          })
+          archiveHelper(store, firstOfSelection)
           // if on firefox, and matched this case
           // prevent the browser from navigating back to the last page
           event.preventDefault()

@@ -2,6 +2,8 @@ import React from 'react'
 import { connect } from 'react-redux'
 import PropTypes from 'prop-types'
 
+import Icon from './Icon'
+
 import layoutFormula from '../drawing/layoutFormula'
 import {
     goalWidth
@@ -20,7 +22,7 @@ function HoverOverlay(props) {
     return (
         <ul className='hover_overlay' style={{ top: `${y}px`, left: `${x}px` }}>
             {/* <li onClick={() => onExpandClick(hoveredAddress)}>Expand</li> */}
-            <li onClick={() => onEditClick(hoveredAddress, goalCoord, goalContent)}>Edit</li>
+            <li onClick={() => onEditClick(hoveredAddress, goalCoord, goalContent)}><Icon name='quick_edit.svg' withBackground /></li>
         </ul>
     )
 }
@@ -46,7 +48,7 @@ function mapStateToProps(state) {
     if (hoveredAddress) {
         goalCoord = layoutFormula(state.ui.screensize.width, state.goals, state.edges)[hoveredAddress]
         position = {
-            x: goalCoord.x + goalWidth - 10 - 77, // 77 is the element size, this is the wrong way to do this
+            x: goalCoord.x + goalWidth,
             y: goalCoord.y + 10
         }
         goalContent = state.goals[hoveredAddress].content
@@ -73,4 +75,3 @@ function mapDispatchToProps(dispatch) {
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(HoverOverlay)
-
