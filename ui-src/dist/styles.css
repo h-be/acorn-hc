@@ -49,7 +49,7 @@ div.react {
 .goal_form_save {
   margin-top: 14px;
   padding: 11px 22px;
-  background: #77FFF5 0% 0% no-repeat padding-box;
+  background: #6600FF 0% 0% no-repeat padding-box;
   box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.16);
   opacity: 1;
   outline: none;
@@ -59,7 +59,7 @@ div.react {
   line-height: 22px;
   font-family: Helvetica, Sans-Serif;
   letter-spacing: 0;
-  color: #4D4D4D;
+  color: #FFFFFF;
   border-radius: 4px;
   text-align: center;
   cursor: pointer;
