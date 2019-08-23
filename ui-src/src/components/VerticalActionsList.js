@@ -4,7 +4,6 @@ import PropTypes from 'prop-types'
 
 import Icon from './Icon'
 
-import archiveHelper from '../goals/archiveHelper'
 import {
   archiveGoal
 } from '../goals/actions'
@@ -45,8 +44,6 @@ function mapDispatchToProps(dispatch) {
   return {
     onSquirrelsClick: (address) => {},
     onArchiveClick: (address) => {
-      // TODO: convert to archiveHelper somehow
-      // blocker: need state/dispatch
       dispatch(archiveGoal.create({ address }))
     }
   }

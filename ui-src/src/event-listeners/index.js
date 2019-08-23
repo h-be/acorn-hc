@@ -19,7 +19,9 @@ import {
   openGoalForm,
   closeGoalForm
 } from '../goal-form/actions'
-import archiveHelper from '../goals/archiveHelper'
+import {
+  archiveGoal
+} from '../goals/actions'
 import {
   setScreenDimensions
 } from '../screensize/actions'
@@ -60,7 +62,7 @@ export default function setupEventListeners(store, canvas) {
         // not open
         if (selection.selectedGoals.length > 0 && !state.ui.goalForm.isOpen) {
           let firstOfSelection = selection.selectedGoals[0]
-          archiveHelper(store, firstOfSelection)
+          store.dispatch(archiveGoal.create({ address: firstOfSelection }))
           // if on firefox, and matched this case
           // prevent the browser from navigating back to the last page
           event.preventDefault()

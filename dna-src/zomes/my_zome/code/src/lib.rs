@@ -64,6 +64,12 @@ pub struct GoalMaybeWithEdge {
     maybe_edge: Option<GetResponse<Edge>>,
 }
 
+#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
+pub struct ArchiveGoalResponse {
+    address: Address,
+    archived_edges: Vec<Address>,
+}
+
 // The GetResponse struct allows our zome functions to return an entry along with its
 // address so that Redux can know the address of goals and edges
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -280,8 +286,7 @@ mod my_zome {
             .collect())
     }
 
-    #[zome_fn("hc_public")]
-    fn fetch_edges() -> ZomeApiResult<Vec<GetResponse<Edge>>> {
+    fn inner_fetch_edges() -> ZomeApiResult<Vec<GetResponse<Edge>>> {
         // set up the anchor entry and compute its address
         let anchor_address = Entry::App(
             "anchor".into(), // app entry type
@@ -308,11 +313,35 @@ mod my_zome {
     }
 
     #[zome_fn("hc_public")]
-    fn archive_goal(address: Address) -> ZomeApiResult<Address> {
+    fn fetch_edges() -> ZomeApiResult<Vec<GetResponse<Edge>>> {
+        inner_fetch_edges()
+    }
+
+    #[zome_fn("hc_public")]
+    fn archive_goal(address: Address) -> ZomeApiResult<ArchiveGoalResponse> {
         // commit the removeEntry. Returns the address of the removeEntry
         hdk::remove_entry(&address)?;
+
+        let archived_edges = inner_fetch_edges()?
+            .into_iter().filter(|get_response: &GetResponse<Edge>| {
+                // check whether the parent_address or child_address is equal to the given address.
+                // If so, the edge is connected to the goal being archived.
+                get_response.entry.child_address == address || get_response.entry.parent_address == address
+            })
+            .map(|get_response: GetResponse<Edge>| {
+                let edge_address = get_response.address;
+                // archive the edge with this address
+                match hdk::remove_entry(&edge_address) {
+                    Ok(_) => Ok(edge_address),
+                    Err(e) => Err(e),
+                }
+            })
+            // filter out errors
+            .filter_map(Result::ok)
+            .collect(); // returns vec of the edge addresses which were removed
+
         // return the address of the archived goal for the UI to use
-        Ok(address)
+        Ok(ArchiveGoalResponse{ address, archived_edges })
     }
 
     #[zome_fn("hc_public")]

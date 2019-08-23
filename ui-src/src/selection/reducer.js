@@ -50,9 +50,9 @@ export default function(state = defaultState, action) {
       }
     case archiveGoal.success().type:
       // unselect if the archived Goal was selected
-      return state.selectedGoals.includes(payload) ? {
+      return state.selectedGoals.includes(payload.address) ? {
         ...state,
-        selectedGoals: arrayWithoutElement(state.selectedGoals, payload)
+        selectedGoals: arrayWithoutElement(state.selectedGoals, payload.address)
       } : { ...state }
     default:
       return state

@@ -7,7 +7,7 @@
 import _ from 'lodash'
 
 import { createEdge, fetchEdges, archiveEdge } from './actions'
-import { createGoal } from '../goals/actions'
+import { createGoal, archiveGoal } from '../goals/actions'
 
 const defaultState = {}
 
@@ -40,6 +40,10 @@ export default function(state = defaultState, action) {
         }
     case archiveEdge.success().type:
         return  _.pickBy(state, (value, key) => key !== payload )
+    case archiveGoal.success().type:
+        // filter out the Edges whose addresses are listed as having been
+        // archived on account of having archived one of the Goals it links
+        return  _.pickBy(state, (value, key) => payload.archived_edges.indexOf(key) === -1)
     case createGoal.success().type:
         if (payload.maybe_edge) {
           return {
