@@ -37,6 +37,8 @@ function render(store, canvas) {
   // pull the current state from the store
   const state = store.getState()
 
+  ctx.translate(state.ui.viewport.translate.x, state.ui.viewport.translate.y)
+
   // clear the entirety of the canvas
   ctx.clearRect(0, 0, state.ui.screensize.width, state.ui.screensize.height)
 
@@ -82,7 +84,8 @@ function render(store, canvas) {
   // draw the editing highlight overlay
   /* if shift key not held down and there are more than 1 Goals selected */
   if (state.ui.goalForm.editAddress || (state.ui.selection.selectedGoals.length > 1 && !state.ui.keyboard.shiftKeyDown)) {
-    drawOverlay(ctx, state.ui.screensize.width, state.ui.screensize.height)
+    // counteract the translation
+    drawOverlay(ctx, -state.ui.viewport.translate.x, -state.ui.viewport.translate.y, state.ui.screensize.width, state.ui.screensize.height)
   }
 
   // render each selected goal to the canvas

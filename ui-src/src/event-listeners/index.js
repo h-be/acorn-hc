@@ -1,3 +1,5 @@
+import _ from 'lodash'
+
 import { checkForGoalAtCoordinates } from '../drawing/eventDetection'
 
 import {
@@ -25,6 +27,9 @@ import {
 import {
   setScreenDimensions
 } from '../screensize/actions'
+import {
+  changeTranslate
+} from '../viewport/actions'
 
 export default function setupEventListeners(store, canvas) {
 
@@ -93,12 +98,26 @@ export default function setupEventListeners(store, canvas) {
   // kill performance
   canvas.addEventListener('mousemove', event => {
     const state = store.getState()
-    const goalAddress = checkForGoalAtCoordinates(state.ui.screensize.width, state.goals, state.edges, event.clientX, event.clientY)
+    const goalAddress = checkForGoalAtCoordinates(state.ui.viewport.translate, state.ui.screensize.width, state.goals, state.edges, event.clientX, event.clientY)
     if (goalAddress && state.ui.hover.hoveredGoal !== goalAddress) {
       store.dispatch(hoverGoal(goalAddress))
     } else if (!goalAddress && state.ui.hover.hoveredGoal) {
       store.dispatch(unhoverGoal())
     }
+  })
+
+  // don't allow this function to be called more than every 200 milliseconds
+  const debouncedWheelHandler = _.debounce(event => {
+    const state = store.getState()
+    if (!state.ui.goalForm.isOpen) {
+      // invert the pattern so that it uses new mac style
+      // of panning
+      store.dispatch(changeTranslate(-1.5*event.deltaX, -1.5*event.deltaY))
+    }
+  }, 2, { leading: true })
+  canvas.addEventListener('wheel', event => {
+    debouncedWheelHandler(event)
+    event.preventDefault()
   })
 
   // This listener is bound to the canvas only so clicks on other parts of
@@ -123,7 +142,7 @@ export default function setupEventListeners(store, canvas) {
       // check for node in clicked area
       // select it if so
       const state = store.getState()
-      const clickedAddress = checkForGoalAtCoordinates(state.ui.screensize.width, state.goals, state.edges, event.clientX, event.clientY)
+      const clickedAddress = checkForGoalAtCoordinates(state.ui.viewport.translate, state.ui.screensize.width, state.goals, state.edges, event.clientX, event.clientY)
       if (clickedAddress) {
         // if the shift key is being use, do an 'additive' select
         // where you add the Goal to the list of selected
