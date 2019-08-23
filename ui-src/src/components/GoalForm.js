@@ -6,6 +6,8 @@ import { createGoal, updateGoal } from '../goals/actions'
 import { createEdge } from '../edges/actions'
 import { closeGoalForm, updateContent } from '../goal-form/actions'
 
+import VerticalActionsList from './VerticalActionsList'
+
 // a React Component is defined as a class that extends the basic
 // React Component class. Usually of the form
 // class MyComponent extends Component
@@ -102,15 +104,15 @@ class GoalForm extends Component {
     // is the strict definition of what HTML should appear on screen
     // depending on the data that is given to the component
 
-    const { editAddress, content, isOpen, xLoc, yLoc } = this.props
+    const { editAddress, content, xLoc, yLoc } = this.props
 
     // use the xLoc and yLoc to position the form anywhere on the screen
     // using a position relative to its container
 
     // optionally render the form dependent on whether the `isOpen` prop
     // is true, else render nothing
-    return (<div style={{ position: 'absolute', top: `${yLoc}px`, left: `${xLoc}px` }}>
-      {isOpen ? <form className='goal_form' onSubmit={this.handleSubmit}>
+    return (<div className='goal_form_wrapper' style={{ position: 'absolute', top: `${yLoc}px`, left: `${xLoc}px` }}>
+      <form className='goal_form' onSubmit={this.handleSubmit}>
         <textarea
           placeholder='Add a title...'
           value={content}
@@ -120,7 +122,8 @@ class GoalForm extends Component {
           onFocus={this.handleFocus}
         />
         {editAddress && <button type='submit' className='goal_form_save'>Save</button>}
-      </form> : null}
+      </form>
+      {editAddress && <VerticalActionsList />}
     </div>)
   }
 }
@@ -132,7 +135,6 @@ class GoalForm extends Component {
 GoalForm.propTypes = {
   parentAddress: PropTypes.string, // optional
   content: PropTypes.string.isRequired,
-  isOpen: PropTypes.bool.isRequired,
   xLoc: PropTypes.number.isRequired,
   yLoc: PropTypes.number.isRequired,
   createGoal: PropTypes.func.isRequired,
@@ -147,14 +149,13 @@ GoalForm.propTypes = {
 // that component expects
 function mapStateToProps(state) {
   // all the state for this component is store under state->ui->goalForm
-  const { parentAddress, editAddress, content, isOpen, xLoc, yLoc } = state.ui.goalForm
+  const { parentAddress, editAddress, content, xLoc, yLoc } = state.ui.goalForm
   // the name of the expected proptypes is the same
   // as the name of the properties as stored in state
   return {
     editAddress,
     parentAddress,
     content,
-    isOpen,
     xLoc,
     yLoc
   }

@@ -16,6 +16,10 @@ div.react {
 
 /* GoalForm */
 
+.goal_form_wrapper {
+  display: flex;
+}
+
 .goal_form {
   width: 363px;
   height: 132px;
@@ -123,4 +127,34 @@ div.react {
 }
 .icon.with_background:hover {
   background-color: rgba(44, 44, 44, 0.75)
+}
+
+/* VerticalActionsList */
+
+.vertical_actions_list {
+  margin-left: 14px;
+}
+
+.action_list_item {
+  background-color: rgba(23, 23, 23, 0.5);
+  border: 1px solid #707070;
+  border-radius: 5px;
+  font-family: Helvetica, Sans-Serif;
+  padding: 4px 20px 4px 10px;
+  outline: 0;
+  font-size: 16px;
+  line-height: 18px;
+  color: #FFF;
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.action_list_item:hover {
+  background-color: rgba(102, 0, 255, 0.95);
+}
+
+.action_list_item img {
+  margin-right: 5px;
 }

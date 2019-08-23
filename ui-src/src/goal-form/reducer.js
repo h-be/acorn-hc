@@ -11,6 +11,10 @@ import {
   UPDATE_CONTENT
 } from './actions'
 
+import {
+  archiveGoal
+} from '../goals/actions'
+
 const defaultState = {
   editAddress: null,
   parentAddress: null,
@@ -38,6 +42,7 @@ export default function(state = defaultState, action) {
         editAddress: payload.editAddress
       }
     case CLOSE_GOAL_FORM:
+    case archiveGoal.success().type:
       return {
         ...state,
         isOpen: false,

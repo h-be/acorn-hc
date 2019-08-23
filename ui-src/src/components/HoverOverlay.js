@@ -22,7 +22,7 @@ function HoverOverlay(props) {
     return (
         <ul className='hover_overlay' style={{ top: `${y}px`, left: `${x}px` }}>
             {/* <li onClick={() => onExpandClick(hoveredAddress)}>Expand</li> */}
-            <li onClick={() => onEditClick(hoveredAddress, goalCoord, goalContent)}><Icon name='quick_edit' withBackground /></li>
+            <li onClick={() => onEditClick(hoveredAddress, goalCoord, goalContent)}><Icon name='quick_edit.svg' withBackground /></li>
         </ul>
     )
 }
