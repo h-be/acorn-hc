@@ -9,33 +9,26 @@ extern crate serde_json;
 #[macro_use]
 extern crate holochain_json_derive;
 
+use hdk::holochain_core_types::{dna::entry_types::Sharing, entry::Entry, link::LinkMatch};
 use hdk::{
     entry_definition::ValidatingEntryType,
-    error::{ ZomeApiResult, ZomeApiError },
-};
-use hdk::holochain_core_types::{
-    entry::Entry,
-    dna::entry_types::Sharing,
-    link::LinkMatch,
+    error::{ZomeApiError, ZomeApiResult},
 };
 
 use hdk::holochain_json_api::{
-    json::{ JsonString, default_to_json},
-    error::JsonError
+    error::JsonError,
+    json::{default_to_json, JsonString},
 };
 
-use hdk::holochain_persistence_api::{
-    cas::content::{Address, AddressableContent}
-};
+use hdk::holochain_persistence_api::cas::content::{Address, AddressableContent};
 
 use hdk_proc_macros::zome;
 
 use serde::Serialize;
-use std::fmt::Debug;
 use std::convert::TryFrom;
+use std::fmt::Debug;
 
 // see https://developer.holochain.org/api/latest/hdk/ for info on using the hdk library
-
 
 // An edge. This is an arrow on the SoA Tree which directionally links
 // two goals.
@@ -75,7 +68,7 @@ pub struct ArchiveGoalResponse {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GetResponse<T> {
     pub entry: T,
-    pub address: Address
+    pub address: Address,
 }
 
 impl<T: Into<JsonString> + Debug + Serialize> From<GetResponse<T>> for JsonString {
@@ -111,7 +104,7 @@ mod my_zome {
     }
 
     #[entry_def]
-     fn edge_def() -> ValidatingEntryType {
+    fn edge_def() -> ValidatingEntryType {
         entry!(
             name: "edge",
             description: "this is an entry representing a edge",
@@ -126,7 +119,7 @@ mod my_zome {
     }
 
     #[entry_def]
-     fn goal_def() -> ValidatingEntryType {
+    fn goal_def() -> ValidatingEntryType {
         entry!(
             name: "goal",
             description: "this is an entry representing a goal",
@@ -144,7 +137,7 @@ mod my_zome {
     // the anchor again, for example, we create an anchor with app entry value 'goals' and
     // link all goals to that anchor.
     #[entry_def]
-     fn anchor_def() -> ValidatingEntryType {
+    fn anchor_def() -> ValidatingEntryType {
         entry!(
             name: "anchor",
             description: "this is an anchor entry that we can link other entries to so we can find them",
@@ -181,30 +174,46 @@ mod my_zome {
     }
 
     #[zome_fn("hc_public")]
-    fn create_goal(goal: Goal, maybe_parent_address: Option<Address>) -> ZomeApiResult<GoalMaybeWithEdge> {
+    fn create_goal(
+        goal: Goal,
+        maybe_parent_address: Option<Address>,
+    ) -> ZomeApiResult<GoalMaybeWithEdge> {
         let app_entry = Entry::App("goal".into(), goal.clone().into());
         let entry_address = hdk::commit_entry(&app_entry)?;
 
         // link new goal to the goals anchor
         let anchor_address = Entry::App(
             "anchor".into(), // app entry type
-            "goals".into() // app entry value
-        ).address();
+            "goals".into(),  // app entry value
+        )
+        .address();
 
-        hdk::link_entries(&anchor_address, &app_entry.address(),  "anchor->goal", "")?;
+        hdk::link_entries(&anchor_address, &app_entry.address(), "anchor->goal", "")?;
 
         // if a parent address was provided, link the goal with its parent
         let maybe_edge = match maybe_parent_address {
             Some(parent_address) => {
-                let edge: Edge = Edge{parent_address: parent_address, child_address: entry_address.clone()};
+                let edge: Edge = Edge {
+                    parent_address: parent_address,
+                    child_address: entry_address.clone(),
+                };
                 let edge_address = inner_create_edge(&edge)?;
-                Some(GetResponse{ entry: edge, address: edge_address })
-            },
+                Some(GetResponse {
+                    entry: edge,
+                    address: edge_address,
+                })
+            }
             None => None,
         };
 
         // format the response as a GetResponse
-        Ok(GoalMaybeWithEdge{ goal: GetResponse{ entry: goal, address: entry_address }, maybe_edge })
+        Ok(GoalMaybeWithEdge {
+            goal: GetResponse {
+                entry: goal,
+                address: entry_address,
+            },
+            maybe_edge,
+        })
     }
 
     fn inner_create_edge(edge: &Edge) -> ZomeApiResult<Address> {
@@ -214,10 +223,11 @@ mod my_zome {
         // link new edge to the edges anchor
         let anchor_address = Entry::App(
             "anchor".into(), // app entry type
-            "edges".into() // app entry value
-        ).address();
+            "edges".into(),  // app entry value
+        )
+        .address();
 
-        hdk::link_entries(&anchor_address, &app_entry.address(),  "anchor->edge", "")?;
+        hdk::link_entries(&anchor_address, &app_entry.address(), "anchor->edge", "")?;
 
         Ok(entry_address)
     }
@@ -229,13 +239,19 @@ mod my_zome {
 
         // format the response as a GetResponse
         // pass the OLD address back and allow the UI to continue to use it
-        Ok(GetResponse{entry: goal, address})
+        Ok(GetResponse {
+            entry: goal,
+            address,
+        })
     }
 
     #[zome_fn("hc_public")]
     fn create_edge(edge: Edge) -> ZomeApiResult<GetResponse<Edge>> {
         let entry_address = inner_create_edge(&edge)?;
-        Ok(GetResponse{entry: edge, address: entry_address})
+        Ok(GetResponse {
+            entry: edge,
+            address: entry_address,
+        })
     }
 
     #[zome_fn("hc_public")]
@@ -243,8 +259,9 @@ mod my_zome {
         // set up the anchor entry and compute its address
         let anchor_address = Entry::App(
             "anchor".into(), // app entry type
-            "goals".into(), // app entry value
-        ).address();
+            "goals".into(),  // app entry value
+        )
+        .address();
 
         Ok(
             // return all the Goal objects from the entries linked to the edge anchor (drop entries with wrong type)
@@ -255,43 +272,46 @@ mod my_zome {
             )?
             // scoop all these entries up into an array and return it
             .addresses()
-            .into_iter().map(|address: Address| {
-                match hdk::get_entry(&address) {
-                    Ok(maybe_entry) => {
-                        match maybe_entry {
-                            Some(entry) => match entry {
-                                Entry::App(_, entry_value) => {
-                                    let goal = Goal::try_from(entry_value.to_owned()).map_err(|_| {
-                                        ZomeApiError::Internal(
-                                            "Could not convert get_links result to requested type".to_string(),
-                                        )
-                                    })?;
-                                    Ok(GetResponse{ entry: goal, address })
-                                }
-                                _ => Err(ZomeApiError::Internal(
-                                    "get_links did not return an app entry".to_string(),
-                                )),
-                            },
-                            _ => Err(ZomeApiError::Internal(
-                                "get_links did not return an app entry".to_string(),
-                            )),
+            .into_iter()
+            .map(|address: Address| match hdk::get_entry(&address) {
+                Ok(maybe_entry) => match maybe_entry {
+                    Some(entry) => match entry {
+                        Entry::App(_, entry_value) => {
+                            let goal = Goal::try_from(entry_value.to_owned()).map_err(|_| {
+                                ZomeApiError::Internal(
+                                    "Could not convert get_links result to requested type"
+                                        .to_string(),
+                                )
+                            })?;
+                            Ok(GetResponse {
+                                entry: goal,
+                                address,
+                            })
                         }
+                        _ => Err(ZomeApiError::Internal(
+                            "get_links did not return an app entry".to_string(),
+                        )),
                     },
                     _ => Err(ZomeApiError::Internal(
                         "get_links did not return an app entry".to_string(),
-                    ))
-                }
+                    )),
+                },
+                _ => Err(ZomeApiError::Internal(
+                    "get_links did not return an app entry".to_string(),
+                )),
             })
             .filter_map(Result::ok)
-            .collect())
+            .collect(),
+        )
     }
 
     fn inner_fetch_edges() -> ZomeApiResult<Vec<GetResponse<Edge>>> {
         // set up the anchor entry and compute its address
         let anchor_address = Entry::App(
             "anchor".into(), // app entry type
-            "edges".into(), // app entry value
-        ).address();
+            "edges".into(),  // app entry value
+        )
+        .address();
 
         Ok(
             // return all the Edge objects from the entries linked to the edge anchor (drop entries with wrong type)
@@ -300,15 +320,17 @@ mod my_zome {
                 LinkMatch::Exactly("anchor->edge"), // the link type to match
                 LinkMatch::Any,
             )?
-            .into_iter().map(|edge: Edge| {
+            .into_iter()
+            .map(|edge: Edge| {
                 // re-create the goal entry to find its address
-                let address = Entry::App(
-                    "edge".into(),
-                    edge.clone().into(),
-                ).address();
+                let address = Entry::App("edge".into(), edge.clone().into()).address();
                 // return a response structs with the edge and its address
-                GetResponse{entry: edge, address}
-            }).collect()
+                GetResponse {
+                    entry: edge,
+                    address,
+                }
+            })
+            .collect(),
         )
     }
 
@@ -323,10 +345,12 @@ mod my_zome {
         hdk::remove_entry(&address)?;
 
         let archived_edges = inner_fetch_edges()?
-            .into_iter().filter(|get_response: &GetResponse<Edge>| {
+            .into_iter()
+            .filter(|get_response: &GetResponse<Edge>| {
                 // check whether the parent_address or child_address is equal to the given address.
                 // If so, the edge is connected to the goal being archived.
-                get_response.entry.child_address == address || get_response.entry.parent_address == address
+                get_response.entry.child_address == address
+                    || get_response.entry.parent_address == address
             })
             .map(|get_response: GetResponse<Edge>| {
                 let edge_address = get_response.address;
@@ -341,7 +365,10 @@ mod my_zome {
             .collect(); // returns vec of the edge addresses which were removed
 
         // return the address of the archived goal for the UI to use
-        Ok(ArchiveGoalResponse{ address, archived_edges })
+        Ok(ArchiveGoalResponse {
+            address,
+            archived_edges,
+        })
     }
 
     #[zome_fn("hc_public")]
