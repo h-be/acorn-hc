@@ -74,15 +74,24 @@ export default function render(goal, { x, y }, isSelected, isHovered, ctx) {
 
   const halfBorder = borderWidth / 2 // for use with 'stroke' of the border
   const twiceBorder = borderWidth * 2
+
+  const selectedOutlineMargin = 1
+  const selectedOutlineWidth = '4'
+
   // background
-  roundRect(ctx, x + borderWidth, y + borderWidth, goalWidth - twiceBorder, goalHeight - twiceBorder, cornerRadius, backgroundColor, false)
+  roundRect(ctx, x + borderWidth, y + borderWidth, goalWidth - twiceBorder, goalHeight - twiceBorder, cornerRadius -1, backgroundColor, false)
   // border
-  roundRect(ctx, x + halfBorder, y + halfBorder, goalWidth - halfBorder, goalHeight - halfBorder, cornerRadius, borderColor, true, '2')
+  roundRect(ctx, x + halfBorder, y + halfBorder, goalWidth - borderWidth, goalHeight - borderWidth, cornerRadius, borderColor, true, '2')
 
+  // selection outline
   if (isSelected) {
-    roundRect(ctx, x - 3, y - 3, goalWidth + 7, goalHeight + 7, cornerRadius + 4, selectedColor, true, '4')
+    let xStart = x - selectedOutlineMargin + 1 - halfBorder - (selectedOutlineWidth / 2)
+    let yStart = y - selectedOutlineMargin + 1 - halfBorder - (selectedOutlineWidth / 2)
+    let w = goalWidth + 2 * (selectedOutlineMargin - 1) + borderWidth + Number(selectedOutlineWidth)
+    let h = goalHeight + 2 * (selectedOutlineMargin - 1) + borderWidth + Number(selectedOutlineWidth)
+    let cr = cornerRadius + (selectedOutlineMargin * 2) + 2
+    roundRect(ctx, xStart, yStart, w, h, cr, selectedColor, true, selectedOutlineWidth)
   }
-
 
   // render text
   let goalText = goal.content
