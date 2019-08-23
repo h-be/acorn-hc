@@ -50,18 +50,18 @@ class GoalForm extends Component {
 
     // depending on editAddress, this
     // might be an update to an existing...
-    // otherwise its a new Goal being created
+    // otherwise it's a new Goal being created
     if (this.props.editAddress) {
       this.updateGoal()
     } else {
-      this.createGoal(this.props.parentAddress)
+      this.createGoal()
     }
 
     // reset the textarea value to empty
     this.props.updateContent('')
     this.props.closeGoalForm()
   }
-  async createGoal(parentAddress) {
+  async createGoal() {
     // dispatch the action to create a goal
     // with the contents from the form
     // inserted into it
@@ -72,8 +72,8 @@ class GoalForm extends Component {
       complete: false,
       certain: false,
       small: false
-    }, parentAddress)
-    console.log('parentAddress:', parentAddress)
+    }, this.props.parentAddress)
+    console.log('parentAddress:', parentAddress) // TODO: Remove this
   }
   updateGoal() {
     this.props.updateGoal({
@@ -159,8 +159,8 @@ function mapDispatchToProps(dispatch) {
     updateContent: (content) => {
       dispatch(updateContent(content))
     },
-    createGoal: (goal) => {
-      return dispatch(createGoal.create({ goal }))
+    createGoal: (goal, maybe_parent_address) => {
+      return dispatch(createGoal.create({ goal , maybe_parent_address}))
     },
     updateGoal: (goal, address) => {
       return dispatch(updateGoal.create({ goal, address }))
