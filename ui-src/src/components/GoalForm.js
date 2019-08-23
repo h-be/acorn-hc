@@ -40,7 +40,7 @@ class GoalForm extends Component {
     this.props.updateContent(event.target.value)
   }
   handleKeyDown(event) {
-    if (event.key === 'Enter' && !this.props.editAddress) {
+    if (event.key === 'Enter') {
       event.preventDefault()
       this.handleSubmit()
     }
