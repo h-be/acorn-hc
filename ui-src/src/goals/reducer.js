@@ -14,6 +14,13 @@ export default function (state = defaultState, action) {
   const { payload, type } = action
   switch (type) {
     case createGoal.success().type:
+      return {
+        ...state,
+        [payload.goal.address]: {
+          ...payload.goal.entry,
+          address: payload.goal.address
+        }
+      }
     case updateGoal.success().type:
       return {
         ...state,

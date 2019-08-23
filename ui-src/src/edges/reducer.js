@@ -7,6 +7,7 @@
 import _ from 'lodash'
 
 import { createEdge, fetchEdges, archiveEdge } from './actions'
+import { createGoal } from '../goals/actions'
 
 const defaultState = {}
 
@@ -39,6 +40,16 @@ export default function(state = defaultState, action) {
         }
     case archiveEdge.success().type:
         return  _.pickBy(state, (value, key) => key !== payload )
+    case createGoal.success().type:
+        if (payload.maybe_edge) {
+          return {
+            ...state,
+            [payload.maybe_edge.address]: {
+              ...payload.maybe_edge.entry,
+              address: payload.maybe_edge.address
+            }
+          }
+        }
     default:
       return state
   }

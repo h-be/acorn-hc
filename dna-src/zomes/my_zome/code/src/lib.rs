@@ -58,6 +58,12 @@ pub struct Goal {
     small: bool,
 }
 
+#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
+pub struct GoalMaybeWithEdge {
+    goal: GetResponse<Goal>,
+    maybe_edge: Option<GetResponse<Edge>>,
+}
+
 // The GetResponse struct allows our zome functions to return an entry along with its
 // address so that Redux can know the address of goals and edges
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -169,9 +175,9 @@ mod my_zome {
     }
 
     #[zome_fn("hc_public")]
-    fn create_goal(goal: Goal) -> ZomeApiResult<GetResponse<Goal>> {
+    fn create_goal(goal: Goal, maybe_parent_address: Option<Address>) -> ZomeApiResult<GoalMaybeWithEdge> {
         let app_entry = Entry::App("goal".into(), goal.clone().into());
-        let _ = hdk::commit_entry(&app_entry)?;
+        let entry_address = hdk::commit_entry(&app_entry)?;
 
         // link new goal to the goals anchor
         let anchor_address = Entry::App(
@@ -181,8 +187,33 @@ mod my_zome {
 
         hdk::link_entries(&anchor_address, &app_entry.address(),  "anchor->goal", "")?;
 
+        // if a parent address was provided, link the goal with its parent
+        let maybe_edge = match maybe_parent_address {
+            Some(parent_address) => {
+                let edge: Edge = Edge{parent_address: parent_address, child_address: entry_address.clone()};
+                let edge_address = inner_create_edge(&edge)?;
+                Some(GetResponse{ entry: edge, address: edge_address })
+            },
+            None => None,
+        };
+
         // format the response as a GetResponse
-        Ok(GetResponse{entry: goal, address: app_entry.address()})
+        Ok(GoalMaybeWithEdge{ goal: GetResponse{ entry: goal, address: entry_address }, maybe_edge })
+    }
+
+    fn inner_create_edge(edge: &Edge) -> ZomeApiResult<Address> {
+        let app_entry = Entry::App("edge".into(), edge.clone().into());
+        let entry_address = hdk::commit_entry(&app_entry)?;
+
+        // link new edge to the edges anchor
+        let anchor_address = Entry::App(
+            "anchor".into(), // app entry type
+            "edges".into() // app entry value
+        ).address();
+
+        hdk::link_entries(&anchor_address, &app_entry.address(),  "anchor->edge", "")?;
+
+        Ok(entry_address)
     }
 
     #[zome_fn("hc_public")]
@@ -197,18 +228,7 @@ mod my_zome {
 
     #[zome_fn("hc_public")]
     fn create_edge(edge: Edge) -> ZomeApiResult<GetResponse<Edge>> {
-        let app_entry = Entry::App("edge".into(), edge.clone().into());
-        let entry_address = hdk::commit_entry(&app_entry)?;
-
-        // link new edge to the edges anchor
-        let anchor_address = Entry::App(
-            "anchor".into(), // app entry type
-            "edges".into() // app entry value
-        ).address();
-
-        hdk::link_entries(&anchor_address, &app_entry.address(),  "anchor->edge", "")?;
-
-        // format the response as a GetResponse
+        let entry_address = inner_create_edge(&edge)?;
         Ok(GetResponse{entry: edge, address: entry_address})
     }
 
