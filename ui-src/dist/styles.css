@@ -8,6 +8,7 @@ html, body, canvas {
 
 body {
   background-color: #F4F4F4;
+  font-family: Helvetica, Sans-Serif;
 }
 
 div.react {
@@ -119,16 +120,23 @@ div.react {
 .icon {
   width: 39px;
   height: 39px;
-  border-radius: 8px;
   box-sizing: border-box;
   padding: 6px;
 }
 
+.icon.small {
+  width: 18px;
+  height: 18px;
+  padding: 2px;
+}
+
 .icon.with_background {
-  background-color: rgba(44, 44, 44, 0.51)
+  background-color: rgba(44, 44, 44, 0.51);
+  border-radius: 8px;
+
 }
 .icon.with_background:hover {
-  background-color: rgba(44, 44, 44, 0.75)
+  background-color: rgba(44, 44, 44, 0.75);
 }
 
 /* VerticalActionsList */
@@ -159,4 +167,87 @@ div.react {
 
 .action_list_item img {
   margin-right: 5px;
+}
+
+
+/* PeoplePicker */
+
+.people_picker {
+  position: absolute;
+  border-radius: 5px;
+  background: #FFFFFF;
+  box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.16);
+  padding: 8px 12px;
+}
+
+.people_picker_spacer {
+  margin-top: 10px;
+  border: 1px solid #D9D9D9;
+  width: 100%;
+}
+
+.people_picker_search {
+  display: flex;
+}
+
+.people_picker_search input {
+  font-size: 14px;
+  line-height: 20px;
+  color: #4D4D4D;
+  border: 0;
+  outline: 0;
+  padding: 0;
+  margin-left: 14px;
+}
+
+.people_picker_search input:placeholder {
+  color: #D1D1D1;
+}
+
+.people_picker_people {
+  list-style: none;
+  margin: 7px 0 0 0;
+  padding: 0;
+}
+
+.people_picker_people li {
+  padding: 3px 0;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.people_picker_people li .avatar {
+  height: 24px;
+  width: 24px;
+  border-radius: 12px;
+  box-sizing: border-box;
+}
+
+.people_picker_people li .hover_wrapper {
+  margin-left: 5px;
+  border-radius: 5px;
+  padding: 4px 0 4px 4px;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.people_picker_people li:hover .hover_wrapper {
+  background: #F2F2F2;
+}
+
+.people_picker_people li .person_name {
+  color: #4D4D4D;
+  flex: 1;
+}
+
+/* when person is a member styles */
+.people_picker_people li.member .avatar {
+  border: 1px solid #5F65FF;
+  padding: 1px;
+}
+
+.people_picker_people li.member .person_name {
+  color: #5F65FF;
 }

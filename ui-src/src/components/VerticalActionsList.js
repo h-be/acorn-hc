@@ -1,8 +1,9 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { connect } from 'react-redux'
 import PropTypes from 'prop-types'
 
 import Icon from './Icon'
+import PeoplePicker from './PeoplePicker'
 
 import {
   archiveGoal
@@ -12,13 +13,21 @@ import {
 } from '../goal-form/actions'
 
 function VerticalActionsList(props) {
+
+    const [squirrelsIsOpen, setSquirrelsIsOpen] = useState(true)
+
     const list = [
-      ['squirrel.png', 'squirrels', 'onSquirrelsClick'],
+      // ['squirrel.png', 'squirrels', 'onSquirrelsClick'],
       ['archive.svg', 'archive', 'onArchiveClick']
     ]
 
     return (
       <div className='vertical_actions_list'>
+        <div className='action_list_item' key='squirrels' onClick={() => setSquirrelsIsOpen(!squirrelsIsOpen)}>
+          <Icon name='squirrel.png' />
+          <span>squirrels</span>
+        </div>
+        {squirrelsIsOpen && <PeoplePicker />}
         {list.map(([icon, text, clickKey], index) => (
           <div className='action_list_item' key={index} onClick={() => props[clickKey](props.goalAddress)}>
             <Icon name={icon} />
@@ -30,7 +39,6 @@ function VerticalActionsList(props) {
 
 VerticalActionsList.propTypes = {
   goalAddress: PropTypes.string.isRequired,
-  onSquirrelsClick: PropTypes.func.isRequired,
   onArchiveClick: PropTypes.func.isRequired
 }
 
@@ -42,7 +50,6 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
   return {
-    onSquirrelsClick: (address) => {},
     onArchiveClick: (address) => {
       dispatch(archiveGoal.create({ address }))
     }
