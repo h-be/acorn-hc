@@ -61,7 +61,7 @@ pub struct Edge {
 #[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
 pub enum Status {
     Uncertain,
-    Certain,
+    Incomplete,
     Complete,
     InReview
 }

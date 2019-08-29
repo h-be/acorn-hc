@@ -21,7 +21,7 @@ function StatusPicker({ goal, goalAddress, updateGoal }) {
 
     const statuses = [
         'Uncertain',
-        'Certain',
+        'Incomplete',
         'Complete',
         'InReview'
     ]

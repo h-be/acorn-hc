@@ -30,19 +30,6 @@ div.react {
   background-color: #FFF;
 }
 
-.goal_form.Uncertain {
-  border: 2px solid #FF5D36;
-}
-.goal_form.Certain {
-  border: 2px solid #FFC400;
-}
-.goal_form.InReview {
-  border: 2px solid #00E2FF;
-}
-.goal_form.Complete {
-  border: 2px solid #83E300;
-}
-
 .goal_form textarea {
   background-color: transparent;
   border: 0;
@@ -145,8 +132,8 @@ div.react {
 .icon.with_background {
   background-color: rgba(44, 44, 44, 0.51);
   border-radius: 8px;
-
 }
+
 .icon.with_background:hover {
   background-color: rgba(44, 44, 44, 0.75);
 }
@@ -181,12 +168,9 @@ div.react {
   margin-right: 5px;
 }
 
-
 /* PeoplePicker */
 
-.people_picker {
-  
-}
+.people_picker {}
 
 .people_picker_spacer {
   margin-top: 10px;
@@ -251,6 +235,7 @@ div.react {
 }
 
 /* when person is a member styles */
+
 .people_picker_people li.member .avatar {
   border: 1px solid #5F65FF;
   padding: 1px;
@@ -260,22 +245,20 @@ div.react {
   color: #5F65FF;
 }
 
-
 /* StatusPicker */
 
 .status_picker {
   display: flex;
 }
 
-
-
 /* StatusIcon */
 
 .status_color {
+  position: relative;
   width: 26px;
   height: 26px;
   margin: 6px;
-  border-radius: 20px;
+  border-radius: 14px;
   border: 1px solid #D1D1D1;
 }
 
@@ -283,24 +266,17 @@ div.react {
   cursor: pointer;
 }
 
-.status_color.Uncertain {
-  background-color: #FF5D36;
-}
-.status_color.Certain {
-  background-color: #FFC400;
-}
-.status_color.InReview {
-  background-color: #00E2FF;
-}
-.status_color.Complete {
-  background-color: #83E300;
+.status_color.can_click:hover {
+  width: 34px;
+  height: 34px;
+  border-radius: 17px;
+  margin: 3px;
+  border: none;
 }
 
 .status_color.has_status {
   box-shadow: 0 0 0 4px #FFF, 0 0 0 6px #5F65FF;
 }
-
-
 
 /* vertical_action_overlay */
 
@@ -314,6 +290,54 @@ div.react {
 
 /* Tooltips */
 
-.hidden_tooltip {
+.tooltip_container:hover .tooltip {
+  display: block;
+}
+
+.tooltip {
+  position: absolute;
   display: none;
+  padding: 5px 7px;
+  border-radius: 3px;
+  color: #4D4D4D;
+  font-size: 10px;
+  line-height: 12px;
+  bottom: -28px;
+  white-space: nowrap;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* status colors */
+
+.border_Uncertain {
+  border: 2px solid #FF5D36;
+}
+
+.border_Incomplete {
+  border: 2px solid #FFC400;
+}
+
+.border_InReview {
+  border: 2px solid #00E2FF;
+}
+
+.border_Complete {
+  border: 2px solid #83E300;
+}
+
+.bg_Uncertain {
+  background-color: #FF5D36;
+}
+
+.bg_Incomplete {
+  background-color: #FFC400;
+}
+
+.bg_InReview {
+  background-color: #00E2FF;
+}
+
+.bg_Complete {
+  background-color: #83E300;
 }

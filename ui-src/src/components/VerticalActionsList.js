@@ -37,7 +37,7 @@ function VerticalActionsList(props) {
         </div>
         {viewsOpen.squirrels && <PeoplePicker />}
         {/* archive */}
-        <div className='action_list_item' key='archive' onClick={() => onArchiveClick(props.goalAddress)}>
+        <div className='action_list_item' key='archive' onClick={() => props.onArchiveClick(props.goalAddress)}>
           <Icon name='archive.svg' />
           <span>archive</span>
         </div>
