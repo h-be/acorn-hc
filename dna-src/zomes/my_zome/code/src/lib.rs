@@ -81,6 +81,7 @@ pub struct GoalMaybeWithEdge {
 pub struct ArchiveGoalResponse {
     address: Address,
     archived_edges: Vec<Address>,
+    archived_goal_members: Vec<Address>,
 }
 
 // The GetResponse struct allows our zome functions to return an entry along with its
@@ -409,6 +410,35 @@ mod my_zome {
         )
     }
 
+    fn inner_fetch_goal_members() -> ZomeApiResult<Vec<GetResponse<GoalMember>>> {
+        // set up the anchor entry and compute its address
+        let anchor_address = Entry::App(
+            "anchor".into(), // app entry type
+            "goal_members".into(),  // app entry value
+        )
+        .address();
+
+        Ok(
+            // return all the GoalMember objects from the entries linked to the goal_members anchor (drop entries with wrong type)
+            hdk::utils::get_links_and_load_type(
+                &anchor_address,
+                LinkMatch::Exactly("anchor->goal_member"), // the link type to match
+                LinkMatch::Any,
+            )?
+            .into_iter()
+            .map(|goal_member: GoalMember| {
+                // re-create the goal_member entry to find its address
+                let address = Entry::App("goal_member".into(), goal_member.clone().into()).address();
+                // return a response structs with the edge and its address
+                GetResponse {
+                    entry: goal_member,
+                    address,
+                }
+            })
+            .collect(),
+        )
+    }
+
     fn inner_fetch_edges() -> ZomeApiResult<Vec<GetResponse<Edge>>> {
         // set up the anchor entry and compute its address
         let anchor_address = Entry::App(
@@ -468,10 +498,30 @@ mod my_zome {
             .filter_map(Result::ok)
             .collect(); // returns vec of the edge addresses which were removed
 
+        let archived_goal_members = inner_fetch_goal_members()?
+            .into_iter()
+            .filter(|get_response: &GetResponse<GoalMember>| {
+                // check whether the parent_address or child_address is equal to the given address.
+                // If so, the edge is connected to the goal being archived.
+                get_response.entry.goal_address == address
+            })
+            .map(|get_response: GetResponse<GoalMember>| {
+                let goal_member_address = get_response.address;
+                // archive the edge with this address
+                match hdk::remove_entry(&goal_member_address) {
+                    Ok(_) => Ok(goal_member_address),
+                    Err(e) => Err(e),
+                }
+            })
+            // filter out errors
+            .filter_map(Result::ok)
+            .collect(); // returns vec of the goal_member addresses which were removed
+
         // return the address of the archived goal for the UI to use
         Ok(ArchiveGoalResponse {
             address,
             archived_edges,
+            archived_goal_members,
         })
     }
 
@@ -514,32 +564,6 @@ mod my_zome {
 
     #[zome_fn("hc_public")]
     fn fetch_goal_members() -> ZomeApiResult<Vec<GetResponse<GoalMember>>> {
-        // set up the anchor entry and compute its address
-        let anchor_address = Entry::App(
-            "anchor".into(),       // app entry type
-            "goal_members".into(), // app entry value
-        )
-        .address();
-
-        Ok(
-            // return all the Edge objects from the entries linked to the edge anchor (drop entries with wrong type)
-            hdk::utils::get_links_and_load_type(
-                &anchor_address,
-                LinkMatch::Exactly("anchor->goal_member"), // the link type to match
-                LinkMatch::Any,
-            )?
-            .into_iter()
-            .map(|goal_member: GoalMember| {
-                // re-create the goal_member entry to find its address
-                let address =
-                    Entry::App("goal_member".into(), goal_member.clone().into()).address();
-                // return a response structs with the goal_member and its address
-                GetResponse {
-                    entry: goal_member,
-                    address,
-                }
-            })
-            .collect(),
-        )
+        inner_fetch_goal_members()
     }
 }
