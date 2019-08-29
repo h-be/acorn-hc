@@ -3,8 +3,12 @@ import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 
 import Icon from './Icon'
+import {
+    addMemberOfGoal,
+    archiveMemberOfGoal
+} from '../goal-members/actions'
 
-function PeoplePicker(props) {
+function PeoplePicker({ people, goalAddress, addMemberOfGoal, archiveMemberOfGoal }) {
     const [filterText, setFilterText] = useState('')
 
     return (
@@ -16,7 +20,7 @@ function PeoplePicker(props) {
             </div>
             <div className='people_picker_spacer' />
             <ul className='people_picker_people'>
-                {props.people
+                {people
                     // filter people out if there's filter text defined, and don't bother case matching
                     .filter(person => !filterText || person.name.toLowerCase().indexOf(filterText.toLowerCase()) > -1)
                     // sort members (people attached to Goal) to the top of the list
@@ -25,15 +29,19 @@ function PeoplePicker(props) {
                         else if (p1.is_member && p2.is_member) return 0
                         else if (!p1.is_member && p2.is_member) return 1
                     })
-                    .map((person, index) => (
-                        <li key={index} className={person.is_member ? 'member' : ''}>
+                    .map((person, index) => {
+                        const onClick = () => {
+                            if (person.is_member) archiveMemberOfGoal(person.goal_member_address)
+                            else addMemberOfGoal(goalAddress, person.agent_address)
+                        }
+                        return (<li key={index} className={person.is_member ? 'member' : ''} onClick={onClick}>
                             <img src={person.avatar} className='avatar' />
                             <div className='hover_wrapper'>
                                 <span className='person_name'>{person.name}</span>
                                 {person.is_member && <Icon size='small' name='check_mark.svg' />}
                             </div>
-                        </li>
-                    ))
+                        </li>)
+                    })
                 }
             </ul>
         </div>
@@ -43,23 +51,49 @@ function PeoplePicker(props) {
 PeoplePicker.propTypes = {
     people: PropTypes.arrayOf(PropTypes.shape({
         name: PropTypes.string.isRequired,
+        avatar: PropTypes.string.isRequired,
         is_member: PropTypes.bool.isRequired,
-        avatar: PropTypes.string.isRequired
-    })).isRequired
+        goal_member_address: PropTypes.string
+    })).isRequired,
+    goalAddress: PropTypes.string.isRequired,
+    addMemberOfGoal: PropTypes.func.isRequired,
+    archiveMemberOfGoal: PropTypes.func.isRequired
 }
 
 function mapStateToProps(state) {
+    const goalAddress = state.ui.goalForm.editAddress
+    const membersOfGoal = Object.keys(state.goalMembers)
+        .map(address => state.goalMembers[address])
+        .filter(goalMember => goalMember.goal_address === goalAddress)
     return {
-        people: [
-            { name: 'Connor Turland', is_member: false, avatar: 'https://pbs.twimg.com/profile_images/801871834522255360/WqhDNxw5_400x400.jpg' },
-            { name: 'Pegah Vaezi', is_member: true, avatar: 'https://pbs.twimg.com/profile_images/801871834522255360/WqhDNxw5_400x400.jpg' }
-        ]
+        people: state.agents.map(agent_address => {
+            const member = membersOfGoal.find(goalMember => goalMember.agent_address === agent_address)
+            return {
+                agent_address,
+                name: 'Somebody Cool',
+                is_member: member ? true : false,
+                goal_member_address: member ? member.address : null,
+                avatar: 'https://pbs.twimg.com/profile_images/801871834522255360/WqhDNxw5_400x400.jpg'
+            }
+        }),
+        goalAddress
     }
 }
 
 function mapDispatchToProps(dispatch) {
     return {
-
+        addMemberOfGoal: (goal_address, agent_address) => {
+            return dispatch(addMemberOfGoal.create({
+                goal_member: {
+                    goal_address,
+                    agent_address,
+                    unix_timestamp: Date.now()
+                }
+            }))
+        },
+        archiveMemberOfGoal: (address) => {
+            return dispatch(archiveMemberOfGoal.create({ address }))
+        }
     }
 }
 

@@ -9,10 +9,13 @@ extern crate serde_json;
 #[macro_use]
 extern crate holochain_json_derive;
 
-use hdk::holochain_core_types::{dna::entry_types::Sharing, entry::Entry, link::LinkMatch};
+use hdk::holochain_core_types::{
+    agent::AgentId, dna::entry_types::Sharing, entry::Entry, link::LinkMatch,
+};
 use hdk::{
     entry_definition::ValidatingEntryType,
     error::{ZomeApiError, ZomeApiResult},
+    AGENT_ADDRESS, AGENT_ID_STR, DNA_ADDRESS, DNA_NAME,
 };
 
 use hdk::holochain_json_api::{
@@ -25,10 +28,27 @@ use hdk::holochain_persistence_api::cas::content::{Address, AddressableContent};
 use hdk_proc_macros::zome;
 
 use serde::Serialize;
-use std::convert::TryFrom;
+use std::convert::{TryFrom, TryInto};
 use std::fmt::Debug;
 
 // see https://developer.holochain.org/api/latest/hdk/ for info on using the hdk library
+
+// whoami -- Return current Agent ID and DNA information
+#[derive(Serialize, Deserialize, Debug, DefaultJson, PartialEq)]
+pub struct WhoamiResult {
+    dna_address: String,
+    dna_name: String,
+    agent_id: AgentId,
+    agent_address: String,
+}
+
+// a relationship between a Goal and an Agent
+#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
+pub struct GoalMember {
+    goal_address: Address,
+    agent_address: Address,
+    unix_timestamp: u128,
+}
 
 // An edge. This is an arrow on the SoA Tree which directionally links
 // two goals.
@@ -93,8 +113,28 @@ mod my_zome {
             // app entry value. We'll use the value to specify what this anchor is for
             "edges".into(),
         );
-        let _goals_anchor_address = hdk::commit_entry(&goals_anchor_entry)?;
-        let _edges_anchor_address = hdk::commit_entry(&edges_anchor_entry)?;
+        let goal_members_anchor_entry = Entry::App(
+            "anchor".into(), // app entry type
+            // app entry value. We'll use the value to specify what this anchor is for
+            "goal_members".into(),
+        );
+        let agents_anchor_entry = Entry::App(
+            "anchor".into(), // app entry type
+            // app entry value. We'll use the value to specify what this anchor is for
+            "agents".into(),
+        );
+        hdk::commit_entry(&goal_members_anchor_entry)?;
+        hdk::commit_entry(&goals_anchor_entry)?;
+        hdk::commit_entry(&edges_anchor_entry)?;
+        hdk::commit_entry(&agents_anchor_entry)?;
+
+        hdk::link_entries(
+            &agents_anchor_entry.address(),
+            &AGENT_ADDRESS,
+            "anchor->agents",
+            "",
+        )?;
+
         Ok(())
     }
 
@@ -133,6 +173,21 @@ mod my_zome {
         )
     }
 
+    #[entry_def]
+    fn goal_member_def() -> ValidatingEntryType {
+        entry!(
+            name: "goal_member",
+            description: "this is an entry representing a connection from a Goal to an Agent",
+            sharing: Sharing::Public,
+            validation_package: || {
+                hdk::ValidationPackageDefinition::Entry
+            },
+            validation: | _validation_data: hdk::EntryValidationData<GoalMember>| {
+                Ok(())
+            }
+        )
+    }
+
     // The anchor type. Anchors are app entries with type anchor. The value is how we find
     // the anchor again, for example, we create an anchor with app entry value 'goals' and
     // link all goals to that anchor.
@@ -149,6 +204,16 @@ mod my_zome {
                 Ok(())
             },
             links: [
+                to!(
+                    "%agent_id",
+                    link_type: "anchor->agents",
+                    validation_package: || {
+                        hdk::ValidationPackageDefinition::Entry
+                    },
+                    validation: | _validation_data: hdk::LinkValidationData| {
+                        Ok(())
+                    }
+                ),
                 to!(
                     "goal",
                     link_type: "anchor->goal",
@@ -168,9 +233,48 @@ mod my_zome {
                     validation: | _validation_data: hdk::LinkValidationData| {
                         Ok(())
                     }
+                ),
+                to!(
+                    "goal_member",
+                    link_type: "anchor->goal_member",
+                    validation_package: || {
+                        hdk::ValidationPackageDefinition::Entry
+                    },
+                    validation: | _validation_data: hdk::LinkValidationData| {
+                        Ok(())
+                    }
                 )
             ]
         )
+    }
+
+    #[zome_fn("hc_public")]
+    fn whoami() -> ZomeApiResult<WhoamiResult> {
+        Ok(WhoamiResult {
+            dna_name: DNA_NAME.to_string(),
+            dna_address: DNA_ADDRESS.to_string(),
+            agent_id: JsonString::from_json(&AGENT_ID_STR).try_into()?,
+            agent_address: AGENT_ADDRESS.to_string(),
+        })
+    }
+
+    #[zome_fn("hc_public")]
+    fn fetch_agents() -> ZomeApiResult<Vec<Address>> {
+        let anchor_address = Entry::App(
+            "anchor".into(), // app entry type
+            // app entry value. We'll use the value to specify what this anchor is for
+            "agents".into(),
+        )
+        .address();
+
+        let addresses = hdk::get_links(
+            &anchor_address,
+            LinkMatch::Exactly("anchor->agents"), // the link type to match
+            LinkMatch::Any,
+        )?
+        .addresses();
+
+        Ok(addresses)
     }
 
     #[zome_fn("hc_public")]
@@ -322,7 +426,7 @@ mod my_zome {
             )?
             .into_iter()
             .map(|edge: Edge| {
-                // re-create the goal entry to find its address
+                // re-create the edge entry to find its address
                 let address = Entry::App("edge".into(), edge.clone().into()).address();
                 // return a response structs with the edge and its address
                 GetResponse {
@@ -377,4 +481,65 @@ mod my_zome {
         Ok(address)
     }
 
+    #[zome_fn("hc_public")]
+    fn add_member_of_goal(goal_member: GoalMember) -> ZomeApiResult<GetResponse<GoalMember>> {
+        let app_entry = Entry::App("goal_member".into(), goal_member.clone().into());
+        let entry_address = hdk::commit_entry(&app_entry)?;
+
+        // link new edge to the edges anchor
+        let anchor_address = Entry::App(
+            "anchor".into(),       // app entry type
+            "goal_members".into(), // app entry value
+        )
+        .address();
+
+        hdk::link_entries(
+            &anchor_address,
+            &app_entry.address(),
+            "anchor->goal_member",
+            "",
+        )?;
+
+        Ok(GetResponse {
+            entry: goal_member,
+            address: entry_address,
+        })
+    }
+
+    #[zome_fn("hc_public")]
+    fn archive_member_of_goal(address: Address) -> ZomeApiResult<Address> {
+        hdk::remove_entry(&address)?;
+        Ok(address)
+    }
+
+    #[zome_fn("hc_public")]
+    fn fetch_goal_members() -> ZomeApiResult<Vec<GetResponse<GoalMember>>> {
+        // set up the anchor entry and compute its address
+        let anchor_address = Entry::App(
+            "anchor".into(),       // app entry type
+            "goal_members".into(), // app entry value
+        )
+        .address();
+
+        Ok(
+            // return all the Edge objects from the entries linked to the edge anchor (drop entries with wrong type)
+            hdk::utils::get_links_and_load_type(
+                &anchor_address,
+                LinkMatch::Exactly("anchor->goal_member"), // the link type to match
+                LinkMatch::Any,
+            )?
+            .into_iter()
+            .map(|goal_member: GoalMember| {
+                // re-create the goal_member entry to find its address
+                let address =
+                    Entry::App("goal_member".into(), goal_member.clone().into()).address();
+                // return a response structs with the goal_member and its address
+                GetResponse {
+                    entry: goal_member,
+                    address,
+                }
+            })
+            .collect(),
+        )
+    }
 }

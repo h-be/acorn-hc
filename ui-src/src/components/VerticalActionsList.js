@@ -14,7 +14,7 @@ import {
 
 function VerticalActionsList(props) {
 
-    const [squirrelsIsOpen, setSquirrelsIsOpen] = useState(true)
+    const [squirrelsIsOpen, setSquirrelsIsOpen] = useState(false)
 
     const list = [
       // ['squirrel.png', 'squirrels', 'onSquirrelsClick'],

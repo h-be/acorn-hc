@@ -19,8 +19,11 @@ import { DEFAULT_HOLOCHAIN_PORT } from './holochainConfig'
 import setupEventListeners from './event-listeners'
 import acorn from './reducer'
 import render from './drawing'
+import { fetchAgents } from './agents/actions'
 import { fetchGoals } from './goals/actions'
 import { fetchEdges } from './edges/actions'
+import { fetchGoalMembers } from './goal-members/actions'
+import { whoami } from './who-am-i/actions'
 import { setScreenDimensions } from './screensize/actions'
 import App from './components/App'
 
@@ -45,8 +48,11 @@ let store = createStore(acorn, /* preloadedState, */ composeEnhancers(
 
 // dispatch fetch goals, and fetch edges functions to pull in all the existing goals and edges
 // on first render
+store.dispatch(fetchAgents.create({}))
 store.dispatch(fetchEdges.create({}))
 store.dispatch(fetchGoals.create({}))
+store.dispatch(fetchGoalMembers.create({}))
+store.dispatch(whoami.create({}))
 /*
   store.subscribe(cb)
   store.getState()
