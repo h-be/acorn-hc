@@ -26,9 +26,21 @@ div.react {
 .goal_form {
   width: 363px;
   height: 132px;
-  border: 2px solid #FF5D36;
   border-radius: 15px;
   background-color: #FFF;
+}
+
+.goal_form.Uncertain {
+  border: 2px solid #FF5D36;
+}
+.goal_form.Certain {
+  border: 2px solid #FFC400;
+}
+.goal_form.InReview {
+  border: 2px solid #00E2FF;
+}
+.goal_form.Complete {
+  border: 2px solid #83E300;
 }
 
 .goal_form textarea {

@@ -84,7 +84,7 @@ class GoalForm extends Component {
       user_hash: 'Boop',
       unix_timestamp: Date.now(),
       hierarchy: 'Branch',
-      status: 'Uncertain'
+      status: this.props.status
     }, this.props.editAddress)
   }
 
@@ -96,7 +96,7 @@ class GoalForm extends Component {
     // is the strict definition of what HTML should appear on screen
     // depending on the data that is given to the component
 
-    const { editAddress, content, xLoc, yLoc } = this.props
+    const { editAddress, content, status, xLoc, yLoc } = this.props
 
     // use the xLoc and yLoc to position the form anywhere on the screen
     // using a position relative to its container
@@ -104,7 +104,7 @@ class GoalForm extends Component {
     // optionally render the form dependent on whether the `isOpen` prop
     // is true, else render nothing
     return (<div className='goal_form_wrapper' style={{ position: 'absolute', top: `${yLoc}px`, left: `${xLoc}px` }}>
-      <form className='goal_form' onSubmit={this.handleSubmit}>
+      <form className={`goal_form ${status}`} onSubmit={this.handleSubmit}>
         <textarea
           placeholder='Add a title...'
           value={content}
@@ -126,6 +126,8 @@ class GoalForm extends Component {
 // looking at the code after it was written
 GoalForm.propTypes = {
   parentAddress: PropTypes.string, // optional
+  editAddress: PropTypes.string, // optional
+  status: PropTypes.string,
   content: PropTypes.string.isRequired,
   xLoc: PropTypes.number.isRequired,
   yLoc: PropTypes.number.isRequired,
@@ -148,6 +150,7 @@ function mapStateToProps(state) {
     editAddress,
     parentAddress,
     content,
+    status: editAddress ? state.goals[editAddress].status : 'Uncertain', // use Uncertain as a default
     xLoc: xLoc + state.ui.viewport.translate.x,
     yLoc: yLoc + state.ui.viewport.translate.y
   }

@@ -10,6 +10,10 @@ import {
   fontFamily
 } from './dimensions'
 
+import {
+  colors
+} from '../styles'
+
 function roundRect(ctx, x, y, w, h, radius, color, stroke, strokeWidth) {
   const r = x + w
   const b = y + h
@@ -59,14 +63,10 @@ function getLinesForParagraphs(ctx, textWithParagraphs, maxWidth) {
 // render a goal card
 export default function render(goal, { x, y }, isSelected, isHovered, ctx) {
   // set up border color
-  // TODO: refactor these colors to central location specifically for styles/theming
-  let borderColor = '#FF5D36'
-  if (goal.complete) {
-    borderColor = '#8fd14f' // FIXME: wasn't in the spec
-  } else if (goal.certain) {
-    borderColor = '#FFC400'
-  }
+  let borderColor = colors[goal.status]
+
   const selectedColor = '#5F65FF'
+
   let backgroundColor = '#FFFFFF'
   if (isHovered) {
     backgroundColor = '#E8E8E8'
