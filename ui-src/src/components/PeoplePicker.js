@@ -12,7 +12,7 @@ function PeoplePicker({ people, goalAddress, addMemberOfGoal, archiveMemberOfGoa
     const [filterText, setFilterText] = useState('')
 
     return (
-        <div className='people_picker'>
+        <div className='people_picker vertical_action_overlay'>
             <div className='people_picker_search'>
                 <Icon name='search.svg' size='small' />
                 <input type='text' onChange={e => setFilterText(e.target.value)} value={filterText} placeholder='Search squirrels...' autoFocus />

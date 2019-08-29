@@ -118,8 +118,8 @@ div.react {
 /* Icon */
 
 .icon {
-  width: 39px;
-  height: 39px;
+  width: 40px;
+  height: 40px;
   box-sizing: border-box;
   padding: 6px;
 }
@@ -173,11 +173,7 @@ div.react {
 /* PeoplePicker */
 
 .people_picker {
-  position: absolute;
-  border-radius: 5px;
-  background: #FFFFFF;
-  box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.16);
-  padding: 8px 12px;
+  
 }
 
 .people_picker_spacer {
@@ -250,4 +246,62 @@ div.react {
 
 .people_picker_people li.member .person_name {
   color: #5F65FF;
+}
+
+
+/* StatusPicker */
+
+.status_picker {
+  display: flex;
+}
+
+
+
+/* StatusIcon */
+
+.status_color {
+  width: 26px;
+  height: 26px;
+  margin: 6px;
+  border-radius: 20px;
+  border: 1px solid #D1D1D1;
+}
+
+.status_color.can_click {
+  cursor: pointer;
+}
+
+.status_color.Uncertain {
+  background-color: #FF5D36;
+}
+.status_color.Certain {
+  background-color: #FFC400;
+}
+.status_color.InReview {
+  background-color: #00E2FF;
+}
+.status_color.Complete {
+  background-color: #83E300;
+}
+
+.status_color.has_status {
+  box-shadow: 0 0 0 4px #FFF, 0 0 0 6px #5F65FF;
+}
+
+
+
+/* vertical_action_overlay */
+
+.vertical_action_overlay {
+  position: absolute;
+  border-radius: 5px;
+  background: #FFFFFF;
+  box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.16);
+  padding: 8px 12px;
+}
+
+/* Tooltips */
+
+.hidden_tooltip {
+  display: none;
 }

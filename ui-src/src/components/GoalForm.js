@@ -70,13 +70,12 @@ class GoalForm extends Component {
     // dispatch the action to create a goal
     // with the contents from the form
     // inserted into it
-    const response = await this.props.createGoal({
+    this.props.createGoal({
       content: this.props.content,
       user_hash: 'Boop',
       unix_timestamp: Date.now(),
-      complete: false,
-      certain: false,
-      small: false
+      hierarchy: 'Branch',
+      status: 'Uncertain',
     }, this.props.parentAddress)
   }
   updateGoal() {
@@ -84,9 +83,8 @@ class GoalForm extends Component {
       content: this.props.content,
       user_hash: 'Boop',
       unix_timestamp: Date.now(),
-      complete: false,
-      certain: false,
-      small: false
+      hierarchy: 'Branch',
+      status: 'Uncertain'
     }, this.props.editAddress)
   }
 

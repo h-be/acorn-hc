@@ -58,6 +58,22 @@ pub struct Edge {
     child_address: Address,
 }
 
+#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
+pub enum Status {
+    Uncertain,
+    Certain,
+    Complete,
+    InReview
+}
+
+#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
+pub enum Hierarchy {
+    Root,
+    Trunk,
+    Branch,
+    Leaf
+}
+
 // A Goal Card. This is a card on the SoA Tree which can be small or non-small, complete or
 // incomplete, certain or uncertain, and contains text content.
 // user hash and unix timestamp are included to prevent hash collisions.
@@ -66,9 +82,8 @@ pub struct Goal {
     content: String,
     user_hash: Address,
     unix_timestamp: u128,
-    complete: bool,
-    certain: bool,
-    small: bool,
+    hierarchy: Hierarchy,
+    status: Status,
 }
 
 #[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]

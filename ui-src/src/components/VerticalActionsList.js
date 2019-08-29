@@ -4,6 +4,8 @@ import PropTypes from 'prop-types'
 
 import Icon from './Icon'
 import PeoplePicker from './PeoplePicker'
+import StatusPicker from './StatusPicker'
+import StatusIcon from './StatusIcon'
 
 import {
   archiveGoal
@@ -14,37 +16,46 @@ import {
 
 function VerticalActionsList(props) {
 
-    const [squirrelsIsOpen, setSquirrelsIsOpen] = useState(false)
-
-    const list = [
-      // ['squirrel.png', 'squirrels', 'onSquirrelsClick'],
-      ['archive.svg', 'archive', 'onArchiveClick']
-    ]
+    const defaultViews = {
+      status: false,
+      squirrels: false
+    }
+    const [viewsOpen, setViews] = useState(defaultViews)
 
     return (
       <div className='vertical_actions_list'>
-        <div className='action_list_item' key='squirrels' onClick={() => setSquirrelsIsOpen(!squirrelsIsOpen)}>
+        {/* status */}
+        <div className='action_list_item' key='status' onClick={() => setViews({ ...defaultViews, status: !viewsOpen.status })}>
+          <StatusIcon status={props.goal.status} />
+          <span>status</span>
+        </div>
+        {viewsOpen.status && <StatusPicker />}
+        {/* squirrels */}
+        <div className='action_list_item' key='squirrels' onClick={() => setViews({ ...defaultViews, squirrels: !viewsOpen.squirrels })}>
           <Icon name='squirrel.png' />
           <span>squirrels</span>
         </div>
-        {squirrelsIsOpen && <PeoplePicker />}
-        {list.map(([icon, text, clickKey], index) => (
-          <div className='action_list_item' key={index} onClick={() => props[clickKey](props.goalAddress)}>
-            <Icon name={icon} />
-            <span>{text}</span>
-          </div>))}
+        {viewsOpen.squirrels && <PeoplePicker />}
+        {/* archive */}
+        <div className='action_list_item' key='archive' onClick={() => onArchiveClick(props.goalAddress)}>
+          <Icon name='archive.svg' />
+          <span>archive</span>
+        </div>
       </div>
     )
 }
 
 VerticalActionsList.propTypes = {
   goalAddress: PropTypes.string.isRequired,
+  goal: PropTypes.shape({}).isRequired,
   onArchiveClick: PropTypes.func.isRequired
 }
 
 function mapStateToProps(state) {
+  const goalAddress = state.ui.goalForm.editAddress
   return {
-    goalAddress: state.ui.goalForm.editAddress
+    goalAddress,
+    goal: state.goals[goalAddress]
   }
 }
 
