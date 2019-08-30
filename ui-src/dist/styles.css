@@ -342,6 +342,10 @@ div.react {
   margin-left: 14px;
 }
 
+.vertical_action_close {
+  cursor: pointer;
+}
+
 .action_list_item {
   background-color: rgba(23, 23, 23, 0.5);
   border: 1px solid #707070;

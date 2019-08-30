@@ -8,7 +8,7 @@ import {
     archiveMemberOfGoal
 } from '../goal-members/actions'
 
-function PeoplePicker({ people, goalAddress, addMemberOfGoal, archiveMemberOfGoal }) {
+function PeoplePicker({ people, goalAddress, addMemberOfGoal, archiveMemberOfGoal, onClose }) {
     const [filterText, setFilterText] = useState('')
 
     return (
@@ -16,7 +16,7 @@ function PeoplePicker({ people, goalAddress, addMemberOfGoal, archiveMemberOfGoa
             <div className='people_picker_search'>
                 <Icon name='search.svg' size='small' />
                 <input type='text' onChange={e => setFilterText(e.target.value)} value={filterText} placeholder='Search squirrels...' autoFocus />
-                <Icon name='x.svg' size='small' onClick={() => setFilterText('')} />
+                <Icon className='vertical_action_close' name='x.svg' size='small' onClick={() => onClose()} />
             </div>
             <div className='people_picker_spacer' />
             <ul className='people_picker_people'>
@@ -57,7 +57,8 @@ PeoplePicker.propTypes = {
     })).isRequired,
     goalAddress: PropTypes.string.isRequired,
     addMemberOfGoal: PropTypes.func.isRequired,
-    archiveMemberOfGoal: PropTypes.func.isRequired
+    archiveMemberOfGoal: PropTypes.func.isRequired,
+    onClose: PropTypes.func.isRequired
 }
 
 function mapStateToProps(state) {

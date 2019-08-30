@@ -46,7 +46,7 @@ function VerticalActionsList({ goalAddress, goal, onArchiveClick, updateGoal }) 
         <Icon name='squirrel.png' />
         <span>squirrels</span>
       </div>
-      {viewsOpen.squirrels && <PeoplePicker />}
+      {viewsOpen.squirrels && <PeoplePicker onClose={() => setViews({ ...defaultViews })} />}
       {/* archive */}
       <div className='action_list_item' key='archive' onClick={() => onArchiveClick(goalAddress)}>
         <Icon name='archive.svg' />
