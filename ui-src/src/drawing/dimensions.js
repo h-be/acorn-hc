@@ -6,4 +6,4 @@ export const textBoxMarginLeft = 29
 export const textBoxMarginTop = 27
 export const textBoxWidth = 302
 export const fontSize = '20px'
-export const fontFamily = 'Helvetica'
+export const fontFamily = 'rennerbook'
