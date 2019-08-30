@@ -90,13 +90,27 @@ div.react {
   position: fixed;
   bottom: 0px;
   left: 50%;
-  margin-left: -480px;
-  width: 960px;
-  height: 61px;
-  background: #FFFFFF 0% 0% no-repeat padding-box;
+  transform: translateX(-50%);
+  padding: 0 8px;
+  background-color: #FFFFFF;
   box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.16);
   border-radius: 10px 10px 0px 0px;
   opacity: 1;
+  display: flex;
+  align-items: center;
+}
+
+.multi_edit_bar_item {
+  width: 60px;
+  height: 60px;
+  box-sizing: border-box;
+  border: 1px solid #E8E8E82B;
+  display: flex;
+  align-items: center;
+}
+
+.multi_edit_bar .status_picker {
+  top: -60px;
 }
 
 /* HoverOverlay */
@@ -255,22 +269,31 @@ div.react {
 
 .status_color {
   position: relative;
+}
+
+.status_color_small {
   width: 26px;
   height: 26px;
   margin: 6px;
   border-radius: 14px;
-  border: 1px solid #D1D1D1;
+}
+
+.status_color_medium {
+  width: 38px;
+  height: 38px;
+  border-radius: 19px;
+  margin: 0 auto;
 }
 
 .status_color.can_click {
   cursor: pointer;
 }
 
-.status_color.can_click:hover {
+.status_color_small.can_click:hover {
   width: 34px;
   height: 34px;
   border-radius: 17px;
-  margin: 3px;
+  margin: 2px;
   border: none;
 }
 
