@@ -17,6 +17,7 @@ import goalForm from './goal-form/reducer'
 import selection from './selection/reducer'
 import hover from './hover/reducer'
 import keyboard from './keyboard/reducer'
+import mouse from './mouse/reducer'
 import screensize from './screensize/reducer'
 import viewport from './viewport/reducer'
 // import anotherone from './another/path'
@@ -34,7 +35,8 @@ export default combineReducers({
     hover,
     keyboard,
     screensize,
-    viewport
+    viewport,
+    mouse
   }) // ,
   // anotherone: anotherone
 })
