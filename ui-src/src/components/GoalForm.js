@@ -104,7 +104,7 @@ class GoalForm extends Component {
     // optionally render the form dependent on whether the `isOpen` prop
     // is true, else render nothing
     return (<div className='goal_form_wrapper' style={{ position: 'absolute', top: `${yLoc}px`, left: `${xLoc}px` }}>
-      <form className={`goal_form border_${status}`} onSubmit={this.handleSubmit}>
+      <form className={'goal_form'} onSubmit={this.handleSubmit}>
         <textarea
           placeholder='Add a title...'
           value={content}

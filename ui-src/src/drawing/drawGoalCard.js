@@ -61,7 +61,7 @@ function getLinesForParagraphs(ctx, textWithParagraphs, maxWidth) {
   return textWithParagraphs.split("\n").map(para => getLines(ctx, para, maxWidth)).reduce((a, b) => a.concat(b)) }
 
 // render a goal card
-export default function render(goal, { x, y }, isSelected, isHovered, ctx) {
+export default function render(goal, { x, y }, isEditing, isSelected, isHovered, ctx) {
   // set up border color
   let borderColor = colors[goal.status]
 
@@ -93,23 +93,25 @@ export default function render(goal, { x, y }, isSelected, isHovered, ctx) {
     roundRect(ctx, xStart, yStart, w, h, cr, selectedColor, true, selectedOutlineWidth)
   }
 
-  // render text
-  let goalText = goal.content
+  // render text, if not in edit mode
+  if (!isEditing) {
+    let goalText = goal.content
 
-  ctx.fillStyle = '#4D4D4D'
-  ctx.font = fontSize + ' ' + fontFamily
-  ctx.textBaseline = 'top'
+    ctx.fillStyle = '#4D4D4D'
+    ctx.font = fontSize + ' ' + fontFamily
+    ctx.textBaseline = 'top'
 
-  // get lines after font and font size are set up, since ctx.measureText()
-  // takes font and font size into account
-  let lines = getLinesForParagraphs(ctx, goalText, textBoxWidth)
+    // get lines after font and font size are set up, since ctx.measureText()
+    // takes font and font size into account
+    let lines = getLinesForParagraphs(ctx, goalText, textBoxWidth)
 
-  let fontSizeInt = Number(fontSize.slice(0, -2)) // slice off px from font size to get font height as number
-  let lineSpacing = fontSizeInt / 5
-  let textBoxLeft = x + textBoxMarginLeft
-  let textBoxTop = y + textBoxMarginTop
-  lines.forEach((line, index) => {
-    let linePosition = index * (fontSizeInt + lineSpacing)
-    ctx.fillText(line, textBoxLeft, textBoxTop + linePosition )
-  })
+    let fontSizeInt = Number(fontSize.slice(0, -2)) // slice off px from font size to get font height as number
+    let lineSpacing = fontSizeInt / 5
+    let textBoxLeft = x + textBoxMarginLeft
+    let textBoxTop = y + textBoxMarginTop
+    lines.forEach((line, index) => {
+      let linePosition = index * (fontSizeInt + lineSpacing)
+      ctx.fillText(line, textBoxLeft, textBoxTop + linePosition )
+    })
+  }
 }
