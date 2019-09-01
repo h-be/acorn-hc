@@ -18,6 +18,10 @@ import {
   unsetShiftKeyDown
 } from '../keyboard/actions'
 import {
+  setMousedown,
+  unsetMousedown
+} from '../mouse/actions'
+import {
   openGoalForm,
   closeGoalForm
 } from '../goal-form/actions'
@@ -98,6 +102,10 @@ export default function setupEventListeners(store, canvas) {
   // kill performance
   canvas.addEventListener('mousemove', event => {
     const state = store.getState()
+    if (state.ui.mouse.mousedown) {
+      store.dispatch(changeTranslate(event.movementX, event.movementY))
+      return
+    }
     const goalAddress = checkForGoalAtCoordinates(state.ui.viewport.translate, state.ui.screensize.width, state.goals, state.edges, event.clientX, event.clientY)
     if (goalAddress && state.ui.hover.hoveredGoal !== goalAddress) {
       store.dispatch(hoverGoal(goalAddress))
@@ -118,6 +126,13 @@ export default function setupEventListeners(store, canvas) {
   canvas.addEventListener('wheel', event => {
     debouncedWheelHandler(event)
     event.preventDefault()
+  })
+
+  canvas.addEventListener('mousedown', event => {
+    store.dispatch(setMousedown())
+  })
+  canvas.addEventListener('mouseup', event => {
+    store.dispatch(unsetMousedown())
   })
 
   // This listener is bound to the canvas only so clicks on other parts of

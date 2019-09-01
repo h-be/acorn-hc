@@ -69,8 +69,12 @@ function render(store, canvas) {
   }
 
   // create layers behind and in front of the editing highlight overlay
-  const unselectedGoals = goalsAsArray.filter(goal => state.ui.selection.selectedGoals.indexOf(goal.address) === -1)
-  const selectedGoals = goalsAsArray.filter(goal => state.ui.selection.selectedGoals.indexOf(goal.address) > -1)
+  const unselectedGoals = goalsAsArray.filter(goal => {
+    return state.ui.selection.selectedGoals.indexOf(goal.address) === -1 && state.ui.goalForm.editAddress !== goal.address
+  })
+  const selectedGoals = goalsAsArray.filter(goal => {
+    return state.ui.selection.selectedGoals.indexOf(goal.address) > -1 && state.ui.goalForm.editAddress !== goal.address
+  })
 
   // render each unselected goal to the canvas
   unselectedGoals.forEach(goal => {
@@ -78,7 +82,8 @@ function render(store, canvas) {
     // in the coordinates array
     const isHovered = state.ui.hover.hoveredGoal === goal.address
     const isSelected = false
-    drawGoalCard(goal, coordinates[goal.address], isSelected, isHovered, ctx)
+    const isEditing = false
+    drawGoalCard(goal, coordinates[goal.address], isEditing, isSelected, isHovered, ctx)
   })
 
   // draw the editing highlight overlay
@@ -94,8 +99,16 @@ function render(store, canvas) {
     // in the coordinates array
     const isHovered = state.ui.hover.hoveredGoal === goal.address
     const isSelected = true
-    drawGoalCard(goal, coordinates[goal.address], isSelected, isHovered, ctx)
+    const isEditing = false
+    drawGoalCard(goal, coordinates[goal.address], isEditing, isSelected, isHovered, ctx)
   })
+
+  // draw the editing goal in front of the overlay as well
+  if (state.ui.goalForm.editAddress) {
+    const editingGoal = state.goals[state.ui.goalForm.editAddress]
+    const isEditing = true
+    drawGoalCard(editingGoal, coordinates[editingGoal.address], isEditing, false, false, ctx)
+  }
 }
 
 export default render
