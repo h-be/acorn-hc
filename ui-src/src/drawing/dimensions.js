@@ -1,9 +1,9 @@
-export const goalWidth = 363
-export const goalHeight = 132
+export const goalWidth = 360
+export const goalHeight = 130
 export const cornerRadius = 15
 export const borderWidth = 2
-export const textBoxMarginLeft = 29
+export const textBoxMarginLeft = 28
 export const textBoxMarginTop = 27
-export const textBoxWidth = 302
+export const textBoxWidth = 310
 export const fontSize = '20px'
-export const fontFamily = 'Helvetica'
+export const fontFamily = 'rennerbook'
