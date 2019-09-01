@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
+import TextareaAutosize from 'react-textarea-autosize'
 
 import { createGoal, updateGoal } from '../goals/actions'
 import { createEdge } from '../edges/actions'
@@ -96,7 +97,7 @@ class GoalForm extends Component {
     // is the strict definition of what HTML should appear on screen
     // depending on the data that is given to the component
 
-    const { editAddress, content, status, xLoc, yLoc } = this.props
+    const { editAddress, content, xLoc, yLoc } = this.props
 
     // use the xLoc and yLoc to position the form anywhere on the screen
     // using a position relative to its container
@@ -105,7 +106,8 @@ class GoalForm extends Component {
     // is true, else render nothing
     return (<div className='goal_form_wrapper' style={{ position: 'absolute', top: `${yLoc}px`, left: `${xLoc}px` }}>
       <form className={'goal_form'} onSubmit={this.handleSubmit}>
-        <textarea
+        <TextareaAutosize
+          minRows={3}
           placeholder='Add a title...'
           value={content}
           onChange={this.handleChange}
