@@ -106,7 +106,7 @@ export default function setupEventListeners(store, canvas) {
       store.dispatch(changeTranslate(event.movementX, event.movementY))
       return
     }
-    const goalAddress = checkForGoalAtCoordinates(state.ui.viewport.translate, state.ui.screensize.width, state.goals, state.edges, event.clientX, event.clientY)
+    const goalAddress = checkForGoalAtCoordinates(canvas.getContext('2d'), state.ui.viewport.translate, state.ui.screensize.width, state.goals, state.edges, event.clientX, event.clientY)
     if (goalAddress && state.ui.hover.hoveredGoal !== goalAddress) {
       store.dispatch(hoverGoal(goalAddress))
     } else if (!goalAddress && state.ui.hover.hoveredGoal) {
@@ -157,7 +157,7 @@ export default function setupEventListeners(store, canvas) {
       // check for node in clicked area
       // select it if so
       const state = store.getState()
-      const clickedAddress = checkForGoalAtCoordinates(state.ui.viewport.translate, state.ui.screensize.width, state.goals, state.edges, event.clientX, event.clientY)
+      const clickedAddress = checkForGoalAtCoordinates(canvas.getContext('2d'), state.ui.viewport.translate, state.ui.screensize.width, state.goals, state.edges, event.clientX, event.clientY)
       if (clickedAddress) {
         // if the shift key is being use, do an 'additive' select
         // where you add the Goal to the list of selected

@@ -54,7 +54,8 @@ function render(store, canvas) {
   edgesAsArray.forEach(function (edge) {
     const childCoords = coordinates[edge.child_address]
     const parentCoords = coordinates[edge.parent_address]
-    if (childCoords && parentCoords) drawEdge(childCoords, parentCoords, ctx)
+    const parentGoalText = state.goals[edge.parent_address] ? state.goals[edge.parent_address].content : ''
+    if (childCoords && parentCoords) drawEdge(childCoords, parentCoords, parentGoalText, ctx)
   })
 
   if (state.ui.goalForm.isOpen) {
@@ -64,7 +65,8 @@ function render(store, canvas) {
         x: state.ui.goalForm.xLoc,
         y: state.ui.goalForm.yLoc
       }
-      drawEdge(newGoalCoords, parentCoords, ctx)
+      const parentGoalText = state.goals[state.ui.goalForm.parentAddress] ? state.goals[state.ui.goalForm.parentAddress].content : ''
+      drawEdge(newGoalCoords, parentCoords, parentGoalText, ctx)
     }
   }
 
@@ -83,7 +85,7 @@ function render(store, canvas) {
     const isHovered = state.ui.hover.hoveredGoal === goal.address
     const isSelected = false
     const isEditing = false
-    drawGoalCard(goal, coordinates[goal.address], isEditing, isSelected, isHovered, ctx)
+    drawGoalCard(goal, coordinates[goal.address], isEditing, '', isSelected, isHovered, ctx)
   })
 
   // draw the editing highlight overlay
@@ -100,14 +102,30 @@ function render(store, canvas) {
     const isHovered = state.ui.hover.hoveredGoal === goal.address
     const isSelected = true
     const isEditing = false
-    drawGoalCard(goal, coordinates[goal.address], isEditing, isSelected, isHovered, ctx)
+    drawGoalCard(goal, coordinates[goal.address], isEditing, '', isSelected, isHovered, ctx)
   })
 
   // draw the editing goal in front of the overlay as well
   if (state.ui.goalForm.editAddress) {
     const editingGoal = state.goals[state.ui.goalForm.editAddress]
     const isEditing = true
-    drawGoalCard(editingGoal, coordinates[editingGoal.address], isEditing, false, false, ctx)
+    const editText = state.ui.goalForm.content
+    drawGoalCard(editingGoal, coordinates[editingGoal.address], isEditing, editText, false, false, ctx)
+  }
+
+  if (state.ui.goalForm.isOpen) {
+    const isHovered = false
+    const isSelected = false
+    const isEditing = true
+    drawGoalCard(
+      { status: 'Uncertain' },
+      { x: state.ui.goalForm.xLoc, y: state.ui.goalForm.yLoc },
+      isEditing,
+      state.ui.goalForm.content,
+      isSelected,
+      isHovered,
+      ctx
+    )
   }
 }
 

@@ -1,15 +1,16 @@
 import {
     goalWidth,
-    goalHeight
+    getGoalHeight
 } from './dimensions'
 import layoutFormula from './layoutFormula'
 
-export function checkForGoalAtCoordinates(translate, width, goals, edges, clickX, clickY) {
+export function checkForGoalAtCoordinates(ctx, translate, width, goals, edges, clickX, clickY) {
     const coordinates = layoutFormula(width, goals, edges)
     // keep track of whether a goal was selected
     let clickedAddress
     Object.keys(goals).map(address => goals[address]).forEach(goal => {
         const { x, y } = coordinates[goal.address]
+        const goalHeight = getGoalHeight(ctx, goal.content)
         const left = x + translate.x
         const top = y + translate.y
         const right = left + goalWidth
