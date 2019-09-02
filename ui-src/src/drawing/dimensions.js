@@ -53,7 +53,7 @@ export function getGoalHeight(ctx, goalText) {
     // calculate the goalHeight
     // from the top and bottom margins + the height
     // of the lines of text
-    const goalHeight = textBoxMarginTop * 2 + totalTextHeight
+    const detectedGoalHeight = textBoxMarginTop * 2 + totalTextHeight
 
-    return goalHeight
+    return Math.max(detectedGoalHeight, goalHeight) 
 }
