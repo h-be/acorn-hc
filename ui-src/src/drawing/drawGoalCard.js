@@ -1,4 +1,7 @@
 import {
+  avatarHeight,
+  avatarWidth,
+  avatarSpace,
   goalWidth,
   cornerRadius,
   borderWidth,
@@ -13,6 +16,9 @@ import {
 import {
   colors
 } from '../styles'
+import {
+  getOrSetImageForUrl
+} from './imageCache'
 
 function roundRect(ctx, x, y, w, h, radius, color, stroke, strokeWidth) {
   const r = x + w
@@ -39,7 +45,7 @@ function roundRect(ctx, x, y, w, h, radius, color, stroke, strokeWidth) {
 }
 
 // render a goal card
-export default function render(goal, { x, y }, isEditing, editText, isSelected, isHovered, ctx) {
+export default function render(goal, members, { x, y }, isEditing, editText, isSelected, isHovered, ctx) {
 
   // use the editText for measuring,
   // even though it's not getting drawn on the canvas
@@ -87,4 +93,16 @@ export default function render(goal, { x, y }, isEditing, editText, isSelected, 
       ctx.fillText(line, textBoxLeft, textBoxTop + linePosition)
     })
   }
+
+  members.forEach((member, index) => {
+    const img = getOrSetImageForUrl(member.avatar, avatarWidth, avatarHeight)
+    // assume that it will be drawn the next time 'render' is called
+    // if it isn't already set
+    if (!img) return
+    // adjust the x position according to the index of this member
+    // since there can be many
+    const xImgDraw = x + goalWidth - (index + 1 * avatarWidth + avatarSpace)
+    const yImgDraw = y + goalHeight - avatarHeight - avatarSpace
+    ctx.drawImage(img, xImgDraw, yImgDraw, avatarWidth, avatarHeight)
+  })
 }

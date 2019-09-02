@@ -1,3 +1,6 @@
+export const avatarSpace = 12
+export const avatarWidth = 37
+export const avatarHeight = 37
 export const goalWidth = 360
 export const goalHeight = 130
 export const cornerRadius = 15
@@ -53,7 +56,7 @@ export function getGoalHeight(ctx, goalText) {
     // calculate the goalHeight
     // from the top and bottom margins + the height
     // of the lines of text
-    const detectedGoalHeight = textBoxMarginTop * 2 + totalTextHeight
+    const detectedGoalHeight = (textBoxMarginTop * 2) + totalTextHeight + avatarHeight + (avatarSpace * 2)
 
-    return Math.max(detectedGoalHeight, goalHeight) 
+    return Math.max(detectedGoalHeight, goalHeight)
 }

@@ -107,7 +107,6 @@ class GoalForm extends Component {
     return (<div className='goal_form_wrapper' style={{ position: 'absolute', top: `${yLoc}px`, left: `${xLoc}px` }}>
       <form className={'goal_form'} onSubmit={this.handleSubmit}>
         <TextareaAutosize
-          minRows={3}
           placeholder='Add a title...'
           value={content}
           onChange={this.handleChange}

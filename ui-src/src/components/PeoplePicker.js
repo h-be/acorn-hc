@@ -74,7 +74,7 @@ function mapStateToProps(state) {
                 name: 'Somebody Cool',
                 is_member: member ? true : false,
                 goal_member_address: member ? member.address : null,
-                avatar: 'https://miro.medium.com/fit/c/256/256/1*HOcvyIf90C1MxwiARJHR-w.jpeg'
+                avatar: '/img/profile.png'
             }
         }),
         goalAddress

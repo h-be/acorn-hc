@@ -85,7 +85,16 @@ function render(store, canvas) {
     const isHovered = state.ui.hover.hoveredGoal === goal.address
     const isSelected = false
     const isEditing = false
-    drawGoalCard(goal, coordinates[goal.address], isEditing, '', isSelected, isHovered, ctx)
+    const membersOfGoal = Object.keys(state.goalMembers)
+        .map(address => state.goalMembers[address])
+        .filter(goalMember => goalMember.goal_address === goal.address)
+        .map(goalMember => goalMember.agent_address)
+        .map(agentAddress => ({
+          address: agentAddress,
+          avatar: '/img/profile.png',
+          name: 'Somebody Cool',
+        }))
+    drawGoalCard(goal, membersOfGoal, coordinates[goal.address], isEditing, '', isSelected, isHovered, ctx)
   })
 
   // draw the editing highlight overlay
@@ -102,23 +111,42 @@ function render(store, canvas) {
     const isHovered = state.ui.hover.hoveredGoal === goal.address
     const isSelected = true
     const isEditing = false
-    drawGoalCard(goal, coordinates[goal.address], isEditing, '', isSelected, isHovered, ctx)
+    const membersOfGoal = Object.keys(state.goalMembers)
+        .map(address => state.goalMembers[address])
+        .filter(goalMember => goalMember.goal_address === goal.address)
+        .map(goalMember => goalMember.agent_address)
+        .map(agentAddress => ({
+          address: agentAddress,
+          avatar: '/img/profile.png',
+          name: 'Somebody Cool',
+        }))
+    drawGoalCard(goal, membersOfGoal, coordinates[goal.address], isEditing, '', isSelected, isHovered, ctx)
   })
 
   // draw the editing goal in front of the overlay as well
   if (state.ui.goalForm.editAddress) {
+    // editing an existing Goal
     const editingGoal = state.goals[state.ui.goalForm.editAddress]
     const isEditing = true
     const editText = state.ui.goalForm.content
-    drawGoalCard(editingGoal, coordinates[editingGoal.address], isEditing, editText, false, false, ctx)
-  }
-
-  if (state.ui.goalForm.isOpen) {
+    const membersOfGoal = Object.keys(state.goalMembers)
+        .map(address => state.goalMembers[address])
+        .filter(goalMember => goalMember.goal_address === editingGoal.address)
+        .map(goalMember => goalMember.agent_address)
+        .map(agentAddress => ({
+          address: agentAddress,
+          avatar: '/img/profile.png',
+          name: 'Somebody Cool',
+        }))
+    drawGoalCard(editingGoal, membersOfGoal, coordinates[editingGoal.address], isEditing, editText, false, false, ctx)
+  } else if (state.ui.goalForm.isOpen) {
+    // creating a new Goal
     const isHovered = false
     const isSelected = false
     const isEditing = true
     drawGoalCard(
       { status: 'Uncertain' },
+      [],
       { x: state.ui.goalForm.xLoc, y: state.ui.goalForm.yLoc },
       isEditing,
       state.ui.goalForm.content,
