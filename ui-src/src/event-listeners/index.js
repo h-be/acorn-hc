@@ -138,25 +138,27 @@ export default function setupEventListeners(store, canvas) {
   // This listener is bound to the canvas only so clicks on other parts of
   // the UI like the GoalForm won't trigger it.
   canvas.addEventListener('click', event => {
+    const state = store.getState()
     // if the GoalForm is open, any click on the
     // canvas should close it
-    if (store.getState().ui.goalForm.isOpen) {
+    if (state.ui.goalForm.isOpen) {
       store.dispatch(closeGoalForm())
     }
     // opening the GoalForm is dependent on
     // holding down the `g` keyboard key modifier
-    else if (store.getState().ui.keyboard.gKeyDown) {
+    else if (state.ui.keyboard.gKeyDown) {
       let parentAddress
-      if (store.getState().ui.selection.selectedGoals.length) {
+      if (state.ui.selection.selectedGoals.length) {
         // use first
-        parentAddress = store.getState().ui.selection.selectedGoals[0]
+        parentAddress = state.ui.selection.selectedGoals[0]
       }
-      store.dispatch(openGoalForm(event.clientX, event.clientY, null, parentAddress))
+      const calcedX = event.clientX - state.ui.viewport.translate.x
+      const calcedY = event.clientY - state.ui.viewport.translate.y
+      store.dispatch(openGoalForm(calcedX, calcedY, null, parentAddress))
     }
     else {
       // check for node in clicked area
       // select it if so
-      const state = store.getState()
       const clickedAddress = checkForGoalAtCoordinates(canvas.getContext('2d'), state.ui.viewport.translate, state.ui.screensize.width, state.goals, state.edges, event.clientX, event.clientY)
       if (clickedAddress) {
         // if the shift key is being use, do an 'additive' select
