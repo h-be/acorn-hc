@@ -8,9 +8,9 @@ edition = "2018"
 serde = "=1.0.89"
 serde_json = { version = "=1.0.39", features = ["preserve_order"] }
 serde_derive = "=1.0.89"
-hdk = { git = "https://github.com/holochain/holochain-rust", tag = "0.0.25-alpha1" }
-hdk-proc-macros = { git = "https://github.com/holochain/holochain-rust", tag = "0.0.25-alpha1" }
-holochain_wasm_utils = { git = "https://github.com/holochain/holochain-rust", tag = "0.0.25-alpha1" }
+hdk = { path = "../../../../../../holochain/rust/hdk-rust" }
+hdk-proc-macros = { path = "../../../../../../holochain/rust/hdk-proc-macros" }
+holochain_wasm_utils = { path = "../../../../../../holochain/rust/wasm_utils" }
 holochain_json_derive = { version = "0.0.1-alpha2" }
 
 [lib]
