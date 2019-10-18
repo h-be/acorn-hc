@@ -21,9 +21,6 @@ function setupCanvas(canvas) {
   canvas.width = rect.width * dpr
   canvas.height = rect.height * dpr
   const ctx = canvas.getContext('2d')
-  // Scale all drawing operations by the dpr, so you
-  // don't have to worry about the difference.
-  ctx.scale(dpr, dpr)
   return ctx
 }
 
@@ -37,10 +34,16 @@ function render(store, canvas) {
   // pull the current state from the store
   const state = store.getState()
 
-  ctx.translate(state.ui.viewport.translate.x, state.ui.viewport.translate.y)
-
+  // scale x, skew x, skew y, scale y, translate x, and translate y
+  const { ui: { viewport: { translate, scale } } } = state
+  ctx.setTransform(1, 0, 0, 1, 0, 0) // normalize
   // clear the entirety of the canvas
   ctx.clearRect(0, 0, state.ui.screensize.width, state.ui.screensize.height)
+
+  // Scale all drawing operations by the dpr, as well as the zoom, so you
+  // don't have to worry about the difference.
+  const dpr = window.devicePixelRatio || 1
+  ctx.setTransform(scale * dpr, 0, 0, scale * dpr, translate.x * dpr, translate.y * dpr)
 
 
   // converts the goals object to an array
@@ -101,7 +104,10 @@ function render(store, canvas) {
   /* if shift key not held down and there are more than 1 Goals selected */
   if (state.ui.goalForm.editAddress || (state.ui.selection.selectedGoals.length > 1 && !state.ui.keyboard.shiftKeyDown)) {
     // counteract the translation
-    drawOverlay(ctx, -state.ui.viewport.translate.x, -state.ui.viewport.translate.y, state.ui.screensize.width, state.ui.screensize.height)
+    ctx.save()
+    ctx.setTransform(1, 0, 0, 1, 0, 0)
+    drawOverlay(ctx, 0, 0, state.ui.screensize.width, state.ui.screensize.height)
+    ctx.restore()
   }
 
   // render each selected goal to the canvas

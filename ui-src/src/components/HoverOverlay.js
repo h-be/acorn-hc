@@ -6,6 +6,9 @@ import Icon from './Icon'
 
 import layoutFormula from '../drawing/layoutFormula'
 import {
+    coordsCanvasToPage
+} from '../drawing/coordinateSystems'
+import {
     goalWidth
 } from '../drawing/dimensions'
 import {
@@ -48,8 +51,8 @@ function mapStateToProps(state) {
     if (hoveredAddress) {
         goalCoord = layoutFormula(state.ui.screensize.width, state.goals, state.edges)[hoveredAddress]
         position = {
-            x: goalCoord.x + goalWidth + state.ui.viewport.translate.x, // left
-            y: goalCoord.y + 6 + state.ui.viewport.translate.y  // top
+            x: goalCoord.x + goalWidth,
+            y: goalCoord.y + 6
         }
         goalContent = state.goals[hoveredAddress].content
     }

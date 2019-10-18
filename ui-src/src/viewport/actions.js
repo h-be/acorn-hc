@@ -7,6 +7,7 @@
 
 /* constants */
 const CHANGE_TRANSLATE = 'CHANGE_TRANSLATE'
+const CHANGE_SCALE = 'CHANGE_SCALE'
 
 /* action creator functions */
 
@@ -20,7 +21,20 @@ function changeTranslate(x, y) {
   }
 }
 
+function changeScale(zoom, mouseX, mouseY) {
+  return {
+    type: CHANGE_SCALE,
+    payload: {
+      zoom,
+      mouseX,
+      mouseY
+    }
+  }
+}
+
 export {
   CHANGE_TRANSLATE,
-  changeTranslate
+  CHANGE_SCALE,
+  changeTranslate,
+  changeScale
 }

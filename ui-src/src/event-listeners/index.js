@@ -1,5 +1,6 @@
 import _ from 'lodash'
 
+import { coordsPageToCanvas } from '../drawing/coordinateSystems'
 import { checkForGoalAtCoordinates } from '../drawing/eventDetection'
 
 import {
@@ -32,7 +33,8 @@ import {
   setScreenDimensions
 } from '../screensize/actions'
 import {
-  changeTranslate
+  changeTranslate,
+  changeScale
 } from '../viewport/actions'
 
 export default function setupEventListeners(store, canvas) {
@@ -106,7 +108,8 @@ export default function setupEventListeners(store, canvas) {
       store.dispatch(changeTranslate(event.movementX, event.movementY))
       return
     }
-    const goalAddress = checkForGoalAtCoordinates(canvas.getContext('2d'), state.ui.viewport.translate, state.ui.screensize.width, state.goals, state.edges, event.clientX, event.clientY)
+    const { goals, edges, ui: { viewport: { translate, scale }, screensize: { width } }} = state
+    const goalAddress = checkForGoalAtCoordinates(canvas.getContext('2d'), translate, scale, width, goals, edges, event.clientX, event.clientY)
     if (goalAddress && state.ui.hover.hoveredGoal !== goalAddress) {
       store.dispatch(hoverGoal(goalAddress))
     } else if (!goalAddress && state.ui.hover.hoveredGoal) {
@@ -118,9 +121,22 @@ export default function setupEventListeners(store, canvas) {
   const debouncedWheelHandler = _.debounce(event => {
     const state = store.getState()
     if (!state.ui.goalForm.isOpen) {
-      // invert the pattern so that it uses new mac style
-      // of panning
-      store.dispatch(changeTranslate(-1.5*event.deltaX, -1.5*event.deltaY))
+      // from https://medium.com/@auchenberg/detecting-multi-touch-trackpad-gestures-in-javascript-a2505babb10e
+      // and https://stackoverflow.com/questions/2916081/zoom-in-on-a-point-using-scale-and-translate
+      if (event.ctrlKey) {
+        // Normalize wheel to +1 or -1.
+        const wheel = event.deltaY < 0 ? 1 : -1
+        const zoomIntensity = 0.05
+        // Compute zoom factor.
+        const zoom = Math.exp(wheel*zoomIntensity)
+        const mouseX = event.clientX
+        const mouseY = event.clientY
+        store.dispatch(changeScale(zoom, mouseX, mouseY))
+      } else {
+        // invert the pattern so that it uses new mac style
+        // of panning
+        store.dispatch(changeTranslate(-1*event.deltaX, -1*event.deltaY))
+      }
     }
   }, 2, { leading: true })
   canvas.addEventListener('wheel', event => {
@@ -152,14 +168,17 @@ export default function setupEventListeners(store, canvas) {
         // use first
         parentAddress = state.ui.selection.selectedGoals[0]
       }
-      const calcedX = event.clientX - state.ui.viewport.translate.x
-      const calcedY = event.clientY - state.ui.viewport.translate.y
-      store.dispatch(openGoalForm(calcedX, calcedY, null, parentAddress))
+      const calcedPoint = coordsPageToCanvas({
+        x: event.clientX,
+        y: event.clientY
+      }, state.ui.viewport.translate, state.ui.viewport.scale)
+      store.dispatch(openGoalForm(calcedPoint.x, calcedPoint.y, null, parentAddress))
     }
     else {
       // check for node in clicked area
       // select it if so
-      const clickedAddress = checkForGoalAtCoordinates(canvas.getContext('2d'), state.ui.viewport.translate, state.ui.screensize.width, state.goals, state.edges, event.clientX, event.clientY)
+      const { goals, edges, ui: { viewport: { translate, scale }, screensize: { width } }} = state
+      const clickedAddress = checkForGoalAtCoordinates(canvas.getContext('2d'), translate, scale, width, goals, edges, event.clientX, event.clientY)
       if (clickedAddress) {
         // if the shift key is being use, do an 'additive' select
         // where you add the Goal to the list of selected

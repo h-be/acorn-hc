@@ -152,8 +152,8 @@ function mapStateToProps(state) {
     parentAddress,
     content,
     status: editAddress ? state.goals[editAddress].status : 'Uncertain', // use Uncertain as a default
-    xLoc: xLoc + state.ui.viewport.translate.x,
-    yLoc: yLoc + state.ui.viewport.translate.y
+    xLoc: xLoc,
+    yLoc: yLoc
   }
 }
 
