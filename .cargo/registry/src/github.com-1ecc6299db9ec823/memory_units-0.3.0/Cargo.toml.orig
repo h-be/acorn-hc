@@ -1,8 +1,0 @@
-[package]
-name = "memory_units"
-description = "Safe conversions between units of memory"
-categories = ["memory-management", "no-std"]
-authors = ["Nick Fitzgerald <fitzgen@gmail.com>", "Sergey Pepyakin <s.pepyakin@gmail.com>"]
-repository = "https://github.com/pepyakin/memory_units"
-license = "MPL-2.0"
-version = "0.3.0"

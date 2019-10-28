@@ -12,7 +12,7 @@ test_agent = true
 
 [[dnas]]
 file = '/home/empleado/Escritorio/acorn-hc/dist/acorn-hc.dna.json'
-hash = 'QmWUzFNUdCmsFkJipJT4NKr85dBcSTXQrw2RH9Xt246w9Z'
+hash = 'QmPVxmv47CCmgm7X7DrFHMFipgdYCXexSvP8gNEES4mx6Z'
 id = 'hc-run-dna'
 
 [[instances]]
@@ -35,7 +35,7 @@ port = 8888
 type = 'websocket'
 
 [logger]
-state_dump = true
+state_dump = false
 type = 'debug'
 
 [logger.rules]
