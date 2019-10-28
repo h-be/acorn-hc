@@ -1,0 +1,35 @@
+[package]
+authors = ["The Rust Project Developers"]
+description = "External iterators for generic mathematics"
+documentation = "https://docs.rs/num-iter"
+homepage = "https://github.com/rust-num/num-iter"
+keywords = ["mathematics", "numerics"]
+categories = ["algorithms", "science", "no-std"]
+license = "MIT/Apache-2.0"
+repository = "https://github.com/rust-num/num-iter"
+name = "num-iter"
+version = "0.1.39"
+readme = "README.md"
+build = "build.rs"
+exclude = ["/ci/*", "/.travis.yml", "/bors.toml"]
+
+[package.metadata.docs.rs]
+features = ["std"]
+
+[dependencies]
+
+[dependencies.num-integer]
+version = "0.1.38"
+default-features = false
+
+[dependencies.num-traits]
+version = "0.2.4"
+default-features = false
+
+[features]
+default = ["std"]
+i128 = ["num-integer/i128", "num-traits/i128"]
+std = ["num-integer/std", "num-traits/std"]
+
+[build-dependencies]
+autocfg = "0.1.3"

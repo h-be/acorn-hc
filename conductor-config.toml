@@ -1,17 +1,18 @@
 bridges = []
-persistence_dir = './conductor-config.toml'
+persistence_dir = ''
 ui_bundles = []
 ui_interfaces = []
 
 [[agents]]
 id = 'hc-run-agent'
-keystore_file = './key.key'
+keystore_file = 'testAgent'
 name = 'testAgent'
-public_address = 'HcSciGpYDHTaa5dmw583AO7Jy9kHz9K3gu6MtTsB8Nwbfe3y3hD8rOb9aj5B8za'
+public_address = 'HcScjN8wBwrn3tuyg89aab3a69xsIgdzmX5P9537BqQZ5A7TEZu7qCY4Xzzjhma'
+test_agent = true
 
 [[dnas]]
-file = './dist/dna-src.dna.json'
-hash = 'QmXye7ojb4Vivj2EvxhJSvnHQUKMjgf9UAdQhxVoVSRQXB'
+file = '/home/empleado/Escritorio/acorn-hc/dist/acorn-hc.dna.json'
+hash = 'QmWUzFNUdCmsFkJipJT4NKr85dBcSTXQrw2RH9Xt246w9Z'
 id = 'hc-run-dna'
 
 [[instances]]
@@ -20,8 +21,7 @@ dna = 'hc-run-dna'
 id = 'acorn'
 
 [instances.storage]
-type = 'pickle'
-path = './storage'
+type = 'memory'
 
 [[interfaces]]
 admin = true
@@ -35,31 +35,11 @@ port = 8888
 type = 'websocket'
 
 [logger]
-state_dump = false
-type = 'info'
-[[logger.rules.rules]]
-exclude = true
-pattern = '.*'
+state_dump = true
+type = 'debug'
 
-[[logger.rules.rules]]
-exclude = false
-pattern = '^lib3h'
-
-[[logger.rules.rules]]
-exclude = false
-pattern = '^sim2h'
-
-[[logger.rules.rules]]
-exclude = false
-pattern = '^holochain'
-
-[[logger.rules.rules]]
-exclude = true
-pattern = '^holochain_core_types'
-
-[network]
-sim2h_url = 'wss://0.0.0.0:9000/'
-type = 'sim2h'
+[logger.rules]
+rules = []
 
 [passphrase_service]
 type = 'cmd'

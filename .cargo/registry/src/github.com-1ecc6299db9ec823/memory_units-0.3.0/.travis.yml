@@ -1,0 +1,14 @@
+language: rust
+cache: cargo
+
+rust:
+  - nightly
+before_install:
+# Install `cargo-deadlinks` unless it is currently installed.
+- command -v cargo-deadlinks &> /dev/null || cargo install cargo-deadlinks
+- rustup target add wasm32-unknown-unknown
+script:
+- cargo check --target=wasm32-unknown-unknown
+- cargo test --verbose
+- cargo doc
+- cargo deadlinks
