@@ -1,18 +1,17 @@
 bridges = []
-persistence_dir = ''
+persistence_dir = '.'
 ui_bundles = []
 ui_interfaces = []
 
 [[agents]]
 id = 'hc-run-agent'
-keystore_file = 'testAgent'
+keystore_file = './key.key'
 name = 'testAgent'
-public_address = 'HcScjN8wBwrn3tuyg89aab3a69xsIgdzmX5P9537BqQZ5A7TEZu7qCY4Xzzjhma'
-test_agent = true
+public_address = 'HcSciGpYDHTaa5dmw583AO7Jy9kHz9K3gu6MtTsB8Nwbfe3y3hD8rOb9aj5B8za'
 
 [[dnas]]
-file = '/home/empleado/Escritorio/acorn-hc/dist/acorn-hc.dna.json'
-hash = 'QmPVxmv47CCmgm7X7DrFHMFipgdYCXexSvP8gNEES4mx6Z'
+file = './dist/acorn-hc.dna.json'
+hash = 'QmPNP2J6bPcMPADmcTcQpAHxWjDuiPenyp9jVhzKECGbnT'
 id = 'hc-run-dna'
 
 [[instances]]
