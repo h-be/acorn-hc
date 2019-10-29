@@ -2,3 +2,5 @@ node_modules/
 target/
 .hc
 storage
+.cargo
+**/.DS_Store
