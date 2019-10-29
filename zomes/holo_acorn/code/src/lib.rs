@@ -292,7 +292,7 @@ mod holo_acorn {
 
         Ok(addresses)
     }
-
+    
     #[zome_fn("hc_public")]
     fn create_goal(
         goal: Goal,
@@ -325,7 +325,7 @@ mod holo_acorn {
             }
             None => None,
         };
-
+        
         // format the response as a GetResponse
         Ok(GoalMaybeWithEdge {
             goal: GetResponse {
@@ -335,7 +335,8 @@ mod holo_acorn {
             maybe_edge,
         })
     }
-
+    
+    
     fn inner_create_edge(edge: &Edge) -> ZomeApiResult<Address> {
         let app_entry = Entry::App("edge".into(), edge.clone().into());
         let entry_address = hdk::commit_entry(&app_entry)?;

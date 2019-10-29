@@ -49,24 +49,22 @@ const conductorConfig = {
 orchestrator.registerScenario("description of example test", async (s, t) => {
 
   const {alice, bob} = await s.players({alice: conductorConfig, bob: conductorConfig})
- let f =Date.now()
+  const f = Date.now()
   // Make a call to a Zome function
   // indicating the function, and passing it an input
-  const addr = await alice.call("myInstanceName", "holo_acorn", "create_goal", {"goal" : {
-    "content":"sample content",
-    "user_hash":"Boop",
-    "unix_timestamp":""+f,
-    "hierarchy":"Branch",
-    "status":"Uncertain"
-  }, "maybe_parent_address": null})
+  const addr = await alice.call("myInstanceName", "holo_acorn", "create_goal", {"goal" : {"content":"sample content",
+  'user_hash': "HcSciJuZ4M4e4Iew7zsJCU8jdTxypahgfE5BJGzQANqhhmnjRa9vTu4snh44kuz",
+  "unix_timestamp":f,
+  "hierarchy": "Branch",
+  "status": "Uncertain"},"maybe_parent_address":null})
 
   // Wait for all network activity to
   await s.consistency()
 
-  const result = await alice.call("myInstanceName", "holo_acorn", "fetch_goal", {"address": addr.Ok})
-
+  const result = await alice.call("myInstanceName", "holo_acorn", "fetch_goal", {"address": addr.Ok.goal.address})
+  console.log(addr)
   // check for equality of the actual and expected results
-  t.deepEqual(result, { Ok: { App: [ 'goal', '{"content":"sample content","user_hash":"Boop","unix_timestamp":"'+f+'","hierarchy":"Branch","status":"Uncertain"}'
-  ]}})
+  t.deepEqual(result, { Ok: {"content":"sample content","user_hash": "HcSciJuZ4M4e4Iew7zsJCU8jdTxypahgfE5BJGzQANqhhmnjRa9vTu4snh44kuz","unix_timestamp":f,"hierarchy": "Branch","status": "Uncertain"}})
 })
+
 orchestrator.run()
