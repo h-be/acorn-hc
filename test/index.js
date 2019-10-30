@@ -3,9 +3,8 @@
 /// for a potentially more accurate example
 
 const path = require('path')
-const tape = require('tape')
 
-const { Orchestrator, Config, tapeExecutor, singleConductor, combine  } = require('@holochain/try-o-rama')
+const { Orchestrator, Config, tapeExecutor, singleConductor, combine, callSync  } = require('@holochain/try-o-rama')
 
 process.on('unhandledRejection', error => {
   // Will print "unhandledRejection err is not defined"
@@ -20,16 +19,22 @@ const orchestrator = new Orchestrator({
     // for in-memory testing purposes.
     // Remove this middleware for other "real" network types which can actually
     // send messages across conductors
-    singleConductor,
-
+    // singleConductor,
+    // callSync,
     // use the tape harness to run the tests, injects the tape API into each scenario
     // as the second argument
     tapeExecutor(require('tape'))
   ),
 
   globalConfig: {
-    logger: true,
-    network: 'memory',  // must use singleConductor middleware if using in-memory network
+    logger: {
+      type: 'info'
+    },
+    // network: 'memory'
+    network: {
+      type: 'sim2h',
+      sim2h_url: 'wss://localhost:9000'
+    }  // must use singleConductor middleware if using in-memory network
   },
 
   // the following are optional:
@@ -44,7 +49,8 @@ const conductorConfig = {
 
 orchestrator.registerScenario("description of example test", async (s, t) => {
 
-  const {alice, bob} = await s.players({alice: conductorConfig, bob: conductorConfig})
+   // the 'true' is for 'start', which means boot the Conductors
+  const {alice, bob} = await s.players({alice: conductorConfig, bob: conductorConfig}, true)
   const f = Date.now()
   // Make a call to a Zome function
   // indicating the function, and passing it an input
@@ -59,7 +65,7 @@ orchestrator.registerScenario("description of example test", async (s, t) => {
 
   const result = await alice.call("myInstanceName", "holo_acorn", "fetch_goals", {})
   // check for equality of the actual and expected results
-  t.deepEqual(addr.Ok,result.Err)
+  t.deepEqual(addr.Ok.goal, result.Ok[0])
 })
 
 orchestrator.run()
