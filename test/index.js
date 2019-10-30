@@ -34,10 +34,6 @@ const orchestrator = new Orchestrator({
 
   // the following are optional:
 
-  waiter: {
-    softTimeout: 5000,
-    hardTimeout: 10000,
-  },
 })
 
 const conductorConfig = {
@@ -61,10 +57,9 @@ orchestrator.registerScenario("description of example test", async (s, t) => {
   // Wait for all network activity to
   await s.consistency()
 
-  const result = await alice.call("myInstanceName", "holo_acorn", "fetch_goal", {"address": addr.Ok.goal.address})
-  console.log(addr)
+  const result = await alice.call("myInstanceName", "holo_acorn", "fetch_goals", {})
   // check for equality of the actual and expected results
-  t.deepEqual(result, { Ok: {"content":"sample content","user_hash": "HcSciJuZ4M4e4Iew7zsJCU8jdTxypahgfE5BJGzQANqhhmnjRa9vTu4snh44kuz","unix_timestamp":f,"hierarchy": "Branch","status": "Uncertain"}})
+  t.deepEqual(addr.Ok,result.Err)
 })
 
 orchestrator.run()

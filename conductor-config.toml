@@ -12,7 +12,7 @@ test_agent = true
 
 [[dnas]]
 file = '/home/empleado/Escritorio/acorn-hc/dist/acorn-hc.dna.json'
-hash = 'QmPVxmv47CCmgm7X7DrFHMFipgdYCXexSvP8gNEES4mx6Z'
+hash = 'QmfKkDs14xGe2EENrq6pmuCfpoSC59RZDiDRoDAwSvhCJ1'
 id = 'hc-run-dna'
 
 [[instances]]
