@@ -18,7 +18,7 @@ hc --version
 holochain --version
 ```
 
-Change directories to the `/dna-src` subfolder of this project
+Change directories to this project folder.
 Run
 ```
 hc package
