@@ -1,5 +1,5 @@
 # acorn-hc
-the holochain backend for Acorn
+the holochain backend for Acorn, see [acorn-ui](https://github.com/h-be/acorn-ui) for user interface
 
 Resources:
 * [Acorn SoA Google Doc](https://docs.google.com/document/d/1VTne9BmrQgAgUV873pVm1yP2l--IMEGawfqnf5tpBaQ)
