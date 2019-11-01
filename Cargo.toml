@@ -1,0 +1,5 @@
+[workspace]
+
+members = [
+  "zomes/holo_acorn/code",
+]
