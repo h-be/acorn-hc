@@ -6,12 +6,12 @@ ui_interfaces = []
 [[agents]]
 id = 'hc-run-agent'
 keystore_file = './key.key'
-name = 'testAgent'
+name = 'Connor Turland'
 public_address = 'HcSciGpYDHTaa5dmw583AO7Jy9kHz9K3gu6MtTsB8Nwbfe3y3hD8rOb9aj5B8za'
 
 [[dnas]]
 file = './dist/acorn-hc.dna.json'
-hash = 'QmPNP2J6bPcMPADmcTcQpAHxWjDuiPenyp9jVhzKECGbnT'
+hash = 'QmXFHCtSaSWUugoQkLsrUNfxxEHCnJWPr4uwq75mvvhPfN'
 id = 'hc-run-dna'
 
 [[instances]]
