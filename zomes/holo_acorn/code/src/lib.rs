@@ -289,6 +289,43 @@ mod holo_acorn {
     }
 
     #[zome_fn("hc_public")]
+    fn create_whoami(profile: Profile) -> ZomeApiResult<GetResponse<Profile>> {
+      let agents_anchor_entry = Entry::App(
+          "anchor".into(), // app entry type
+          // app entry value. We'll use the value to specify what this anchor is for
+          "agents".into(),
+      );
+      let profile_entry = Entry::App("profile".into(), profile.clone().into());
+      let profile_address = hdk::commit_entry(&profile_entry)?;
+      hdk::link_entries(
+          &agents_anchor_entry.address(),
+          &profile_address,
+          "anchor->profiles",
+          "",
+      )?;
+      hdk::link_entries(
+          &AGENT_ADDRESS,
+          &profile_address,
+          "agent->profile",
+          "",
+      )?;
+      Ok(GetResponse {
+        entry: profile,
+        address: profile_address
+      })
+    }
+
+    #[zome_fn("hc_public")]
+    fn update_whoami(profile: Profile, address: Address) -> ZomeApiResult<GetResponse<Profile>> {
+      let profile_entry = Entry::App("profile".into(), profile.clone().into());
+      hdk::update_entry(profile_entry, &address)?;
+      Ok(GetResponse {
+        entry: profile,
+        address: address
+      })
+    }
+
+    #[zome_fn("hc_public")]
     fn whoami() -> ZomeApiResult<Option<GetResponse<Profile>>> {
       match hdk::utils::get_links_and_load_type::<Profile>(
           &AGENT_ADDRESS,
