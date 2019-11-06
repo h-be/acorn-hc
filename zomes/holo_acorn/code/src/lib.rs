@@ -10,12 +10,14 @@ extern crate serde_json;
 extern crate holochain_json_derive;
 
 use hdk::holochain_core_types::{
-    agent::AgentId, dna::entry_types::Sharing, entry::Entry, link::LinkMatch,
+    // agent::AgentId, dna::entry_types::Sharing, entry::Entry, link::LinkMatch,
+    dna::entry_types::Sharing, entry::Entry, link::LinkMatch,
 };
 use hdk::{
     entry_definition::ValidatingEntryType,
     error::{ZomeApiError, ZomeApiResult},
-    AGENT_ADDRESS, AGENT_ID_STR,
+    AGENT_ADDRESS,
+    // AGENT_ADDRESS, AGENT_ID_STR,
 };
 
 use hdk::holochain_json_api::{
@@ -28,7 +30,8 @@ use hdk::holochain_persistence_api::cas::content::{Address, AddressableContent};
 use hdk_proc_macros::zome;
 
 use serde::Serialize;
-use std::convert::{TryFrom, TryInto};
+use std::convert::{TryFrom};
+// use std::convert::{TryFrom, TryInto};
 use std::fmt::Debug;
 
 // see https://developer.holochain.org/api/latest/hdk/ for info on using the hdk library
@@ -36,7 +39,9 @@ use std::fmt::Debug;
 // a bit of profile info for an agent
 #[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
 pub struct Profile {
-    name: String,
+    first_name: String,
+    last_name: String,
+    handle: String,
     avatar_url: String,
     address: String,
 }
@@ -142,26 +147,6 @@ mod holo_acorn {
         hdk::commit_entry(&goals_anchor_entry)?;
         hdk::commit_entry(&edges_anchor_entry)?;
         hdk::commit_entry(&agents_anchor_entry)?;
-
-        let agent_id: AgentId = JsonString::from_json(&AGENT_ID_STR).try_into()?;
-        let profile_entry = Entry::App("profile".into(), Profile {
-          name: agent_id.nick,
-          avatar_url: "/img/profile.png".to_string(),
-          address: AGENT_ADDRESS.to_string()
-        }.into());
-        let profile_address = hdk::commit_entry(&profile_entry)?;
-        hdk::link_entries(
-            &agents_anchor_entry.address(),
-            &profile_address,
-            "anchor->profiles",
-            "",
-        )?;
-        hdk::link_entries(
-            &AGENT_ADDRESS,
-            &profile_address,
-            "agent->profile",
-            "",
-        )?;
 
         Ok(())
     }
@@ -304,18 +289,26 @@ mod holo_acorn {
     }
 
     #[zome_fn("hc_public")]
-    fn whoami() -> ZomeApiResult<GetResponse<Profile>> {
-      let mut profiles = hdk::utils::get_links_and_load_type(
+    fn whoami() -> ZomeApiResult<Option<GetResponse<Profile>>> {
+      match hdk::utils::get_links_and_load_type::<Profile>(
           &AGENT_ADDRESS,
           LinkMatch::Exactly("agent->profile"), // the link type to match
           LinkMatch::Any,
-      )?;
-      let my_profile: Profile = profiles.remove(0);
-      let app_entry = Entry::App("profile".into(), my_profile.clone().into());
-      Ok(GetResponse {
-        entry: my_profile,
-        address: app_entry.address()
-      })
+      )?.first() {
+        Some(my_profile) => {
+          let app_entry = Entry::App("profile".into(), my_profile.into());
+          Ok(Some(GetResponse {
+            entry: my_profile.clone(),
+            address: app_entry.address()
+          }))
+        }
+        None => Ok(None)
+      }
+    }
+
+    #[zome_fn("hc_public")]
+    fn fetch_agent_address() -> ZomeApiResult<Address> {
+      Ok(AGENT_ADDRESS.clone())
     }
 
     #[zome_fn("hc_public")]
