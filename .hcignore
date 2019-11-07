@@ -5,3 +5,7 @@ conductor-config.toml
 Vagrantfile
 default.nix
 storage
+Cargo.toml
+Cargo.lock
+key.key
+target

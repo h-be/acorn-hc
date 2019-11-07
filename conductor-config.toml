@@ -11,7 +11,7 @@ public_address = 'HcSciGpYDHTaa5dmw583AO7Jy9kHz9K3gu6MtTsB8Nwbfe3y3hD8rOb9aj5B8z
 
 [[dnas]]
 file = './dist/acorn-hc.dna.json'
-hash = 'QmXFHCtSaSWUugoQkLsrUNfxxEHCnJWPr4uwq75mvvhPfN'
+hash = 'QmSiAgtzScwsjcp2NJktUNxyVJGqP9RRPPkdhCjC79rJrr'
 id = 'hc-run-dna'
 
 [[instances]]
@@ -35,7 +35,7 @@ type = 'websocket'
 
 [logger]
 state_dump = false
-type = 'debug'
+type = 'info'
 
 [logger.rules]
 rules = []

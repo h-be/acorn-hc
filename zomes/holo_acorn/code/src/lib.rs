@@ -10,12 +10,14 @@ extern crate serde_json;
 extern crate holochain_json_derive;
 
 use hdk::holochain_core_types::{
-    agent::AgentId, dna::entry_types::Sharing, entry::Entry, link::LinkMatch,
+    // agent::AgentId, dna::entry_types::Sharing, entry::Entry, link::LinkMatch,
+    dna::entry_types::Sharing, entry::Entry, link::LinkMatch,
 };
 use hdk::{
     entry_definition::ValidatingEntryType,
     error::{ZomeApiError, ZomeApiResult},
-    AGENT_ADDRESS, AGENT_ID_STR, DNA_ADDRESS, DNA_NAME,
+    AGENT_ADDRESS,
+    // AGENT_ADDRESS, AGENT_ID_STR,
 };
 
 use hdk::holochain_json_api::{
@@ -28,18 +30,20 @@ use hdk::holochain_persistence_api::cas::content::{Address, AddressableContent};
 use hdk_proc_macros::zome;
 
 use serde::Serialize;
-use std::convert::{TryFrom, TryInto};
+use std::convert::{TryFrom};
+// use std::convert::{TryFrom, TryInto};
 use std::fmt::Debug;
 
 // see https://developer.holochain.org/api/latest/hdk/ for info on using the hdk library
 
-// whoami -- Return current Agent ID and DNA information
-#[derive(Serialize, Deserialize, Debug, DefaultJson, PartialEq)]
-pub struct WhoamiResult {
-    dna_address: String,
-    dna_name: String,
-    agent_id: AgentId,
-    agent_address: String,
+// a bit of profile info for an agent
+#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
+pub struct Profile {
+    first_name: String,
+    last_name: String,
+    handle: String,
+    avatar_url: String,
+    address: String,
 }
 
 // a relationship between a Goal and an Agent
@@ -144,19 +148,39 @@ mod holo_acorn {
         hdk::commit_entry(&edges_anchor_entry)?;
         hdk::commit_entry(&agents_anchor_entry)?;
 
-        hdk::link_entries(
-            &agents_anchor_entry.address(),
-            &AGENT_ADDRESS,
-            "anchor->agents",
-            "",
-        )?;
-
         Ok(())
     }
 
     #[validate_agent]
     pub fn validate_agent(validation_data: EntryValidationData<AgentId>) {
         Ok(())
+    }
+
+    #[entry_def]
+    fn profile_def() -> ValidatingEntryType {
+        entry!(
+            name: "profile",
+            description: "this is an entry representing some profile info for an agent",
+            sharing: Sharing::Public,
+            validation_package: || {
+                hdk::ValidationPackageDefinition::Entry
+            },
+            validation: | _validation_data: hdk::EntryValidationData<Profile>| {
+                Ok(())
+            },
+            links: [
+                from!(
+                    "%agent_id",
+                    link_type: "agent->profile",
+                    validation_package: || {
+                        hdk::ValidationPackageDefinition::Entry
+                    },
+                    validation: | _validation_data: hdk::LinkValidationData| {
+                        Ok(())
+                    }
+                )
+            ]
+        )
     }
 
     #[entry_def]
@@ -221,8 +245,8 @@ mod holo_acorn {
             },
             links: [
                 to!(
-                    "%agent_id",
-                    link_type: "anchor->agents",
+                    "profile",
+                    link_type: "anchor->profiles",
                     validation_package: || {
                         hdk::ValidationPackageDefinition::Entry
                     },
@@ -265,17 +289,67 @@ mod holo_acorn {
     }
 
     #[zome_fn("hc_public")]
-    fn whoami() -> ZomeApiResult<WhoamiResult> {
-        Ok(WhoamiResult {
-            dna_name: DNA_NAME.to_string(),
-            dna_address: DNA_ADDRESS.to_string(),
-            agent_id: JsonString::from_json(&AGENT_ID_STR).try_into()?,
-            agent_address: AGENT_ADDRESS.to_string(),
-        })
+    fn create_whoami(profile: Profile) -> ZomeApiResult<GetResponse<Profile>> {
+      let agents_anchor_entry = Entry::App(
+          "anchor".into(), // app entry type
+          // app entry value. We'll use the value to specify what this anchor is for
+          "agents".into(),
+      );
+      let profile_entry = Entry::App("profile".into(), profile.clone().into());
+      let profile_address = hdk::commit_entry(&profile_entry)?;
+      hdk::link_entries(
+          &agents_anchor_entry.address(),
+          &profile_address,
+          "anchor->profiles",
+          "",
+      )?;
+      hdk::link_entries(
+          &AGENT_ADDRESS,
+          &profile_address,
+          "agent->profile",
+          "",
+      )?;
+      Ok(GetResponse {
+        entry: profile,
+        address: profile_address
+      })
     }
 
     #[zome_fn("hc_public")]
-    fn fetch_agents() -> ZomeApiResult<Vec<Address>> {
+    fn update_whoami(profile: Profile, address: Address) -> ZomeApiResult<GetResponse<Profile>> {
+      let profile_entry = Entry::App("profile".into(), profile.clone().into());
+      hdk::update_entry(profile_entry, &address)?;
+      Ok(GetResponse {
+        entry: profile,
+        address: address
+      })
+    }
+
+    #[zome_fn("hc_public")]
+    fn whoami() -> ZomeApiResult<Option<GetResponse<Profile>>> {
+      match hdk::utils::get_links_and_load_type::<Profile>(
+          &AGENT_ADDRESS,
+          LinkMatch::Exactly("agent->profile"), // the link type to match
+          LinkMatch::Any,
+      )?.first() {
+        Some(my_profile) => {
+          let app_entry = Entry::App("profile".into(), my_profile.into());
+          Ok(Some(GetResponse {
+            entry: my_profile.clone(),
+            address: app_entry.address()
+          }))
+        }
+        None => Ok(None)
+      }
+    }
+
+    #[zome_fn("hc_public")]
+    fn fetch_agent_address() -> ZomeApiResult<Address> {
+      Ok(AGENT_ADDRESS.clone())
+    }
+
+    #[zome_fn("hc_public")]
+    fn fetch_agents() -> ZomeApiResult<Vec<Profile>> {
         let anchor_address = Entry::App(
             "anchor".into(), // app entry type
             // app entry value. We'll use the value to specify what this anchor is for
@@ -283,14 +357,14 @@ mod holo_acorn {
         )
         .address();
 
-        let addresses = hdk::get_links(
-            &anchor_address,
-            LinkMatch::Exactly("anchor->agents"), // the link type to match
-            LinkMatch::Any,
-        )?
-        .addresses();
-
-        Ok(addresses)
+        Ok(
+            // return all the Profile objects from the entries linked to the profiles anchor (drop entries with wrong type)
+            hdk::utils::get_links_and_load_type(
+                &anchor_address,
+                LinkMatch::Exactly("anchor->profiles"), // the link type to match
+                LinkMatch::Any,
+            )?
+        )
     }
     
     #[zome_fn("hc_public")]
