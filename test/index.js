@@ -28,8 +28,11 @@ const orchestrator = new Orchestrator({
   ),
 
   globalConfig: {
-    logger: true,
-    network: 'memory',  // must use singleConductor middleware if using in-memory network
+    logger: false,
+    network: {
+      type: 'sim2h',
+      sim2h_url: 'wss://sim2h.holochain.org:9000',
+    },  // must use singleConductor middleware if using in-memory network
   },
 
   // the following are optional:
@@ -42,7 +45,7 @@ const orchestrator = new Orchestrator({
 
 const conductorConfig = {
   instances: {
-    myInstanceName: Config.dna(dnaPath, 'scaffold-test')
+    acorn_hc: Config.dna(dnaPath, 'acorn_hc')
   }
 }
 
@@ -52,7 +55,7 @@ orchestrator.registerScenario("description of example test", async (s, t) => {
   const f = Date.now()
   // Make a call to a Zome function
   // indicating the function, and passing it an input
-  const addr = await alice.call("myInstanceName", "holo_acorn", "create_goal", {"goal" : {"content":"sample content",
+  const addr = await alice.call("acorn_hc", "holo_acorn", "create_goal", {"goal" : {"content":"sample content",
   'user_hash': "HcSciJuZ4M4e4Iew7zsJCU8jdTxypahgfE5BJGzQANqhhmnjRa9vTu4snh44kuz",
   "unix_timestamp":f,
   "hierarchy": "Branch",
@@ -61,7 +64,7 @@ orchestrator.registerScenario("description of example test", async (s, t) => {
   // Wait for all network activity to
   await s.consistency()
 
-  const result = await alice.call("myInstanceName", "holo_acorn", "fetch_goal", {"address": addr.Ok.goal.address})
+  const result = await alice.call("acorn_hc", "holo_acorn", "fetch_goal", {"address": addr.Ok.goal.address})
   console.log(addr)
   // check for equality of the actual and expected results
   t.deepEqual(result, { Ok: {"content":"sample content","user_hash": "HcSciJuZ4M4e4Iew7zsJCU8jdTxypahgfE5BJGzQANqhhmnjRa9vTu4snh44kuz","unix_timestamp":f,"hierarchy": "Branch","status": "Uncertain"}})
