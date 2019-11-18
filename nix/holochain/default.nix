@@ -1,6 +1,6 @@
 { pkgs }:
 let
-  script-cluster = pkgs.writeShellScriptBin "acorn-hc"
+  script = pkgs.writeShellScriptBin "acorn-hc"
   ''
   set -euxo pipefail
   hc package
@@ -8,5 +8,5 @@ let
   '';
 in
 {
- buildInputs = [ script-cluster ];
+ buildInputs = [ script ];
 }
