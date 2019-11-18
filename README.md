@@ -7,28 +7,14 @@ Resources:
 
 Before starting up the UI development, start up a Holochain Conductor with the Acorn DNA. Here's how:
 
-Enter a nix shell (for convenience, we are using a `nix-hc` alias)
+Enter a nix shell:
+```
+nix-shell --run acorn-hc
+```
+This packages the DNA and starts up the Conductor with a running instance of the DNA in it.
 
-You can target the specific version of holonix that has the right version, by doing:
-`nix-shell https://github.com/holochain/holonix/archive/v0.0.39.tar.gz`
+Leave this terminal open and running, as long as you're doing development.
 
-Test that you are on Holochain version 0.0.34-alpha1
-```
-hc --version
-holochain --version
-```
+Stop (ctrl + c) and rerun the above again if you make changes to the DNA.
 
-Change directories to this project folder.
-Run
-```
-hc package
-```
-This builds the DNA into the `dist` folder, from the source code under `zomes`.
-
-Run
-```
-holochain -c ./conductor-config.toml
-```
-This starts up the Conductor with a running instance of the DNA in it.
-
-Leave this terminal open and running, as long as you're doing development. Repackage and run `holochain ...` again if you make changes to the DNA.
+To update the holonix version (and therefore the holochain binaries) edit the holonix property of `config.nix`.
