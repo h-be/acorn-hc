@@ -114,7 +114,7 @@ orchestrator.registerScenario("tow agent test", async (s, t) => {
 
 orchestrator.registerScenario("tow agent test create, update and archive goals ", async (s, t) => {
   // the 'true' is for 'start', which means boot the Conductors
-  const {alice,bob} = await s.players({alice: conductorConfig,bob: conductorConfig}, true)
+  const {alice,bob,alex} = await s.players({alice: conductorConfig,bob: conductorConfig,alex:conductorConfig}, true)
   // Make a call to a Zome function
   // indicating the function, and passing it an input
   const goal = await alice.call("acorn_hc", "holo_acorn", "create_goal", {"goal" : {"content":"sample content",
@@ -137,6 +137,11 @@ orchestrator.registerScenario("tow agent test create, update and archive goals "
   "hierarchy": "Root",
   "status": "Uncertain"},"address":goal.Ok.goal.address})
   // check for equality of the actual and expected results
+  await s.consistency()
+  const result_alex=await alex.call("acorn_hc","holo_acorn","add_member_of_goal",{"goal_member":{"goal_address":goal.Ok.goal.address,
+    "agent_address":alice._instances.acorn_hc.agentAddress,"unix_timestamp":Date.now()}})
+    await s.consistency()
+  const result_alex2=await alex.call("acorn_hc","holo_acorn","fetch_goal_members",{})
   const result_alice= await alice.call("acorn_hc", "holo_acorn", "fetch_goals",{})
   t.isNotDeepEqual(goal2.Ok.maybe_edge,null)
   t.deepEqual(result_alice.Ok.length,2)
@@ -145,11 +150,17 @@ orchestrator.registerScenario("tow agent test create, update and archive goals "
   "unix_timestamp":time,
   "hierarchy": "Root",
   "status": "Uncertain"})
+  t.deepEqual(result_alex.Ok.entry,result_alex2.Ok[0].entry)
+  await s.consistency()
   const result_alice2= await alice.call("acorn_hc", "holo_acorn", "archive_goal",{"address":goal.Ok.goal.address})
+  await s.consistency()
   const result_alice3= await alice.call("acorn_hc", "holo_acorn", "fetch_edges",{})
   const result_bob2= await bob.call("acorn_hc", "holo_acorn", "fetch_goals",{})
+  const result_alex3=await alex.call("acorn_hc","holo_acorn","fetch_goal_members",{})
+
   t.deepEqual(result_alice2.Ok.address,goal.Ok.goal.address)
   t.deepEqual(result_alice3.Ok.length,0)
+  t.deepEqual(result_alex3.Ok.length,0)
   t.deepEqual(result_bob2.Ok.length,1)
 
 
