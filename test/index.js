@@ -68,7 +68,6 @@ orchestrator.registerScenario("create goal test", async (s, t) => {
 
   // the 'true' is for 'start', which means boot the Conductors
  const {alice} = await s.players({alice: conductorConfig}, true)
- console.log(alice._instances.acorn_hc.agentAddress)
  // Make a call to a Zome function
  // indicating the function, and passing it an input
  const addr = await alice.call("acorn_hc", "holo_acorn", "create_goal", {"goal" : {"content":"sample content",
