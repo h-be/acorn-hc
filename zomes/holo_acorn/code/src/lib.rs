@@ -448,10 +448,6 @@ mod holo_acorn {
             address: entry_address,
         })
     }
-     #[zome_fn("hc_public")]
-    fn fetch_goal(address:Address)-> ZomeApiResult<Goal> {
-        hdk::utils::get_as_type(address)
-    }
     #[zome_fn("hc_public")]
     fn fetch_goals() -> ZomeApiResult<Vec<GetResponse<Goal>>> {
         // set up the anchor entry and compute its address
