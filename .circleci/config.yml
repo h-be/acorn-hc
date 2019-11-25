@@ -1,0 +1,17 @@
+version: 2
+
+jobs:
+ cargo-test:
+  docker:
+   - image: holochain/holonix:latest
+  steps:
+   - checkout
+   - run: nix-shell --run 'cargo test'
+
+workflows:
+ version: 2
+ tests:
+  jobs:
+   - cargo-test
+   # @todo get this passing
+   # - hc-test
