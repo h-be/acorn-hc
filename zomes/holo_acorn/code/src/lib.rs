@@ -53,6 +53,16 @@ pub struct GoalMember {
     agent_address: Address,
     unix_timestamp: u128,
 }
+#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
+pub struct GoalVote {
+    goal_address: Address,
+    urgency:f32,
+    importance:f32,
+    impact:f32,
+    effort:f32,
+    agent_address: Address,
+    unix_timestamp: u128,
+}
 
 // An edge. This is an arrow on the SoA Tree which directionally links
 // two goals.
@@ -101,6 +111,7 @@ pub struct ArchiveGoalResponse {
     address: Address,
     archived_edges: Vec<Address>,
     archived_goal_members: Vec<Address>,
+    archived_goal_votes: Vec<Address>,
 }
 
 // The GetResponse struct allows our zome functions to return an entry along with its
@@ -138,11 +149,17 @@ mod holo_acorn {
             // app entry value. We'll use the value to specify what this anchor is for
             "goal_members".into(),
         );
+        let goal_vote_anchor_entry = Entry::App(
+            "anchor".into(), // app entry type
+            // app entry value. We'll use the value to specify what this anchor is for
+            "goal_votes".into(),
+        );
         let agents_anchor_entry = Entry::App(
             "anchor".into(), // app entry type
             // app entry value. We'll use the value to specify what this anchor is for
             "agents".into(),
         );
+        hdk::commit_entry(&goal_vote_anchor_entry)?;
         hdk::commit_entry(&goal_members_anchor_entry)?;
         hdk::commit_entry(&goals_anchor_entry)?;
         hdk::commit_entry(&edges_anchor_entry)?;
@@ -227,6 +244,20 @@ mod holo_acorn {
             }
         )
     }
+    #[entry_def]
+    fn goal_vote_def() -> ValidatingEntryType {
+        entry!(
+            name: "goal_vote",
+            description: "this is an entry representing a connection from a Goal to an Agent",
+            sharing: Sharing::Public,
+            validation_package: || {
+                hdk::ValidationPackageDefinition::Entry
+            },
+            validation: | _validation_data: hdk::EntryValidationData<GoalVote>| {
+                Ok(())
+            }
+        )
+    }
 
     // The anchor type. Anchors are app entries with type anchor. The value is how we find
     // the anchor again, for example, we create an anchor with app entry value 'goals' and
@@ -277,6 +308,16 @@ mod holo_acorn {
                 to!(
                     "goal_member",
                     link_type: "anchor->goal_member",
+                    validation_package: || {
+                        hdk::ValidationPackageDefinition::Entry
+                    },
+                    validation: | _validation_data: hdk::LinkValidationData| {
+                        Ok(())
+                    }
+                ),
+                to!(
+                    "goal_vote",
+                    link_type: "anchor->goal_vote",
                     validation_package: || {
                         hdk::ValidationPackageDefinition::Entry
                     },
@@ -439,6 +480,7 @@ mod holo_acorn {
             address,
         })
     }
+    
 
     #[zome_fn("hc_public")]
     fn create_edge(edge: Edge) -> ZomeApiResult<GetResponse<Edge>> {
@@ -527,7 +569,34 @@ mod holo_acorn {
             .collect(),
         )
     }
+    fn inner_fetch_goal_votes() -> ZomeApiResult<Vec<GetResponse<GoalVote>>> {
+        // set up the anchor entry and compute its address
+        let anchor_address = Entry::App(
+            "anchor".into(), // app entry type
+            "goal_votes".into(),  // app entry value
+        )
+        .address();
 
+        Ok(
+            // return all the GoalMember objects from the entries linked to the goal_members anchor (drop entries with wrong type)
+            hdk::utils::get_links_and_load_type(
+                &anchor_address,
+                LinkMatch::Exactly("anchor->goal_vote"), // the link type to match
+                LinkMatch::Any,
+            )?
+            .into_iter()
+            .map(|goal_vote: GoalVote| {
+                // re-create the goal_member entry to find its address
+                let address = Entry::App("goal_vote".into(), goal_vote.clone().into()).address();
+                // return a response structs with the edge and its address
+                GetResponse {
+                    entry: goal_vote,
+                    address,
+                }
+            })
+            .collect(),
+        )
+    }
     fn inner_fetch_edges() -> ZomeApiResult<Vec<GetResponse<Edge>>> {
         // set up the anchor entry and compute its address
         let anchor_address = Entry::App(
@@ -605,12 +674,30 @@ mod holo_acorn {
             // filter out errors
             .filter_map(Result::ok)
             .collect(); // returns vec of the goal_member addresses which were removed
-
+        let archived_goal_votes = inner_fetch_goal_votes()?
+            .into_iter()
+            .filter(|get_response: &GetResponse<GoalVote>| {
+                // check whether the parent_address or child_address is equal to the given address.
+                // If so, the edge is connected to the goal being archived.
+                get_response.entry.goal_address == address
+            })
+            .map(|get_response: GetResponse<GoalVote>| {
+                let goal_vote_address = get_response.address;
+                // archive the edge with this address
+                match hdk::remove_entry(&goal_vote_address) {
+                    Ok(_) => Ok(goal_vote_address),
+                    Err(e) => Err(e),
+                }
+            })
+            // filter out errors
+            .filter_map(Result::ok)
+            .collect(); // returns vec of the goal_member addresses which were removed
         // return the address of the archived goal for the UI to use
         Ok(ArchiveGoalResponse {
             address,
             archived_edges,
             archived_goal_members,
+            archived_goal_votes,
         })
     }
 
@@ -619,7 +706,6 @@ mod holo_acorn {
         hdk::remove_entry(&address)?;
         Ok(address)
     }
-
     #[zome_fn("hc_public")]
     fn add_member_of_goal(goal_member: GoalMember) -> ZomeApiResult<GetResponse<GoalMember>> {
         let app_entry = Entry::App("goal_member".into(), goal_member.clone().into());
@@ -646,13 +732,47 @@ mod holo_acorn {
     }
 
     #[zome_fn("hc_public")]
+    fn add_vote_of_goal(goal_vote: GoalVote) -> ZomeApiResult<GetResponse<GoalVote>> {
+        let app_entry = Entry::App("goal_vote".into(), goal_vote.clone().into());
+        let entry_address = hdk::commit_entry(&app_entry)?;
+
+        // link new edge to the edges anchor
+        let anchor_address = Entry::App(
+            "anchor".into(),       // app entry type
+            "goal_votes".into(), // app entry value
+        )
+        .address();
+
+        hdk::link_entries(
+            &anchor_address,
+            &app_entry.address(),
+            "anchor->goal_vote",
+            "",
+        )?;
+
+        Ok(GetResponse {
+            entry: goal_vote,
+            address: entry_address,
+        })
+    }
+    #[zome_fn("hc_public")]
     fn archive_member_of_goal(address: Address) -> ZomeApiResult<Address> {
         hdk::remove_entry(&address)?;
         Ok(address)
     }
+     #[zome_fn("hc_public")]
+    fn archive_vote_of_goal(address: Address) -> ZomeApiResult<Address> {
+        hdk::remove_entry(&address)?;
+        Ok(address)
+    }
+
 
     #[zome_fn("hc_public")]
     fn fetch_goal_members() -> ZomeApiResult<Vec<GetResponse<GoalMember>>> {
         inner_fetch_goal_members()
+    }
+    #[zome_fn("hc_public")]
+    fn fetch_goal_votes() -> ZomeApiResult<Vec<GetResponse<GoalVote>>> {
+        inner_fetch_goal_votes()
     }
 }
