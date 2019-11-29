@@ -248,7 +248,7 @@ mod holo_acorn {
     fn goal_vote_def() -> ValidatingEntryType {
         entry!(
             name: "goal_vote",
-            description: "this is an entry representing a connection from a Goal to an Agent",
+            description: "this is an entry representing a connection from a Goal to an Vote (priority)",
             sharing: Sharing::Public,
             validation_package: || {
                 hdk::ValidationPackageDefinition::Entry
