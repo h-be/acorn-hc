@@ -1,17 +1,15 @@
 version: 2
 
 jobs:
- cargo-test:
+ tests:
   docker:
    - image: holochain/holonix:latest
   steps:
    - checkout
-   - run: nix-shell --run 'cargo test'
+   - run: nix-shell --run acorn-test
 
 workflows:
  version: 2
  tests:
   jobs:
-   - cargo-test
-   # @todo get this passing
-   # - hc-test
+   - tests
