@@ -11,7 +11,7 @@ const {
   singleConductor,
   combine,
   callSync
-} = require("@holochain/try-o-rama");
+} = require("@holochain/tryorama");
 
 process.on("unhandledRejection", error => {
   // Will print "unhandledRejection err is not defined"
