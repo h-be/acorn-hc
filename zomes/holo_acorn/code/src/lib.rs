@@ -481,8 +481,8 @@ mod holo_acorn {
         })
     }
     #[zome_fn("hc_public")]
-    fn update_goal(goal_vote:GoalVote , address: Address) -> ZomeApiResult<GetResponse<Goal>> {
-        let app_entry = Entry::App("goal".into(), goal_vote.clone().into());
+    fn update_goal_vote(goal_vote:GoalVote , address: Address) -> ZomeApiResult<GetResponse<GoalVote>> {
+        let app_entry = Entry::App("goal_vote".into(), goal_vote.clone().into());
         let _ = hdk::update_entry(app_entry, &address)?;
 
         // format the response as a GetResponse
