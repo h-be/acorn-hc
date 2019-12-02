@@ -98,6 +98,7 @@ pub struct Goal {
     unix_timestamp: u128,
     hierarchy: Hierarchy,
     status: Status,
+    description:String,
 }
 
 #[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
