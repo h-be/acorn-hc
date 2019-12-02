@@ -90,6 +90,7 @@ orchestrator.registerScenario('create goal test', async (s, t) => {
       unix_timestamp: Date.now(),
       hierarchy: 'Branch',
       status: 'Uncertain',
+      description: '',
     },
     maybe_parent_address: null,
   })
@@ -167,6 +168,7 @@ orchestrator.registerScenario(
         unix_timestamp: Date.now(),
         hierarchy: 'Branch',
         status: 'Uncertain',
+        description: '',
       },
       maybe_parent_address: null,
     })
@@ -177,6 +179,7 @@ orchestrator.registerScenario(
         unix_timestamp: Date.now(),
         hierarchy: 'Branch',
         status: 'Uncertain',
+        description: '',
       },
       maybe_parent_address: goal.Ok.goal.address,
     })
@@ -191,6 +194,7 @@ orchestrator.registerScenario(
         unix_timestamp: time,
         hierarchy: 'Root',
         status: 'Uncertain',
+        description: '33',
       },
       address: goal.Ok.goal.address,
     })
@@ -252,6 +256,7 @@ orchestrator.registerScenario(
       unix_timestamp: time,
       hierarchy: 'Root',
       status: 'Uncertain',
+      description: '33',
     })
     t.deepEqual(result_alex.Ok.entry, result_alex2.Ok[0].entry)
     t.deepEqual(result_alex4.Ok.entry, result_alex5.Ok[0].entry)
@@ -322,5 +327,90 @@ orchestrator.registerScenario(
     t.equal(result_bob2.Ok.length, 1)
   }
 )
-
+orchestrator.registerScenario('alex and alice are commenting', async (s, t) => {
+  // the 'true' is for 'start', which means boot the Conductors
+  const { alice, alex } = await s.players(
+    { alice: conductorConfig, alex: conductorConfig },
+    true
+  )
+  // Make a call to a Zome function
+  // indicating the function, and passing it an input
+  const goal = await alice.call('acorn_hc', 'holo_acorn', 'create_goal', {
+    goal: {
+      content: 'sample content',
+      user_hash: alice._instances.acorn_hc.agentAddress,
+      unix_timestamp: Date.now(),
+      hierarchy: 'Branch',
+      status: 'Uncertain',
+      description: '',
+    },
+    maybe_parent_address: null,
+  })
+  const comment1 = await alex.call(
+    'acorn_hc',
+    'holo_acorn',
+    'add_comment_of_goal',
+    {
+      goal_comment: {
+        goal_address: goal.Ok.goal.address,
+        content: 'hola mundo',
+        agent_address: alice._instances.acorn_hc.agentAddress,
+        unix_timestamp: Date.now(),
+      },
+    }
+  )
+  const comment2 = await alex.call(
+    'acorn_hc',
+    'holo_acorn',
+    'add_comment_of_goal',
+    {
+      goal_comment: {
+        goal_address: goal.Ok.goal.address,
+        content: 'this is a test',
+        agent_address: alice._instances.acorn_hc.agentAddress,
+        unix_timestamp: Date.now(),
+      },
+    }
+  )
+  await s.consistency()
+  const update = await alice.call(
+    'acorn_hc',
+    'holo_acorn',
+    'update_goal_comment',
+    {
+      goal_comment: {
+        goal_address: goal.Ok.goal.address,
+        content: 'hello world',
+        agent_address: alice._instances.acorn_hc.agentAddress,
+        unix_timestamp: Date.now(),
+      },
+      address: comment1.Ok.address,
+    }
+  )
+  await s.consistency()
+  await alice.call('acorn_hc', 'holo_acorn', 'archive_comment_of_goal', {
+    address: comment2.Ok.address,
+  })
+  await s.consistency()
+  // Wait for all network activity to
+  const fetch = await alice.call(
+    'acorn_hc',
+    'holo_acorn',
+    'fetch_goal_comments',
+    {}
+  )
+  t.equal(fetch.Ok.length, 1)
+  t.deepEqual(fetch.Ok[0].entry, update.Ok.entry)
+  await alice.call('acorn_hc', 'holo_acorn', 'archive_goal', {
+    address: goal.Ok.goal.address,
+  })
+  await s.consistency()
+  const fetch2 = await alice.call(
+    'acorn_hc',
+    'holo_acorn',
+    'fetch_goal_comments',
+    {}
+  )
+  t.equal(fetch2.Ok.length, 0)
+})
 orchestrator.run()
