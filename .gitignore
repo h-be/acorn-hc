@@ -4,3 +4,4 @@ target/
 storage
 .cargo
 **/.DS_Store
+.prettierrc
