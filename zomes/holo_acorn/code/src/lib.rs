@@ -15,7 +15,7 @@ use hdk::holochain_core_types::{
 };
 use hdk::{
     entry_definition::ValidatingEntryType,
-    error::{ZomeApiError, ZomeApiResult},
+    error::{ ZomeApiResult},
     AGENT_ADDRESS,
     // AGENT_ADDRESS, AGENT_ID_STR,
 };
@@ -30,7 +30,6 @@ use hdk::holochain_persistence_api::cas::content::{Address, AddressableContent};
 use hdk_proc_macros::zome;
 
 use serde::Serialize;
-use std::convert::{TryFrom};
 // use std::convert::{TryFrom, TryInto};
 use std::fmt::Debug;
 
@@ -561,47 +560,21 @@ mod holo_acorn {
             "goals".into(),  // app entry value
         )
         .address();
-
         Ok(
             // return all the Goal objects from the entries linked to the edge anchor (drop entries with wrong type)
-            hdk::get_links(
+           hdk::utils::get_links_and_load_type(
                 &anchor_address,
                 LinkMatch::Exactly("anchor->goal"), // the link type to match
                 LinkMatch::Any,
             )?
             // scoop all these entries up into an array and return it
-            .addresses()
             .into_iter()
-            .map(|address: Address| match hdk::get_entry(&address) {
-                Ok(maybe_entry) => match maybe_entry {
-                    Some(entry) => match entry {
-                        Entry::App(_, entry_value) => {
-                            let goal = Goal::try_from(entry_value.to_owned()).map_err(|_| {
-                                ZomeApiError::Internal(
-                                    "Could not convert get_links result to requested type"
-                                        .to_string(),
-                                )
-                            })?;
-                            Ok(GetResponse {
-                                entry: goal,
-                                address,
-                            })
-                        }
-                        _ => Err(ZomeApiError::Internal(
-                            "get_links did not return an app entry".to_string(),
-                        )),
-                    },
-                    _ => Err(ZomeApiError::Internal(
-                        "get_links did not return an app entry".to_string(),
-                    )),
-                },
-                _ => Err(ZomeApiError::Internal(
-                    "get_links did not return an app entry".to_string(),
-                )),
-            })
-            .filter_map(Result::ok)
-            .collect(),
-        )
+            .map(|goal: Goal|{
+                GetResponse {
+                    entry: goal.clone(),
+                    address:Entry::App("goal".into(),goal.into()).address(),
+                
+            }}).collect())
     }
 
     fn inner_fetch_goal_members() -> ZomeApiResult<Vec<GetResponse<GoalMember>>> {
