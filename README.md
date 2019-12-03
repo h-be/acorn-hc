@@ -1,4 +1,6 @@
 # acorn-hc
+[![CircleCI](https://circleci.com/gh/h-be/acorn-hc.svg?style=svg)](https://circleci.com/gh/h-be/acorn-hc)
+
 the holochain backend for Acorn, see [acorn-ui](https://github.com/h-be/acorn-ui) for user interface
 
 Resources:
