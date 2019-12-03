@@ -63,6 +63,13 @@ pub struct GoalVote {
     agent_address: Address,
     unix_timestamp: u128,
 }
+#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
+pub struct GoalComment {
+    goal_address: Address,
+    content:String,
+    agent_address: Address,
+    unix_timestamp: u128,
+}
 
 // An edge. This is an arrow on the SoA Tree which directionally links
 // two goals.
@@ -98,6 +105,7 @@ pub struct Goal {
     unix_timestamp: u128,
     hierarchy: Hierarchy,
     status: Status,
+    description:String,
 }
 
 #[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
@@ -112,6 +120,7 @@ pub struct ArchiveGoalResponse {
     archived_edges: Vec<Address>,
     archived_goal_members: Vec<Address>,
     archived_goal_votes: Vec<Address>,
+    archived_goal_comments:Vec<Address>,
 }
 
 // The GetResponse struct allows our zome functions to return an entry along with its
@@ -154,11 +163,17 @@ mod holo_acorn {
             // app entry value. We'll use the value to specify what this anchor is for
             "goal_votes".into(),
         );
+        let goal_comment_anchor_entry = Entry::App(
+            "anchor".into(), // app entry type
+            // app entry value. We'll use the value to specify what this anchor is for
+            "goal_comments".into(),
+        );
         let agents_anchor_entry = Entry::App(
             "anchor".into(), // app entry type
             // app entry value. We'll use the value to specify what this anchor is for
             "agents".into(),
         );
+        hdk::commit_entry(&goal_comment_anchor_entry)?;
         hdk::commit_entry(&goal_vote_anchor_entry)?;
         hdk::commit_entry(&goal_members_anchor_entry)?;
         hdk::commit_entry(&goals_anchor_entry)?;
@@ -225,6 +240,20 @@ mod holo_acorn {
                 hdk::ValidationPackageDefinition::Entry
             },
             validation: | _validation_data: hdk::EntryValidationData<Goal>| {
+                Ok(())
+            }
+        )
+    }
+    #[entry_def]
+    fn goal_comment_def() -> ValidatingEntryType {
+        entry!(
+            name: "goal_comment",
+            description: "this is an entry representing a goal",
+            sharing: Sharing::Public,
+            validation_package: || {
+                hdk::ValidationPackageDefinition::Entry
+            },
+            validation: | _validation_data: hdk::EntryValidationData<GoalComment>| {
                 Ok(())
             }
         )
@@ -318,6 +347,16 @@ mod holo_acorn {
                 to!(
                     "goal_vote",
                     link_type: "anchor->goal_vote",
+                    validation_package: || {
+                        hdk::ValidationPackageDefinition::Entry
+                    },
+                    validation: | _validation_data: hdk::LinkValidationData| {
+                        Ok(())
+                    }
+                ),
+                to!(
+                    "goal_comment",
+                    link_type: "anchor->goal_comment",
                     validation_package: || {
                         hdk::ValidationPackageDefinition::Entry
                     },
@@ -480,6 +519,30 @@ mod holo_acorn {
             address,
         })
     }
+    #[zome_fn("hc_public")]
+    fn update_goal_vote(goal_vote:GoalVote , address: Address) -> ZomeApiResult<GetResponse<GoalVote>> {
+        let app_entry = Entry::App("goal_vote".into(), goal_vote.clone().into());
+        let _ = hdk::update_entry(app_entry, &address)?;
+
+        // format the response as a GetResponse
+        // pass the OLD address back and allow the UI to continue to use it
+        Ok(GetResponse {
+            entry: goal_vote,
+            address,
+        })
+    }
+     #[zome_fn("hc_public")]
+    fn update_goal_comment(goal_comment:GoalComment , address: Address) -> ZomeApiResult<GetResponse<GoalComment>> {
+        let app_entry = Entry::App("goal_comment".into(), goal_comment.clone().into());
+        let _ = hdk::update_entry(app_entry, &address)?;
+
+        // format the response as a GetResponse
+        // pass the OLD address back and allow the UI to continue to use it
+        Ok(GetResponse {
+            entry: goal_comment,
+            address,
+        })
+    }
     
 
     #[zome_fn("hc_public")]
@@ -597,6 +660,34 @@ mod holo_acorn {
             .collect(),
         )
     }
+     fn inner_fetch_goal_comments() -> ZomeApiResult<Vec<GetResponse<GoalComment>>> {
+        // set up the anchor entry and compute its address
+        let anchor_address = Entry::App(
+            "anchor".into(), // app entry type
+            "goal_comments".into(),  // app entry value
+        )
+        .address();
+
+        Ok(
+            // return all the GoalMember objects from the entries linked to the goal_members anchor (drop entries with wrong type)
+            hdk::utils::get_links_and_load_type(
+                &anchor_address,
+                LinkMatch::Exactly("anchor->goal_comment"), // the link type to match
+                LinkMatch::Any,
+            )?
+            .into_iter()
+            .map(|goal_comment: GoalComment| {
+                // re-create the goal_member entry to find its address
+                let address = Entry::App("goal_comment".into(), goal_comment.clone().into()).address();
+                // return a response structs with the edge and its address
+                GetResponse {
+                    entry: goal_comment,
+                    address,
+                }
+            })
+            .collect(),
+        )
+    }
     fn inner_fetch_edges() -> ZomeApiResult<Vec<GetResponse<Edge>>> {
         // set up the anchor entry and compute its address
         let anchor_address = Entry::App(
@@ -674,7 +765,7 @@ mod holo_acorn {
             // filter out errors
             .filter_map(Result::ok)
             .collect(); // returns vec of the goal_member addresses which were removed
-        let archived_goal_votes = inner_fetch_goal_votes()?
+        let archived_goal_votes= inner_fetch_goal_votes()?
             .into_iter()
             .filter(|get_response: &GetResponse<GoalVote>| {
                 // check whether the parent_address or child_address is equal to the given address.
@@ -691,13 +782,32 @@ mod holo_acorn {
             })
             // filter out errors
             .filter_map(Result::ok)
-            .collect(); // returns vec of the goal_member addresses which were removed
+            .collect();
+             let archived_goal_comments= inner_fetch_goal_comments()?
+            .into_iter()
+            .filter(|get_response: &GetResponse<GoalComment>| {
+                // check whether the parent_address or child_address is equal to the given address.
+                // If so, the edge is connected to the goal being archived.
+                get_response.entry.goal_address == address
+            })
+            .map(|get_response: GetResponse<GoalComment>| {
+                let goal_comment_address = get_response.address;
+                // archive the edge with this address
+                match hdk::remove_entry(&goal_comment_address) {
+                    Ok(_) => Ok(goal_comment_address),
+                    Err(e) => Err(e),
+                }
+            })
+            // filter out errors
+            .filter_map(Result::ok)
+            .collect();  // returns vec of the goal_member addresses which were removed
         // return the address of the archived goal for the UI to use
         Ok(ArchiveGoalResponse {
             address,
             archived_edges,
             archived_goal_members,
             archived_goal_votes,
+            archived_goal_comments,
         })
     }
 
@@ -756,12 +866,41 @@ mod holo_acorn {
         })
     }
     #[zome_fn("hc_public")]
+    fn add_comment_of_goal(goal_comment: GoalComment) -> ZomeApiResult<GetResponse<GoalComment>> {
+        let app_entry = Entry::App("goal_comment".into(), goal_comment.clone().into());
+        let entry_address = hdk::commit_entry(&app_entry)?;
+
+        // link new edge to the edges anchor
+        let anchor_address = Entry::App(
+            "anchor".into(),       // app entry type
+            "goal_comments".into(), // app entry value
+        )
+        .address();
+
+        hdk::link_entries(
+            &anchor_address,
+            &app_entry.address(),
+            "anchor->goal_comment",
+            "",
+        )?;
+
+        Ok(GetResponse {
+            entry: goal_comment,
+            address: entry_address,
+        })
+    }
+    #[zome_fn("hc_public")]
     fn archive_member_of_goal(address: Address) -> ZomeApiResult<Address> {
         hdk::remove_entry(&address)?;
         Ok(address)
     }
      #[zome_fn("hc_public")]
     fn archive_vote_of_goal(address: Address) -> ZomeApiResult<Address> {
+        hdk::remove_entry(&address)?;
+        Ok(address)
+    }
+     #[zome_fn("hc_public")]
+    fn archive_comment_of_goal(address: Address) -> ZomeApiResult<Address> {
         hdk::remove_entry(&address)?;
         Ok(address)
     }
@@ -774,5 +913,9 @@ mod holo_acorn {
     #[zome_fn("hc_public")]
     fn fetch_goal_votes() -> ZomeApiResult<Vec<GetResponse<GoalVote>>> {
         inner_fetch_goal_votes()
+    }
+    #[zome_fn("hc_public")]
+    fn fetch_goal_comments() -> ZomeApiResult<Vec<GetResponse<GoalComment>>> {
+        inner_fetch_goal_comments()
     }
 }
