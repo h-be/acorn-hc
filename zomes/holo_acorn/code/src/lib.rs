@@ -552,7 +552,7 @@ mod holo_acorn {
             address: entry_address,
         })
     }
-    #[zome_fn("hc_public")]
+     #[zome_fn("hc_public")]
     fn fetch_goals() -> ZomeApiResult<Vec<GetResponse<Goal>>> {
         // set up the anchor entry and compute its address
         let anchor_address = Entry::App(
@@ -560,21 +560,24 @@ mod holo_acorn {
             "goals".into(),  // app entry value
         )
         .address();
+
         Ok(
             // return all the Goal objects from the entries linked to the edge anchor (drop entries with wrong type)
-           hdk::utils::get_links_and_load_type(
+            hdk::get_links(
                 &anchor_address,
                 LinkMatch::Exactly("anchor->goal"), // the link type to match
                 LinkMatch::Any,
             )?
             // scoop all these entries up into an array and return it
+            .addresses()
             .into_iter()
-            .map(|goal: Goal|{
-                GetResponse {
-                    entry: goal.clone(),
-                    address:Entry::App("goal".into(),goal.into()).address(),
-                
-            }}).collect())
+            .map(|address: Address| let goal= hdk::utils::get_as_type(&address)? {
+                            GetResponse {
+                                entry: goal,
+                                address,
+                            }})
+            .collect()
+        )
     }
 
     fn inner_fetch_goal_members() -> ZomeApiResult<Vec<GetResponse<GoalMember>>> {
