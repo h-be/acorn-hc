@@ -5,10 +5,37 @@
       "arguments": [
         "build",
         "--release",
-        "--target=wasm32-unknown-unknown",
-        "--target-dir=../target"
+        "--target=wasm32-unknown-unknown"
+      ]
+    },
+    {
+      "command": "wasm-gc",
+      "arguments": ["target/wasm32-unknown-unknown/release/holo_acorn.wasm"]
+    },
+    {
+      "command": "wasm-opt",
+      "arguments": [
+        "-Oz",
+        "--vacuum",
+        "target/wasm32-unknown-unknown/release/holo_acorn.wasm"
+      ]
+    },
+    {
+      "command": "wasm2wat",
+      "arguments": [
+        "target/wasm32-unknown-unknown/release/holo_acorn.wasm",
+        "-o",
+        "target/wasm32-unknown-unknown/release/holo_acorn.wat"
+      ]
+    },
+    {
+      "command": "wat2wasm",
+      "arguments": [
+        "target/wasm32-unknown-unknown/release/holo_acorn.wat",
+        "-o",
+        "target/wasm32-unknown-unknown/release/holo_acorn.wasm"
       ]
     }
   ],
-  "artifact": "../target/wasm32-unknown-unknown/release/holo_acorn.wasm"
+  "artifact": "target/wasm32-unknown-unknown/release/holo_acorn.wasm"
 }

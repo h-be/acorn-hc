@@ -1,6 +1,6 @@
 {
-  "name": "Acorn",
-  "description": "Acorn State of Affairs Tree",
+  "name": "Holochain App Name",
+  "description": "A Holochain app",
   "authors": [
     {
       "identifier": "Author Name <author@name.com>",

@@ -1,17 +1,17 @@
 [package]
 name = "holo_acorn"
 version = "0.1.0"
-authors = ["hector vasquez <hectorvasquez05@gmail.com>"]
+authors = ["hc-scaffold-framework"]
 edition = "2018"
 
 [dependencies]
 serde = "=1.0.89"
 serde_json = { version = "=1.0.39", features = ["preserve_order"] }
 serde_derive = "=1.0.89"
-hdk = "=0.0.34-alpha1"
-holochain_wasm_utils = "=0.0.34-alpha1"
-holochain_json_derive = "=0.0.17"
-hdk_proc_macros = "=0.0.34-alpha1"
+hdk = { git = "https://github.com/holochain/holochain-rust", tag = "v0.0.40-alpha1" }
+holochain_wasm_utils = { git = "https://github.com/holochain/holochain-rust", tag = "v0.0.40-alpha1" }
+holochain_json_derive = "=0.0.1-alpha2"
+hdk_proc_macros = "0.0.40-alpha1"
 
 [lib]
 path = "src/lib.rs"
