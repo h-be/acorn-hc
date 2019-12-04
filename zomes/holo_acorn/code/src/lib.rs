@@ -571,11 +571,16 @@ mod holo_acorn {
             // scoop all these entries up into an array and return it
             .addresses()
             .into_iter()
-            .map(|address: Address|{ let goal= hdk::utils::get_as_type(&address)? ;
-                            GetResponse {
+            .map(|address: Address|{ 
+                match hdk::utils::get_as_type(address.clone()){
+                    Ok(goal)=>Ok(GetResponse {
                                 entry: goal,
                                 address,
-                            }})
+                            }),
+                    Err(r)=>Err(r)
+                }})
+            .filter_map(Result::ok)   
+
             .collect()
         )
     }
