@@ -327,6 +327,67 @@ orchestrator.registerScenario(
     t.equal(result_bob2.Ok.length, 1)
   }
 )
+
+orchestrator.registerScenario(
+  'test create, fetch, update, then re-fetch goals',
+  async (s, t) => {
+    // the 'true' is for 'start', which means boot the Conductors
+    const { alice } = await s.players({ alice: conductorConfig }, true)
+    const create_goal = await alice.call(
+      'acorn_hc',
+      'holo_acorn',
+      'create_goal',
+      {
+        goal: {
+          content: 'sample content',
+          user_hash: alice._instances.acorn_hc.agentAddress,
+          unix_timestamp: Date.now(),
+          hierarchy: 'Branch',
+          status: 'Uncertain',
+          description: '',
+        },
+        maybe_parent_address: null,
+      }
+    )
+    await s.consistency()
+    const first_fetch_goals_result = await alice.call(
+      'acorn_hc',
+      'holo_acorn',
+      'fetch_goals',
+      {}
+    )
+    await s.consistency()
+    const time = Date.now()
+    const update_goal = await alice.call(
+      'acorn_hc',
+      'holo_acorn',
+      'update_goal',
+      {
+        goal: {
+          content: 'sample content2',
+          user_hash: alice._instances.acorn_hc.agentAddress,
+          unix_timestamp: time,
+          hierarchy: 'Root',
+          status: 'Uncertain',
+          description: '33',
+        },
+        address: create_goal.Ok.goal.address,
+      }
+    )
+    await s.consistency()
+    const second_fetch_goals_result = await alice.call(
+      'acorn_hc',
+      'holo_acorn',
+      'fetch_goals',
+      {}
+    )
+    t.equal(
+      first_fetch_goals_result.Ok[0].address,
+      second_fetch_goals_result.Ok[0].address
+    )
+  }
+)
+
 orchestrator.registerScenario('alex and alice are commenting', async (s, t) => {
   // the 'true' is for 'start', which means boot the Conductors
   const { alice, alex } = await s.players(
