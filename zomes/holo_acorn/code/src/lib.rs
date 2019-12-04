@@ -15,7 +15,7 @@ use hdk::holochain_core_types::{
 };
 use hdk::{
     entry_definition::ValidatingEntryType,
-    error::{ZomeApiError, ZomeApiResult},
+    error::{ZomeApiResult},
     AGENT_ADDRESS,
     // AGENT_ADDRESS, AGENT_ID_STR,
 };
@@ -30,7 +30,7 @@ use hdk::holochain_persistence_api::cas::content::{Address, AddressableContent};
 use hdk_proc_macros::zome;
 
 use serde::Serialize;
-use std::convert::{TryFrom};
+//use std::convert::{TryFrom};
 // use std::convert::{TryFrom, TryInto};
 use std::fmt::Debug;
 
@@ -553,7 +553,7 @@ mod holo_acorn {
             address: entry_address,
         })
     }
-    #[zome_fn("hc_public")]
+     #[zome_fn("hc_public")]
     fn fetch_goals() -> ZomeApiResult<Vec<GetResponse<Goal>>> {
         // set up the anchor entry and compute its address
         let anchor_address = Entry::App(
@@ -572,32 +572,13 @@ mod holo_acorn {
             // scoop all these entries up into an array and return it
             .addresses()
             .into_iter()
-            .map(|address: Address| match hdk::get_entry(&address) {
-                Ok(maybe_entry) => match maybe_entry {
-                    Some(entry) => match entry {
-                        Entry::App(_, entry_value) => {
-                            let goal = Goal::try_from(entry_value.to_owned()).map_err(|_| {
-                                ZomeApiError::Internal(
-                                    "Could not convert get_links result to requested type"
-                                        .to_string(),
-                                )
-                            })?;
-                            Ok(GetResponse {
+            .map(|address: Address| match hdk::utils::get_as_type(address.clone()) {
+                Ok(goal) =>Ok(GetResponse {
                                 entry: goal,
                                 address,
-                            })
-                        }
-                        _ => Err(ZomeApiError::Internal(
-                            "get_links did not return an app entry".to_string(),
-                        )),
-                    },
-                    _ => Err(ZomeApiError::Internal(
-                        "get_links did not return an app entry".to_string(),
-                    )),
-                },
-                _ => Err(ZomeApiError::Internal(
-                    "get_links did not return an app entry".to_string(),
-                )),
+                            }),
+                        
+                        Err(e) => Err(e)
             })
             .filter_map(Result::ok)
             .collect(),
