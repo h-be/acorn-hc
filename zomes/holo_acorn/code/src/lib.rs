@@ -15,7 +15,7 @@ use hdk::holochain_core_types::{
 };
 use hdk::{
     entry_definition::ValidatingEntryType,
-    error::{ ZomeApiResult},
+    error::{ZomeApiResult},
     AGENT_ADDRESS,
     // AGENT_ADDRESS, AGENT_ID_STR,
 };
@@ -30,6 +30,7 @@ use hdk::holochain_persistence_api::cas::content::{Address, AddressableContent};
 use hdk_proc_macros::zome;
 
 use serde::Serialize;
+//use std::convert::{TryFrom};
 // use std::convert::{TryFrom, TryInto};
 use std::fmt::Debug;
 
@@ -560,21 +561,28 @@ mod holo_acorn {
             "goals".into(),  // app entry value
         )
         .address();
+
         Ok(
             // return all the Goal objects from the entries linked to the edge anchor (drop entries with wrong type)
-           hdk::utils::get_links_and_load_type(
+            hdk::get_links(
                 &anchor_address,
                 LinkMatch::Exactly("anchor->goal"), // the link type to match
                 LinkMatch::Any,
             )?
             // scoop all these entries up into an array and return it
+            .addresses()
             .into_iter()
-            .map(|goal: Goal|{
-                GetResponse {
-                    entry: goal.clone(),
-                    address:Entry::App("goal".into(),goal.into()).address(),
-                
-            }}).collect())
+            .map(|address: Address| match hdk::utils::get_as_type(address.clone()) {
+                Ok(goal) =>Ok(GetResponse {
+                                entry: goal,
+                                address,
+                            }),
+                        
+                        Err(e) => Err(e)
+            })
+            .filter_map(Result::ok)
+            .collect(),
+        )
     }
 
     fn inner_fetch_goal_members() -> ZomeApiResult<Vec<GetResponse<GoalMember>>> {
