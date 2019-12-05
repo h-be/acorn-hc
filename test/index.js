@@ -180,6 +180,10 @@ orchestrator.registerScenario(
         hierarchy: 'Branch',
         status: 'Uncertain',
         description: '',
+        time_frame: {
+          from_date: Date.now(),
+          to_date: Date.parse('Aug 9, 2020'),
+        },
       },
       maybe_parent_address: goal.Ok.goal.address,
     })
@@ -195,6 +199,10 @@ orchestrator.registerScenario(
         hierarchy: 'Root',
         status: 'Uncertain',
         description: '33',
+        time_frame: {
+          from_date: time,
+          to_date: Date.parse('Aug 9, 2020'),
+        },
       },
       address: goal.Ok.goal.address,
     })
@@ -257,6 +265,10 @@ orchestrator.registerScenario(
       hierarchy: 'Root',
       status: 'Uncertain',
       description: '33',
+      time_frame: {
+        from_date: time,
+        to_date: Date.parse('Aug 9, 2020'),
+      },
     })
     t.deepEqual(result_alex.Ok.entry, result_alex2.Ok[0].entry)
     t.deepEqual(result_alex4.Ok.entry, result_alex5.Ok[0].entry)
