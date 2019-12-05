@@ -49,7 +49,59 @@ const conductorConfig = {
     acorn_hc: Config.dna(dnaPath, 'acorn_hc'),
   },
 }
+orchestrator.registerScenario('create profile test', async (s, t) => {
+  // the 'true' is for 'start', which means boot the Conductors
+  const { alice } = await s.players({ alice: conductorConfig }, true)
+  // Make a call to a Zome function
+  // indicating the function, and passing it an input
+  const addr = await alice.call('acorn_hc', 'holo_acorn', 'create_goal', {
+    goal: {
+      content: 'sample content',
+      user_hash: alice._instances.acorn_hc.agentAddress,
+      unix_timestamp: Date.now(),
+      hierarchy: 'Branch',
+      status: 'Uncertain',
+      description: '',
+    },
+    maybe_parent_address: null,
+  })
+  await s.consistency()
+  await alice.call('acorn_hc', 'holo_acorn', 'update_goal', {
+    goal: {
+      content: 'sample content2',
+      user_hash: alice._instances.acorn_hc.agentAddress,
+      unix_timestamp: Date.now(),
+      hierarchy: 'Root',
+      status: 'Uncertain',
+      description: '33',
+      time_frame: {
+        from_date: Date.now(),
+        to_date: Date.parse('Aug 9, 2020'),
+      },
+    },
+    address: addr.Ok.goal.address,
+  })
+  await s.consistency()
+  const history1 = await alice.call(
+    'acorn_hc',
+    'holo_acorn',
+    'history_of_goal',
+    {}
+  )
+  await alice.call('acorn_hc', 'holo_acorn', 'archive_goal', {
+    address: addr.Ok.goal.address,
+  })
+  await s.consistency()
+  const history2 = await alice.call(
+    'acorn_hc',
+    'holo_acorn',
+    'history_of_goal',
+    {}
+  )
 
+  t.equal(history1.Ok[0].entrys.length, 2)
+  t.equal(history2.Ok.length, 0)
+})
 orchestrator.registerScenario('create profile test', async (s, t) => {
   // the 'true' is for 'start', which means boot the Conductors
   const { alice } = await s.players({ alice: conductorConfig }, true)

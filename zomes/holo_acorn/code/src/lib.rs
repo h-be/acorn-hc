@@ -8,14 +8,14 @@ extern crate serde_derive;
 extern crate serde_json;
 #[macro_use]
 extern crate holochain_json_derive;
-
+use hdk::prelude::Entry::App;
 use hdk::holochain_core_types::{
     // agent::AgentId, dna::entry_types::Sharing, entry::Entry, link::LinkMatch,
     dna::entry_types::Sharing, entry::Entry, link::LinkMatch,
 };
 use hdk::{
     entry_definition::ValidatingEntryType,
-    error::{ZomeApiResult},
+    error::{ZomeApiError,ZomeApiResult},
     AGENT_ADDRESS,
     // AGENT_ADDRESS, AGENT_ID_STR,
 };
@@ -24,7 +24,7 @@ use hdk::holochain_json_api::{
     error::JsonError,
     json::{default_to_json, JsonString},
 };
-
+//use hdk::prelude::EntryHistory;
 use hdk::holochain_persistence_api::cas::content::{Address, AddressableContent};
 
 use hdk_proc_macros::zome;
@@ -127,9 +127,13 @@ pub struct ArchiveGoalResponse {
     archived_goal_votes: Vec<Address>,
     archived_goal_comments:Vec<Address>,
 }
-
-// The GetResponse struct allows our zome functions to return an entry along with its
-// address so that Redux can know the address of goals and edges
+#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
+pub struct GetHistoryResponse {
+    entrys: Option<Vec<Goal>>,
+    address: Address,
+}
+//The GetResponse struct allows our zome functions to return an entry along with its
+//address so that Redux can know the address of goals and edges
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GetResponse<T> {
     pub entry: T,
@@ -432,7 +436,48 @@ mod holo_acorn {
     fn fetch_agent_address() -> ZomeApiResult<Address> {
       Ok(AGENT_ADDRESS.clone())
     }
+    #[zome_fn("hc_public")]
+    fn history_of_goal()->ZomeApiResult<Vec<GetHistoryResponse>>{
+        let anchor_address = Entry::App(
+            "anchor".into(), // app entry type
+            "goals".into(),  // app entry value
+        )
+        .address();
 
+        Ok(
+            // return all the Goal objects from the entries linked to the edge anchor (drop entries with wrong type)
+            hdk::get_links(
+                &anchor_address,
+                LinkMatch::Exactly("anchor->goal"), // the link type to match
+                LinkMatch::Any,
+            )?
+            // scoop all these entries up into an array and return it
+            .addresses()
+            .into_iter()
+            .map(|address: Address| {
+                if let Ok(Some(entry_history))=hdk::api::get_entry_history(&address)
+                {
+                   match hdk::utils::get_as_type::<Goal>(address.clone()){ //verify that the goal is not deleted
+
+                      Ok(_)=> Ok(GetHistoryResponse{
+                            entrys:entry_history.items.into_iter().map(|item|
+                                if let Some(App(_,value_entry))=item.entry{
+                                    serde_json::from_str::<Goal>(&Into::<String>::into(value_entry)).ok()  
+                                }else {None}
+                                ).collect(),
+                            address:address,
+                       }),
+                       Err(r)=>Err(r)
+                   }
+                
+                }else{
+                    Err(ZomeApiError::Internal("get_links did not return an app entry".into()))
+                }})
+            .filter_map(Result::ok)
+            .collect()
+            )
+          
+    }
     #[zome_fn("hc_public")]
     fn fetch_agents() -> ZomeApiResult<Vec<Profile>> {
         let anchor_address = Entry::App(
