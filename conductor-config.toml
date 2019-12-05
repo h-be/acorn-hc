@@ -10,7 +10,7 @@ name = 'Connor Turland'
 public_address = 'HcSciGpYDHTaa5dmw583AO7Jy9kHz9K3gu6MtTsB8Nwbfe3y3hD8rOb9aj5B8za'
 
 [[dnas]]
-file = './dist/acorn-hc.dna.json'
+file = './acorn-hc.dna.json'
 hash = 'QmaLZGGW3hq9hVqWVw7scVpvrUFS7CxU7ZQtzozKtpwWfy'
 id = 'hc-run-dna'
 

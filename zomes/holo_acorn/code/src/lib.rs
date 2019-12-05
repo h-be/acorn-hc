@@ -94,6 +94,11 @@ pub enum Hierarchy {
     Branch,
     Leaf
 }
+#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
+pub struct TimeFrame {
+    from_date: u128,
+    to_date: u128,
+}
 
 // A Goal Card. This is a card on the SoA Tree which can be small or non-small, complete or
 // incomplete, certain or uncertain, and contains text content.
@@ -106,8 +111,8 @@ pub struct Goal {
     hierarchy: Hierarchy,
     status: Status,
     description:String,
+    time_frame:Option<TimeFrame>
 }
-
 #[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
 pub struct GoalMaybeWithEdge {
     goal: GetResponse<Goal>,
