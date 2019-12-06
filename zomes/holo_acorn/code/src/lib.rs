@@ -12,6 +12,7 @@ use hdk::prelude::Entry::App;
 use hdk::holochain_core_types::{
     // agent::AgentId, dna::entry_types::Sharing, entry::Entry, link::LinkMatch,
     dna::entry_types::Sharing, entry::Entry, link::LinkMatch,
+    validation::{EntryValidationData},
 };
 use hdk::{
     entry_definition::ValidatingEntryType,
@@ -107,11 +108,13 @@ pub struct TimeFrame {
 pub struct Goal {
     content: String,
     user_hash: Address,
-    unix_timestamp: u128,
+    user_edit_hash: Option<Address>,
+    timestamp_created: u128,
+    timestamp_updated:Option<u128>,
     hierarchy: Hierarchy,
     status: Status,
     description:String,
-    time_frame:Option<TimeFrame>
+    time_frame:Option<TimeFrame>,
 }
 #[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
 pub struct GoalMaybeWithEdge {
@@ -248,8 +251,21 @@ mod holo_acorn {
             validation_package: || {
                 hdk::ValidationPackageDefinition::Entry
             },
-            validation: | _validation_data: hdk::EntryValidationData<Goal>| {
-                Ok(())
+            validation: | validation_data: hdk::EntryValidationData<Goal>| {
+                match validation_data {
+                    EntryValidationData::Modify {
+                        mut new_entry,
+                        old_entry,
+                        ..
+                     }=>{
+                         if new_entry.timestamp_updated==None
+                         {new_entry.timestamp_updated=Some(new_entry.timestamp_created);}
+                         new_entry.timestamp_created=old_entry.timestamp_created;
+                         new_entry.user_edit_hash=Some(AGENT_ADDRESS.clone());
+                         Ok(())
+                     },
+                     _=>Ok(())                
+                }
             }
         )
     }
