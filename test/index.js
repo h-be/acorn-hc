@@ -37,7 +37,7 @@ const orchestrator = new Orchestrator({
     logger: false,
     network: {
       type: 'sim2h',
-      sim2h_url: 'wss://sim2h.holochain.org:9000',
+      sim2h_url: 'wss://sim2h.harris-braun.com:9000',
     }, // must use singleConductor middleware if using in-memory network
   },
 
