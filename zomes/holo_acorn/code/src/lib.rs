@@ -52,6 +52,7 @@ pub struct Profile {
 pub struct GoalMember {
     goal_address: Address,
     agent_address: Address,
+    user_edit_hash: Option<Address>,
     unix_timestamp: u128,
 }
 #[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
@@ -293,8 +294,17 @@ mod holo_acorn {
             validation_package: || {
                 hdk::ValidationPackageDefinition::Entry
             },
-            validation: | _validation_data: hdk::EntryValidationData<GoalMember>| {
-                Ok(())
+            validation: | validation_data: hdk::EntryValidationData<GoalMember>| {
+                match validation_data {
+                    EntryValidationData::Modify {
+                        mut new_entry,
+                        ..
+                     }=>{
+                         new_entry.user_edit_hash=Some(AGENT_ADDRESS.clone());
+                         Ok(())
+                     },
+                     _=>Ok(())                
+                }
             }
         )
     }
