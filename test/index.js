@@ -86,21 +86,14 @@ orchestrator.registerScenario('create profile test', async (s, t) => {
     'acorn_hc',
     'holo_acorn',
     'history_of_goal',
-    {}
+    { address: addr.Ok.goal.address }
   )
   await alice.call('acorn_hc', 'holo_acorn', 'archive_goal', {
     address: addr.Ok.goal.address,
   })
   await s.consistency()
-  const history2 = await alice.call(
-    'acorn_hc',
-    'holo_acorn',
-    'history_of_goal',
-    {}
-  )
 
-  t.equal(history1.Ok[0].entrys.length, 2)
-  t.equal(history2.Ok.length, 0)
+  t.equal(history1.Ok.entries.length, 2)
 })
 orchestrator.registerScenario('create profile test', async (s, t) => {
   // the 'true' is for 'start', which means boot the Conductors

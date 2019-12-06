@@ -129,7 +129,7 @@ pub struct ArchiveGoalResponse {
 }
 #[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
 pub struct GetHistoryResponse {
-    entrys: Option<Vec<Goal>>,
+    entries: Vec<Goal>,
     address: Address,
 }
 //The GetResponse struct allows our zome functions to return an entry along with its
@@ -437,46 +437,24 @@ mod holo_acorn {
       Ok(AGENT_ADDRESS.clone())
     }
     #[zome_fn("hc_public")]
-    fn history_of_goal()->ZomeApiResult<Vec<GetHistoryResponse>>{
-        let anchor_address = Entry::App(
-            "anchor".into(), // app entry type
-            "goals".into(),  // app entry value
-        )
-        .address();
-
-        Ok(
-            // return all the Goal objects from the entries linked to the edge anchor (drop entries with wrong type)
-            hdk::get_links(
-                &anchor_address,
-                LinkMatch::Exactly("anchor->goal"), // the link type to match
-                LinkMatch::Any,
-            )?
-            // scoop all these entries up into an array and return it
-            .addresses()
-            .into_iter()
-            .map(|address: Address| {
+    fn history_of_goal(address:Address)->ZomeApiResult<GetHistoryResponse>{
                 if let Ok(Some(entry_history))=hdk::api::get_entry_history(&address)
                 {
-                   match hdk::utils::get_as_type::<Goal>(address.clone()){ //verify that the goal is not deleted
+                    Ok(GetHistoryResponse{
+                        entries:entry_history.items.into_iter().map(|item|
+                            if let Some(App(_,value_entry))=item.entry{
+                                match serde_json::from_str::<Goal>(&Into::<String>::into(value_entry)).ok(){
+                                    Some(goal)=>Ok(goal),
+                                    None=>Err(ZomeApiError::Internal("error".into()))
+                                }
 
-                      Ok(_)=> Ok(GetHistoryResponse{
-                            entrys:entry_history.items.into_iter().map(|item|
-                                if let Some(App(_,value_entry))=item.entry{
-                                    serde_json::from_str::<Goal>(&Into::<String>::into(value_entry)).ok()  
-                                }else {None}
-                                ).collect(),
-                            address:address,
-                       }),
-                       Err(r)=>Err(r)
-                   }
-                
+                            }else { Err(ZomeApiError::Internal("error".into()))}
+                            ).filter_map(Result::ok).collect(),
+                        address:address,
+                    })
                 }else{
-                    Err(ZomeApiError::Internal("get_links did not return an app entry".into()))
-                }})
-            .filter_map(Result::ok)
-            .collect()
-            )
-          
+                    Err(ZomeApiError::Internal("error".into()))
+                }
     }
     #[zome_fn("hc_public")]
     fn fetch_agents() -> ZomeApiResult<Vec<Profile>> {
