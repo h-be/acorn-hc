@@ -114,6 +114,7 @@ pub struct Goal {
     timestamp_updated:Option<u128>,
     hierarchy: Hierarchy,
     status: Status,
+    tags:Option<Vec<String>>,
     description:String,
     time_frame:Option<TimeFrame>,
 }
