@@ -66,6 +66,34 @@ orchestrator.registerScenario('create profile test', async (s, t) => {
     maybe_parent_address: null,
   })
   await s.consistency()
+  const addr2 = await alice.call('acorn_hc', 'holo_acorn', 'create_goal', {
+    goal: {
+      content: 'sample content',
+      user_hash: alice._instances.acorn_hc.agentAddress,
+      timestamp_created: Date.now(),
+      hierarchy: 'Branch',
+      status: 'Uncertain',
+      description: '',
+    },
+    maybe_parent_address: null,
+  })
+  await s.consistency()
+  await alice.call('acorn_hc', 'holo_acorn', 'add_member_of_goal', {
+    goal_member: {
+      goal_address: addr.Ok.goal.address,
+      agent_address: alice._instances.acorn_hc.agentAddress,
+      unix_timestamp: Date.now(),
+    },
+  })
+  await s.consistency()
+  await alice.call('acorn_hc', 'holo_acorn', 'add_member_of_goal', {
+    goal_member: {
+      goal_address: addr2.Ok.goal.address,
+      agent_address: alice._instances.acorn_hc.agentAddress,
+      unix_timestamp: Date.now(),
+    },
+  })
+  await s.consistency()
   await alice.call('acorn_hc', 'holo_acorn', 'update_goal', {
     goal: {
       content: 'sample content2',
@@ -92,7 +120,7 @@ orchestrator.registerScenario('create profile test', async (s, t) => {
     address: addr.Ok.goal.address,
   })
   await s.consistency()
-
+  console.log('members', history1.Ok.members)
   t.equal(history1.Ok.entries.length, 2)
 })
 orchestrator.registerScenario('create profile test', async (s, t) => {
