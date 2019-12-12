@@ -467,6 +467,7 @@ mod holo_acorn {
                             if let Some(App(_,value_entry))=item.entry{
                                 match serde_json::from_str::<GoalMember>(&Into::<String>::into(value_entry)).ok(){
                                     Some(goal_member)=>{
+                                        // filter down to only Goal Members that are associated with the requested Goal
                                         if goal_member.goal_address==address {Ok(goal_member)}
                                         else {Err(ZomeApiError::Internal("error".into()))}
                                         },
