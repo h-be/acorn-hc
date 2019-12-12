@@ -25,7 +25,7 @@ use hdk::holochain_json_api::{
     error::JsonError,
     json::{default_to_json, JsonString},
 };
-//use hdk::prelude::EntryHistory;
+
 use hdk::holochain_persistence_api::cas::content::{Address, AddressableContent};
 
 use hdk_proc_macros::zome;
