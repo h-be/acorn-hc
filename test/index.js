@@ -49,7 +49,80 @@ const conductorConfig = {
     acorn_hc: Config.dna(dnaPath, 'acorn_hc'),
   },
 }
-
+orchestrator.registerScenario('create profile test', async (s, t) => {
+  // the 'true' is for 'start', which means boot the Conductors
+  const { alice } = await s.players({ alice: conductorConfig }, true)
+  // Make a call to a Zome function
+  // indicating the function, and passing it an input
+  const addr = await alice.call('acorn_hc', 'holo_acorn', 'create_goal', {
+    goal: {
+      content: 'sample content',
+      user_hash: alice._instances.acorn_hc.agentAddress,
+      timestamp_created: Date.now(),
+      hierarchy: 'Branch',
+      status: 'Uncertain',
+      description: '',
+    },
+    maybe_parent_address: null,
+  })
+  await s.consistency()
+  const addr2 = await alice.call('acorn_hc', 'holo_acorn', 'create_goal', {
+    goal: {
+      content: 'sample content',
+      user_hash: alice._instances.acorn_hc.agentAddress,
+      timestamp_created: Date.now(),
+      hierarchy: 'Branch',
+      status: 'Uncertain',
+      description: '',
+    },
+    maybe_parent_address: null,
+  })
+  await s.consistency()
+  await alice.call('acorn_hc', 'holo_acorn', 'add_member_of_goal', {
+    goal_member: {
+      goal_address: addr.Ok.goal.address,
+      agent_address: alice._instances.acorn_hc.agentAddress,
+      unix_timestamp: Date.now(),
+    },
+  })
+  await s.consistency()
+  await alice.call('acorn_hc', 'holo_acorn', 'add_member_of_goal', {
+    goal_member: {
+      goal_address: addr2.Ok.goal.address,
+      agent_address: alice._instances.acorn_hc.agentAddress,
+      unix_timestamp: Date.now(),
+    },
+  })
+  await s.consistency()
+  await alice.call('acorn_hc', 'holo_acorn', 'update_goal', {
+    goal: {
+      content: 'sample content2',
+      user_hash: alice._instances.acorn_hc.agentAddress,
+      timestamp_created: Date.now(),
+      hierarchy: 'Root',
+      status: 'Uncertain',
+      description: '33',
+      time_frame: {
+        from_date: Date.now(),
+        to_date: Date.parse('Aug 9, 2020'),
+      },
+    },
+    address: addr.Ok.goal.address,
+  })
+  await s.consistency()
+  const history1 = await alice.call(
+    'acorn_hc',
+    'holo_acorn',
+    'history_of_goal',
+    { address: addr.Ok.goal.address }
+  )
+  await alice.call('acorn_hc', 'holo_acorn', 'archive_goal', {
+    address: addr.Ok.goal.address,
+  })
+  await s.consistency()
+  console.log('members', history1.Ok.members)
+  t.equal(history1.Ok.entries.length, 2)
+})
 orchestrator.registerScenario('create profile test', async (s, t) => {
   // the 'true' is for 'start', which means boot the Conductors
   const { alice } = await s.players({ alice: conductorConfig }, true)
@@ -87,7 +160,7 @@ orchestrator.registerScenario('create goal test', async (s, t) => {
     goal: {
       content: 'sample content',
       user_hash: alice._instances.acorn_hc.agentAddress,
-      unix_timestamp: Date.now(),
+      timestamp_created: Date.now(),
       hierarchy: 'Branch',
       status: 'Uncertain',
       description: '',
@@ -165,7 +238,7 @@ orchestrator.registerScenario(
       goal: {
         content: 'sample content',
         user_hash: alice._instances.acorn_hc.agentAddress,
-        unix_timestamp: Date.now(),
+        timestamp_created: Date.now(),
         hierarchy: 'Branch',
         status: 'Uncertain',
         description: '',
@@ -176,7 +249,7 @@ orchestrator.registerScenario(
       goal: {
         content: 'sample content',
         user_hash: bob._instances.acorn_hc.agentAddress,
-        unix_timestamp: Date.now(),
+        timestamp_created: Date.now(),
         hierarchy: 'Branch',
         status: 'Uncertain',
         description: '',
@@ -195,7 +268,7 @@ orchestrator.registerScenario(
       goal: {
         content: 'sample content2',
         user_hash: alice._instances.acorn_hc.agentAddress,
-        unix_timestamp: time,
+        timestamp_created: time,
         hierarchy: 'Root',
         status: 'Uncertain',
         description: '33',
@@ -261,14 +334,13 @@ orchestrator.registerScenario(
     t.deepEqual(result_bob.Ok.entry, {
       content: 'sample content2',
       user_hash: alice._instances.acorn_hc.agentAddress,
-      unix_timestamp: time,
+      user_edit_hash: null,
+      timestamp_created: time,
+      timestamp_updated: null,
       hierarchy: 'Root',
       status: 'Uncertain',
       description: '33',
-      time_frame: {
-        from_date: time,
-        to_date: Date.parse('Aug 9, 2020'),
-      },
+      time_frame: { from_date: time, to_date: 1596945600000 },
     })
     t.deepEqual(result_alex.Ok.entry, result_alex2.Ok[0].entry)
     t.deepEqual(result_alex4.Ok.entry, result_alex5.Ok[0].entry)
@@ -353,7 +425,7 @@ orchestrator.registerScenario(
         goal: {
           content: 'sample content',
           user_hash: alice._instances.acorn_hc.agentAddress,
-          unix_timestamp: Date.now(),
+          timestamp_created: Date.now(),
           hierarchy: 'Branch',
           status: 'Uncertain',
           description: '',
@@ -378,7 +450,7 @@ orchestrator.registerScenario(
         goal: {
           content: 'sample content2',
           user_hash: alice._instances.acorn_hc.agentAddress,
-          unix_timestamp: time,
+          timestamp_created: time,
           hierarchy: 'Root',
           status: 'Uncertain',
           description: '33',
@@ -412,7 +484,7 @@ orchestrator.registerScenario('alex and alice are commenting', async (s, t) => {
     goal: {
       content: 'sample content',
       user_hash: alice._instances.acorn_hc.agentAddress,
-      unix_timestamp: Date.now(),
+      timestamp_created: Date.now(),
       hierarchy: 'Branch',
       status: 'Uncertain',
       description: '',

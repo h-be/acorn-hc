@@ -8,14 +8,15 @@ extern crate serde_derive;
 extern crate serde_json;
 #[macro_use]
 extern crate holochain_json_derive;
-
+use hdk::prelude::Entry::App;
 use hdk::holochain_core_types::{
     // agent::AgentId, dna::entry_types::Sharing, entry::Entry, link::LinkMatch,
     dna::entry_types::Sharing, entry::Entry, link::LinkMatch,
+    
 };
 use hdk::{
     entry_definition::ValidatingEntryType,
-    error::{ZomeApiResult},
+    error::{ZomeApiError,ZomeApiResult},
     AGENT_ADDRESS,
     // AGENT_ADDRESS, AGENT_ID_STR,
 };
@@ -51,6 +52,7 @@ pub struct Profile {
 pub struct GoalMember {
     goal_address: Address,
     agent_address: Address,
+    user_edit_hash: Option<Address>,
     unix_timestamp: u128,
 }
 #[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
@@ -107,11 +109,14 @@ pub struct TimeFrame {
 pub struct Goal {
     content: String,
     user_hash: Address,
-    unix_timestamp: u128,
+    user_edit_hash: Option<Address>,
+    timestamp_created: u128,
+    timestamp_updated:Option<u128>,
     hierarchy: Hierarchy,
     status: Status,
+    tags:Option<Vec<String>>,
     description:String,
-    time_frame:Option<TimeFrame>
+    time_frame:Option<TimeFrame>,
 }
 #[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
 pub struct GoalMaybeWithEdge {
@@ -127,9 +132,15 @@ pub struct ArchiveGoalResponse {
     archived_goal_votes: Vec<Address>,
     archived_goal_comments:Vec<Address>,
 }
+#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
+pub struct GetHistoryResponse {
+    entries: Vec<Goal>,
+    members:Vec<Vec<GoalMember>>,
+    address: Address,
 
-// The GetResponse struct allows our zome functions to return an entry along with its
-// address so that Redux can know the address of goals and edges
+}
+//The GetResponse struct allows our zome functions to return an entry along with its
+//address so that Redux can know the address of goals and edges
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GetResponse<T> {
     pub entry: T,
@@ -245,7 +256,7 @@ mod holo_acorn {
                 hdk::ValidationPackageDefinition::Entry
             },
             validation: | _validation_data: hdk::EntryValidationData<Goal>| {
-                Ok(())
+                 Ok(())                 
             }
         )
     }
@@ -432,7 +443,67 @@ mod holo_acorn {
     fn fetch_agent_address() -> ZomeApiResult<Address> {
       Ok(AGENT_ADDRESS.clone())
     }
+    #[zome_fn("hc_public")]
+    fn history_of_goal(address:Address)->ZomeApiResult<GetHistoryResponse>{
+        let anchor_address = Entry::App(
+            "anchor".into(), // app entry type
+            "goal_members".into(),  // app entry value
+        )
+        .address();
+            // return all the Goal objects from the entries linked to the edge anchor (drop entries with wrong type)
+            let members=hdk::get_links(
+                &anchor_address,
+                LinkMatch::Exactly("anchor->goal_member"), // the link type to match
+                LinkMatch::Any,
+            )?
+            // scoop all these entries up into an array and return it
+            .addresses()
+            .into_iter()
+            .map(|member_address: Address| 
+                if let Ok(Some(entry_history))=hdk::api::get_entry_history(&member_address)
+                {
+                    
+                        Some (entry_history.items.into_iter().map(|item|
+                            if let Some(App(_,value_entry))=item.entry{
+                                match serde_json::from_str::<GoalMember>(&Into::<String>::into(value_entry)).ok(){
+                                    Some(goal_member)=>{
+                                        // filter down to only Goal Members that are associated with the requested Goal
+                                        if goal_member.goal_address==address {Ok(goal_member)}
+                                        else {Err(ZomeApiError::Internal("error".into()))}
+                                        },
+                                    None=>Err(ZomeApiError::Internal("error".into()))
+                                }
 
+                            }else { Err(ZomeApiError::Internal("error".into()))}
+                            ).filter_map(Result::ok).collect(),
+                    )
+                }else{
+                    None
+                })
+            .filter_map(|op:Option<Vec<GoalMember>>|match op{
+                Some(vec)=> if vec.len()>0 {Some(vec)}
+                            else {None},
+            _=>None})
+            .collect();
+                if let Ok(Some(entry_history))=hdk::api::get_entry_history(&address)
+                {
+                    Ok(GetHistoryResponse{
+                        entries:entry_history.items.into_iter().map(|item|
+                            if let Some(App(_,value_entry))=item.entry{
+                                match serde_json::from_str::<Goal>(&Into::<String>::into(value_entry)).ok(){
+                                    Some(goal)=>Ok(goal),
+                                    None=>Err(ZomeApiError::Internal("error".into()))
+                                }
+
+                            }else { Err(ZomeApiError::Internal("error".into()))}
+                            ).filter_map(Result::ok).collect(),
+                            members:members,
+                        address:address,
+                    })
+                }else{
+                    Err(ZomeApiError::Internal("error".into()))
+                }
+    }
     #[zome_fn("hc_public")]
     fn fetch_agents() -> ZomeApiResult<Vec<Profile>> {
         let anchor_address = Entry::App(
@@ -514,6 +585,12 @@ mod holo_acorn {
 
     #[zome_fn("hc_public")]
     fn update_goal(goal: Goal, address: Address) -> ZomeApiResult<GetResponse<Goal>> {
+        let mut goal = goal;
+        let old_goal=hdk::utils::get_as_type::<Goal>( address.clone())?;
+        if goal.timestamp_updated==None
+        {goal.timestamp_updated=Some(goal.timestamp_created);}
+        goal.timestamp_created=old_goal.timestamp_created;
+        goal.user_edit_hash=Some(AGENT_ADDRESS.clone());
         let app_entry = Entry::App("goal".into(), goal.clone().into());
         let _ = hdk::update_entry(app_entry, &address)?;
 
@@ -804,6 +881,8 @@ mod holo_acorn {
     }
     #[zome_fn("hc_public")]
     fn add_member_of_goal(goal_member: GoalMember) -> ZomeApiResult<GetResponse<GoalMember>> {
+        let mut goal_member=goal_member;
+        goal_member.user_edit_hash=Some(AGENT_ADDRESS.clone());
         let app_entry = Entry::App("goal_member".into(), goal_member.clone().into());
         let entry_address = hdk::commit_entry(&app_entry)?;
 
@@ -877,11 +956,16 @@ mod holo_acorn {
     }
     #[zome_fn("hc_public")]
     fn archive_member_of_goal(address: Address) -> ZomeApiResult<Address> {
+        let mut goal_member=hdk::utils::get_as_type::<GoalMember>(address.clone())?;
+        goal_member.user_edit_hash=Some(AGENT_ADDRESS.clone());
+        let app_entry = Entry::App("goal_member".into(), goal_member.clone().into());        
+        let _ = hdk::update_entry(app_entry, &address)?;
         hdk::remove_entry(&address)?;
         Ok(address)
     }
      #[zome_fn("hc_public")]
     fn archive_vote_of_goal(address: Address) -> ZomeApiResult<Address> {
+        
         hdk::remove_entry(&address)?;
         Ok(address)
     }
