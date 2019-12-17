@@ -213,8 +213,15 @@ mod holo_acorn {
             validation_package: || {
                 hdk::ValidationPackageDefinition::Entry
             },
-            validation: | _validation_data: hdk::EntryValidationData<Profile>| {
-                Ok(())
+            validation: | validation_data: hdk::EntryValidationData<Profile>| {
+                match validation_data{
+                    hdk::EntryValidationData::Create{entry,..}=>{
+                        if entry.address!=AGENT_ADDRESS.to_string() {
+                            Err("only the same agent can create your profile".into())
+                        }else {Ok(())}
+                    },
+                    _=> Ok(())
+                }
             },
             links: [
                 from!(

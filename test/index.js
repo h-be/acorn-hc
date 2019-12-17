@@ -37,7 +37,7 @@ const orchestrator = new Orchestrator({
     logger: false,
     network: {
       type: 'sim2h',
-      sim2h_url: 'wss://sim2h.harris-braun.com:9000',
+      sim2h_url: 'wss://sim2h.holochain.org:9000',
     }, // must use singleConductor middleware if using in-memory network
   },
 
@@ -193,6 +193,17 @@ orchestrator.registerScenario('two agent test', async (s, t) => {
       address: alice._instances.acorn_hc.agentAddress,
     },
   })
+  await s.consistency()
+  const result2 = await alice.call('acorn_hc', 'holo_acorn', 'create_whoami', {
+    profile: {
+      first_name: 'bob',
+      last_name: 'romero',
+      handle: 'Branch',
+      avatar_url: '',
+      address: bob._instances.acorn_hc.agentAddress,
+    },
+  })
+  await s.consistency()
   await bob.call('acorn_hc', 'holo_acorn', 'create_whoami', {
     profile: {
       first_name: 'bob',
@@ -217,10 +228,12 @@ orchestrator.registerScenario('two agent test', async (s, t) => {
     'fetch_agent_address',
     {}
   )
+  await s.consistency()
   // check for equality of the actual and expected results
   const result = await alice.call('acorn_hc', 'holo_acorn', 'fetch_agents', {})
 
   t.equal(result.Ok.length, 2)
+  t.equal(result2.Ok, undefined)
   t.isNotDeepEqual(result_alice.Ok, result_bob.Ok)
 })
 
@@ -334,7 +347,7 @@ orchestrator.registerScenario(
     t.deepEqual(result_bob.Ok.entry, {
       content: 'sample content2',
       user_hash: alice._instances.acorn_hc.agentAddress,
-      user_edit_hash: null,
+      user_edit_hash: bob._instances.acorn_hc.agentAddress,
       timestamp_created: time,
       timestamp_updated: null,
       hierarchy: 'Root',
