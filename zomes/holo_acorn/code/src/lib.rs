@@ -220,7 +220,17 @@ mod holo_acorn {
                             Err("only the same agent can create your profile".into())
                         }else {Ok(())}
                     },
-                    _=> Ok(())
+                    hdk::EntryValidationData::Modify{
+                        old_entry,..}=>{
+                        if  old_entry.address!=AGENT_ADDRESS.to_string(){
+                            Err("only the same agent can modify your profile".into())
+                        }else {Ok(())}
+                    },
+                    hdk::EntryValidationData::Delete{old_entry,..}=>{
+                        if old_entry.address!=AGENT_ADDRESS.to_string() {
+                            Err("only the same agent can delete your profile".into())
+                        }else {Ok(())}
+                    }
                 }
             },
             links: [

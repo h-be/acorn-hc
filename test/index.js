@@ -233,7 +233,10 @@ orchestrator.registerScenario('two agent test', async (s, t) => {
   const result = await alice.call('acorn_hc', 'holo_acorn', 'fetch_agents', {})
 
   t.equal(result.Ok.length, 2)
-  t.equal(result2.Ok, undefined)
+  t.deepEqual(result2.Err, {
+    Internal:
+      '{"kind":{"ValidationFailed":"only the same agent can create your profile"},"file":"crates/core/src/nucleus/ribosome/runtime.rs","line":"220"}',
+  })
   t.isNotDeepEqual(result_alice.Ok, result_bob.Ok)
 })
 
