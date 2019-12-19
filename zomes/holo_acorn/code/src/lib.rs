@@ -226,7 +226,7 @@ mod holo_acorn {
                         old_entry,validation_data,..}=>{
                         let agent_address = &validation_data.sources()[0];
                         if new_entry.address!=agent_address.to_string()&& old_entry.address!=agent_address.to_string(){
-                            Err("only the same agent can modify your profile".into())
+                            Err("only the same agent as the profile is about can modify their profile".into())
                         }else {Ok(())}
                     },
                     hdk::EntryValidationData::Delete{old_entry,validation_data,..}=>{
