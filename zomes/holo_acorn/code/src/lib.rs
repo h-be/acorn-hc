@@ -216,7 +216,8 @@ mod holo_acorn {
             validation: | validation_data: hdk::EntryValidationData<Profile>| {
                 match validation_data{
                     hdk::EntryValidationData::Create{entry,validation_data}=>{
-                        if entry.address!=AGENT_ADDRESS.to_string() {
+                        let agent_address = validation_data.package.sources()[0]
+                        if entry.address!=agent_address.to_string() {
                             Err("only the same agent can create your profile".into())
                         }else {Ok(())}
                     },
