@@ -315,7 +315,7 @@ mod holo_acorn {
                     hdk::EntryValidationData::Create{entry,validation_data}=>{
                         let agent_address = &validation_data.sources()[0];
                         if entry.agent_address.to_string()!=agent_address.to_string() {
-                            Err("only the same agent can create a comment on their name".into())
+                            Err("only the same agent making a comment can make it in their name".into())
                         }else {Ok(())}
                     },
                     hdk::EntryValidationData::Modify{
