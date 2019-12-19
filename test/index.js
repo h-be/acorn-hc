@@ -235,7 +235,7 @@ orchestrator.registerScenario('two agent test', async (s, t) => {
   t.equal(result.Ok.length, 2)
   t.deepEqual(result2.Err, {
     Internal:
-      '{"kind":{"ValidationFailed":"only the same agent can create your profile"},"file":"crates/core/src/nucleus/ribosome/runtime.rs","line":"220"}',
+      '{"kind":{"ValidationFailed":"only the same agent as the profile is about can create their profile"},"file":"crates/core/src/nucleus/ribosome/runtime.rs","line":"220"}',
   })
   t.isNotDeepEqual(result_alice.Ok, result_bob.Ok)
 })
