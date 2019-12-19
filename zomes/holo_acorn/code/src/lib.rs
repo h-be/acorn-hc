@@ -18,8 +18,8 @@ use hdk::prelude::Entry::App;
 use hdk::{
     entry_definition::ValidatingEntryType,
     error::{ZomeApiError, ZomeApiResult},
-    AGENT_ADDRESS,
     // AGENT_ADDRESS, AGENT_ID_STR,
+    AGENT_ADDRESS,
 };
 
 use hdk::holochain_json_api::{
@@ -216,7 +216,7 @@ mod holo_acorn {
             validation: | validation_data: hdk::EntryValidationData<Profile>| {
                 match validation_data{
                     hdk::EntryValidationData::Create{entry,validation_data}=>{
-                        let agent_address = validation_data.package.sources()[0]
+                        let agent_address = &validation_data.sources()[0];
                         if entry.address!=agent_address.to_string() {
                             Err("only the same agent can create your profile".into())
                         }else {Ok(())}
@@ -224,13 +224,13 @@ mod holo_acorn {
                     hdk::EntryValidationData::Modify{
                         new_entry,
                         old_entry,validation_data,..}=>{
-                        let agent_address = validation_data.package.sources()[0]
+                        let agent_address = &validation_data.sources()[0];
                         if new_entry.address!=agent_address.to_string()&& old_entry.address!=agent_address.to_string(){
                             Err("only the same agent can modify your profile".into())
                         }else {Ok(())}
                     },
-                    hdk::EntryValidationData::Delete{old_entry,validation_data}=>{
-                        let agent_address = validation_data.package.sources()[0]
+                    hdk::EntryValidationData::Delete{old_entry,validation_data,..}=>{
+                        let agent_address = &validation_data.sources()[0];
                         if old_entry.address!=agent_address.to_string() {
                             Err("only the same agent can delete your profile".into())
                         }else {Ok(())}
@@ -254,9 +254,9 @@ mod holo_acorn {
                                     validation_data,..
                                 } =>validation_data,
                             };
-                        let agent_address=validation_data.package.sources()[0];
+                        let agent_address=&validation_data.sources()[0];
                         if let Ok(profile )= hdk::utils::get_as_type::<Profile>(validation_data.package.chain_header.entry_address().clone()){
-                            if profile.address==agent_address {
+                            if profile.address==agent_address.to_string() {
                                 Ok(())
                             }else {
                             Err("Cannot edit other people's Profile".to_string())
@@ -312,20 +312,24 @@ mod holo_acorn {
             },
             validation: | validation_data: hdk::EntryValidationData<GoalComment>| {
                 match validation_data{
-                    hdk::EntryValidationData::Create{entry,..}=>{
-                        if entry.agent_address.to_string()!=AGENT_ADDRESS.to_string() {
+                    hdk::EntryValidationData::Create{entry,validation_data}=>{
+                        let agent_address = &validation_data.sources()[0];
+                        if entry.agent_address.to_string()!=agent_address.to_string() {
                             Err("only the same agent can create a comment on their name".into())
                         }else {Ok(())}
                     },
                     hdk::EntryValidationData::Modify{
                         new_entry,
-                        old_entry,..}=>{
-                        if new_entry.agent_address.to_string()!=AGENT_ADDRESS.to_string()&& old_entry.agent_address.to_string()!=AGENT_ADDRESS.to_string(){
+                        old_entry,validation_data,..}=>{
+                        let agent_address = &validation_data.sources()[0];
+
+                        if new_entry.agent_address.to_string()!=agent_address.to_string()&& old_entry.agent_address.to_string()!=agent_address.to_string(){
                             Err("only the same agent can create a comment on their name".into())
                         }else {Ok(())}
                     },
-                    hdk::EntryValidationData::Delete{old_entry,..}=>{
-                        if old_entry.agent_address.to_string()!=AGENT_ADDRESS.to_string() {
+                    hdk::EntryValidationData::Delete{old_entry,validation_data,..}=>{
+                        let agent_address = &validation_data.sources()[0];
+                        if old_entry.agent_address.to_string()!=agent_address.to_string() {
                             Err("only the same agent can create a comment on their name".into())
                         }else {Ok(())}
                     }
