@@ -240,8 +240,28 @@ mod holo_acorn {
                     validation_package: || {
                         hdk::ValidationPackageDefinition::Entry
                     },
-                    validation: | _validation_data: hdk::LinkValidationData| {
-                        Ok(())
+                   validation: |link_validation_data: hdk::LinkValidationData| {
+                        let validation_data =
+                            match link_validation_data {
+                                hdk::LinkValidationData::LinkAdd {
+                                    validation_data,..
+                                } => validation_data,
+                                hdk::LinkValidationData::LinkRemove {
+                                    validation_data,..
+                                } =>validation_data,
+                            };
+
+                        if let Ok(profile )= hdk::utils::get_as_type::<Profile>(validation_data.package.chain_header.entry_address().clone()){
+                            if profile.address==AGENT_ADDRESS.to_string() {
+                                Ok(())
+                            }else {
+                            Err("Cannot edit other people's Profile".to_string())
+                        }
+                        }else{
+                            Err("Cannot edit other people's Profile".to_string())
+                        }
+
+
                     }
                 )
             ]
