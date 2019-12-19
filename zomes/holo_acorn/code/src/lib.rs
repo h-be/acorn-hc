@@ -324,7 +324,7 @@ mod holo_acorn {
                         let agent_address = &validation_data.sources()[0];
 
                         if new_entry.agent_address.to_string()!=agent_address.to_string()&& old_entry.agent_address.to_string()!=agent_address.to_string(){
-                            Err("only the same agent can create a comment on their name".into())
+                            Err("an agent can only update their own comment".into())
                         }else {Ok(())}
                     },
                     hdk::EntryValidationData::Delete{old_entry,validation_data,..}=>{
