@@ -221,8 +221,9 @@ mod holo_acorn {
                         }else {Ok(())}
                     },
                     hdk::EntryValidationData::Modify{
+                        new_entry,
                         old_entry,..}=>{
-                        if  old_entry.address!=AGENT_ADDRESS.to_string(){
+                        if new_entry.address!=AGENT_ADDRESS.to_string()&& old_entry.address!=AGENT_ADDRESS.to_string(){
                             Err("only the same agent can modify your profile".into())
                         }else {Ok(())}
                     },
