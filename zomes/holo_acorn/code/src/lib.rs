@@ -307,8 +307,26 @@ mod holo_acorn {
             validation_package: || {
                 hdk::ValidationPackageDefinition::Entry
             },
-            validation: | _validation_data: hdk::EntryValidationData<GoalComment>| {
-                Ok(())
+            validation: | validation_data: hdk::EntryValidationData<GoalComment>| {
+                match validation_data{
+                    hdk::EntryValidationData::Create{entry,..}=>{
+                        if entry.agent_address.to_string()!=AGENT_ADDRESS.to_string() {
+                            Err("only the same agent can create a comment on their name".into())
+                        }else {Ok(())}
+                    },
+                    hdk::EntryValidationData::Modify{
+                        new_entry,
+                        old_entry,..}=>{
+                        if new_entry.agent_address.to_string()!=AGENT_ADDRESS.to_string()&& old_entry.agent_address.to_string()!=AGENT_ADDRESS.to_string(){
+                            Err("only the same agent can create a comment on their name".into())
+                        }else {Ok(())}
+                    },
+                    hdk::EntryValidationData::Delete{old_entry,..}=>{
+                        if old_entry.agent_address.to_string()!=AGENT_ADDRESS.to_string() {
+                            Err("only the same agent can create a comment on their name".into())
+                        }else {Ok(())}
+                    }
+                }
             }
         )
     }
