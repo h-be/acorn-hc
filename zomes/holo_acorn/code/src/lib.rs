@@ -223,13 +223,15 @@ mod holo_acorn {
                     },
                     hdk::EntryValidationData::Modify{
                         new_entry,
-                        old_entry,..}=>{
-                        if new_entry.address!=AGENT_ADDRESS.to_string()&& old_entry.address!=AGENT_ADDRESS.to_string(){
+                        old_entry,validation_data,..}=>{
+                        let agent_address = validation_data.package.sources()[0]
+                        if new_entry.address!=agent_address.to_string()&& old_entry.address!=agent_address.to_string(){
                             Err("only the same agent can modify your profile".into())
                         }else {Ok(())}
                     },
-                    hdk::EntryValidationData::Delete{old_entry,..}=>{
-                        if old_entry.address!=AGENT_ADDRESS.to_string() {
+                    hdk::EntryValidationData::Delete{old_entry,validation_data}=>{
+                        let agent_address = validation_data.package.sources()[0]
+                        if old_entry.address!=agent_address.to_string() {
                             Err("only the same agent can delete your profile".into())
                         }else {Ok(())}
                     }
@@ -252,9 +254,9 @@ mod holo_acorn {
                                     validation_data,..
                                 } =>validation_data,
                             };
-
+                        let agent_address=validation_data.package.sources()[0];
                         if let Ok(profile )= hdk::utils::get_as_type::<Profile>(validation_data.package.chain_header.entry_address().clone()){
-                            if profile.address==AGENT_ADDRESS.to_string() {
+                            if profile.address==agent_address {
                                 Ok(())
                             }else {
                             Err("Cannot edit other people's Profile".to_string())
