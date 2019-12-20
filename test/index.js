@@ -507,7 +507,7 @@ orchestrator.registerScenario('alex and alice are commenting', async (s, t) => {
     },
     maybe_parent_address: null,
   })
-  const comment1 = await alex.call(
+  const comment1 = await alice.call(
     'acorn_hc',
     'holo_acorn',
     'add_comment_of_goal',
@@ -528,7 +528,7 @@ orchestrator.registerScenario('alex and alice are commenting', async (s, t) => {
       goal_comment: {
         goal_address: goal.Ok.goal.address,
         content: 'this is a test',
-        agent_address: alice._instances.acorn_hc.agentAddress,
+        agent_address: alex._instances.acorn_hc.agentAddress,
         unix_timestamp: Date.now(),
       },
     }
@@ -549,7 +549,7 @@ orchestrator.registerScenario('alex and alice are commenting', async (s, t) => {
     }
   )
   await s.consistency()
-  await alice.call('acorn_hc', 'holo_acorn', 'archive_comment_of_goal', {
+  await alex.call('acorn_hc', 'holo_acorn', 'archive_comment_of_goal', {
     address: comment2.Ok.address,
   })
   await s.consistency()
