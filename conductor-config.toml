@@ -49,4 +49,4 @@ trace = false
 
 #[network]
 #type = "sim2h"
-#sim2h_url = "wss://0.0.0.0:9000"
+#sim2h_url = "wss://sim2h.harris-braun.com:9000"
