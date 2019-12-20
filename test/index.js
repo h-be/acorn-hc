@@ -357,6 +357,7 @@ orchestrator.registerScenario(
       timestamp_updated: time,
       hierarchy: 'Root',
       status: 'Uncertain',
+      tags: null,
       description: '33',
       time_frame: { from_date: time, to_date: 1596945600000 },
     })
