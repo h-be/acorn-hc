@@ -349,7 +349,7 @@ orchestrator.registerScenario(
     )
     t.isNotEqual(goal2.Ok.maybe_edge, null)
     t.equal(result_alice.Ok.length, 2)
-    t.deepEqual(result_bob.Ok.entry, {
+    t.isEquivalent(result_bob.Ok.entry, {
       content: 'sample content2',
       user_hash: alice._instances.acorn_hc.agentAddress,
       user_edit_hash: bob._instances.acorn_hc.agentAddress,
