@@ -248,19 +248,21 @@ orchestrator.registerScenario(
       { alice: conductorConfig, bob: conductorConfig, alex: conductorConfig },
       true
     )
+    const time2 = Date.now()
     // Make a call to a Zome function
     // indicating the function, and passing it an input
     const goal = await alice.call('acorn_hc', 'holo_acorn', 'create_goal', {
       goal: {
         content: 'sample content',
         user_hash: alice._instances.acorn_hc.agentAddress,
-        timestamp_created: Date.now(),
+        timestamp_created: time2,
         hierarchy: 'Branch',
         status: 'Uncertain',
         description: '',
       },
       maybe_parent_address: null,
     })
+
     const goal2 = await bob.call('acorn_hc', 'holo_acorn', 'create_goal', {
       goal: {
         content: 'sample content',
@@ -352,7 +354,7 @@ orchestrator.registerScenario(
       user_hash: alice._instances.acorn_hc.agentAddress,
       user_edit_hash: bob._instances.acorn_hc.agentAddress,
       timestamp_created: time,
-      timestamp_updated: null,
+      timestamp_updated: time,
       hierarchy: 'Root',
       status: 'Uncertain',
       description: '33',

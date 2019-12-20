@@ -255,18 +255,25 @@ mod holo_acorn {
                                 } =>validation_data,
                             };
                         let agent_address=&validation_data.sources()[0];
-                        if let Ok(profile )= hdk::utils::get_as_type::<Profile>(validation_data.package.chain_header.entry_address().clone()){
-                            if profile.address==agent_address.to_string() {
+                        if let Some(vector)= validation_data.package.source_chain_entries{
+                            if let App (_,entry)=&vector[0]{
+                            if let Ok(profile)=serde_json::from_str::<Profile>(&Into::<String>::into(entry)) {
+                                if profile.address==agent_address.to_string(){
                                 Ok(())
+
+                                }else {
+                            Err("Cannot edit other people's Profile1".to_string())}
                             }else {
-                            Err("Cannot edit other people's Profile".to_string())
+                            Err("Cannot edit other people's Profile2".to_string())}
                         }
-                        }else{
-                            Err("Cannot edit other people's Profile".to_string())
+                        else{
+                            Err("Cannot edit other people's Profile3".to_string())
                         }
 
-
-                    }
+                        } else{
+                            Ok(())
+                        }
+                        }
                 )
             ]
         )
