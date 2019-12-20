@@ -353,7 +353,7 @@ orchestrator.registerScenario(
       content: 'sample content2',
       user_hash: alice._instances.acorn_hc.agentAddress,
       user_edit_hash: bob._instances.acorn_hc.agentAddress,
-      timestamp_created: time,
+      timestamp_created: time2,
       timestamp_updated: time,
       hierarchy: 'Root',
       status: 'Uncertain',
