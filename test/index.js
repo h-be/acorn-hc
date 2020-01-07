@@ -37,7 +37,7 @@ const orchestrator = new Orchestrator({
     logger: false,
     network: {
       type: 'sim2h',
-      sim2h_url: 'wss://sim2h.harris-braun.com:9000',
+      sim2h_url: 'wss://sim2h.holochain.org:9000',
     }, // must use singleConductor middleware if using in-memory network
   },
 
@@ -193,6 +193,17 @@ orchestrator.registerScenario('two agent test', async (s, t) => {
       address: alice._instances.acorn_hc.agentAddress,
     },
   })
+  await s.consistency()
+  const result2 = await alice.call('acorn_hc', 'holo_acorn', 'create_whoami', {
+    profile: {
+      first_name: 'bob',
+      last_name: 'romero',
+      handle: 'Branch',
+      avatar_url: '',
+      address: bob._instances.acorn_hc.agentAddress,
+    },
+  })
+  await s.consistency()
   await bob.call('acorn_hc', 'holo_acorn', 'create_whoami', {
     profile: {
       first_name: 'bob',
@@ -217,10 +228,15 @@ orchestrator.registerScenario('two agent test', async (s, t) => {
     'fetch_agent_address',
     {}
   )
+  await s.consistency()
   // check for equality of the actual and expected results
   const result = await alice.call('acorn_hc', 'holo_acorn', 'fetch_agents', {})
 
   t.equal(result.Ok.length, 2)
+  t.deepEqual(result2.Err, {
+    Internal:
+      '{"kind":{"ValidationFailed":"only the same agent as the profile is about can create their profile"},"file":"crates/core/src/nucleus/ribosome/runtime.rs","line":"220"}',
+  })
   t.isNotDeepEqual(result_alice.Ok, result_bob.Ok)
 })
 
@@ -232,19 +248,21 @@ orchestrator.registerScenario(
       { alice: conductorConfig, bob: conductorConfig, alex: conductorConfig },
       true
     )
+    const time2 = Date.now()
     // Make a call to a Zome function
     // indicating the function, and passing it an input
     const goal = await alice.call('acorn_hc', 'holo_acorn', 'create_goal', {
       goal: {
         content: 'sample content',
         user_hash: alice._instances.acorn_hc.agentAddress,
-        timestamp_created: Date.now(),
+        timestamp_created: time2,
         hierarchy: 'Branch',
         status: 'Uncertain',
         description: '',
       },
       maybe_parent_address: null,
     })
+
     const goal2 = await bob.call('acorn_hc', 'holo_acorn', 'create_goal', {
       goal: {
         content: 'sample content',
@@ -331,14 +349,15 @@ orchestrator.registerScenario(
     )
     t.isNotEqual(goal2.Ok.maybe_edge, null)
     t.equal(result_alice.Ok.length, 2)
-    t.deepEqual(result_bob.Ok.entry, {
+    t.isEquivalent(result_bob.Ok.entry, {
       content: 'sample content2',
       user_hash: alice._instances.acorn_hc.agentAddress,
-      user_edit_hash: null,
-      timestamp_created: time,
-      timestamp_updated: null,
+      user_edit_hash: bob._instances.acorn_hc.agentAddress,
+      timestamp_created: time2,
+      timestamp_updated: time,
       hierarchy: 'Root',
       status: 'Uncertain',
+      tags: null,
       description: '33',
       time_frame: { from_date: time, to_date: 1596945600000 },
     })
@@ -491,7 +510,7 @@ orchestrator.registerScenario('alex and alice are commenting', async (s, t) => {
     },
     maybe_parent_address: null,
   })
-  const comment1 = await alex.call(
+  const comment1 = await alice.call(
     'acorn_hc',
     'holo_acorn',
     'add_comment_of_goal',
@@ -512,7 +531,7 @@ orchestrator.registerScenario('alex and alice are commenting', async (s, t) => {
       goal_comment: {
         goal_address: goal.Ok.goal.address,
         content: 'this is a test',
-        agent_address: alice._instances.acorn_hc.agentAddress,
+        agent_address: alex._instances.acorn_hc.agentAddress,
         unix_timestamp: Date.now(),
       },
     }
@@ -533,7 +552,7 @@ orchestrator.registerScenario('alex and alice are commenting', async (s, t) => {
     }
   )
   await s.consistency()
-  await alice.call('acorn_hc', 'holo_acorn', 'archive_comment_of_goal', {
+  await alex.call('acorn_hc', 'holo_acorn', 'archive_comment_of_goal', {
     address: comment2.Ok.address,
   })
   await s.consistency()

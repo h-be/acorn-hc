@@ -11,7 +11,7 @@ public_address = 'HcSciGpYDHTaa5dmw583AO7Jy9kHz9K3gu6MtTsB8Nwbfe3y3hD8rOb9aj5B8z
 
 [[dnas]]
 file = './dist/acorn-hc.dna.json'
-hash = 'QmaAXyov9ACUSE3qHe7WcX4VGszgXoxrEPaXRAnAybEmux'
+hash = 'QmVQjgSrCdfEEYmi7ppN9t5F3rCMhv95HhWHoGer5ZJLDi'
 id = 'hc-run-dna'
 
 [[instances]]
@@ -47,6 +47,6 @@ type = 'cmd'
 consistency = false
 trace = false
 
-[network]
-type = "sim2h"
-sim2h_url = "wss://sim2h.harris-braun.com:9000"
+#[network]
+#type = "sim2h"
+#sim2h_url = "wss://sim2h.harris-braun.com:9000"

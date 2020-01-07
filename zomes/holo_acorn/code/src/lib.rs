@@ -18,8 +18,8 @@ use hdk::prelude::Entry::App;
 use hdk::{
     entry_definition::ValidatingEntryType,
     error::{ZomeApiError, ZomeApiResult},
-    AGENT_ADDRESS,
     // AGENT_ADDRESS, AGENT_ID_STR,
+    AGENT_ADDRESS,
 };
 
 use hdk::holochain_json_api::{
@@ -213,8 +213,29 @@ mod holo_acorn {
             validation_package: || {
                 hdk::ValidationPackageDefinition::Entry
             },
-            validation: | _validation_data: hdk::EntryValidationData<Profile>| {
-                Ok(())
+            validation: | validation_data: hdk::EntryValidationData<Profile>| {
+                match validation_data{
+                    hdk::EntryValidationData::Create{entry,validation_data}=>{
+                        let agent_address = &validation_data.sources()[0];
+                        if entry.address!=agent_address.to_string() {
+                            Err("only the same agent as the profile is about can create their profile".into())
+                        }else {Ok(())}
+                    },
+                    hdk::EntryValidationData::Modify{
+                        new_entry,
+                        old_entry,validation_data,..}=>{
+                        let agent_address = &validation_data.sources()[0];
+                        if new_entry.address!=agent_address.to_string()&& old_entry.address!=agent_address.to_string(){
+                            Err("only the same agent as the profile is about can modify their profile".into())
+                        }else {Ok(())}
+                    },
+                    hdk::EntryValidationData::Delete{old_entry,validation_data,..}=>{
+                        let agent_address = &validation_data.sources()[0];
+                        if old_entry.address!=agent_address.to_string() {
+                            Err("only the same agent as the profile is about can delete their profile".into())
+                        }else {Ok(())}
+                    }
+                }
             },
             links: [
                 from!(
@@ -223,9 +244,36 @@ mod holo_acorn {
                     validation_package: || {
                         hdk::ValidationPackageDefinition::Entry
                     },
-                    validation: | _validation_data: hdk::LinkValidationData| {
-                        Ok(())
-                    }
+                   validation: |link_validation_data: hdk::LinkValidationData| {
+                        let validation_data =
+                            match link_validation_data {
+                                hdk::LinkValidationData::LinkAdd {
+                                    validation_data,..
+                                } => validation_data,
+                                hdk::LinkValidationData::LinkRemove {
+                                    validation_data,..
+                                } =>validation_data,
+                            };
+                        let agent_address=&validation_data.sources()[0];
+                        if let Some(vector)= validation_data.package.source_chain_entries{
+                            if let App (_,entry)=&vector[0]{
+                            if let Ok(profile)=serde_json::from_str::<Profile>(&Into::<String>::into(entry)) {
+                                if profile.address==agent_address.to_string(){
+                                Ok(())
+
+                                }else {
+                            Err("Cannot edit other people's Profile1".to_string())}
+                            }else {
+                            Err("Cannot edit other people's Profile2".to_string())}
+                        }
+                        else{
+                            Err("Cannot edit other people's Profile3".to_string())
+                        }
+
+                        } else{
+                            Ok(())
+                        }
+                        }
                 )
             ]
         )
@@ -269,8 +317,30 @@ mod holo_acorn {
             validation_package: || {
                 hdk::ValidationPackageDefinition::Entry
             },
-            validation: | _validation_data: hdk::EntryValidationData<GoalComment>| {
-                Ok(())
+            validation: | validation_data: hdk::EntryValidationData<GoalComment>| {
+                match validation_data{
+                    hdk::EntryValidationData::Create{entry,validation_data}=>{
+                        let agent_address = &validation_data.sources()[0];
+                        if entry.agent_address.to_string()!=agent_address.to_string() {
+                            Err("only the same agent making a comment can make it in their name".into())
+                        }else {Ok(())}
+                    },
+                    hdk::EntryValidationData::Modify{
+                        new_entry,
+                        old_entry,validation_data,..}=>{
+                        let agent_address = &validation_data.sources()[0];
+
+                        if new_entry.agent_address.to_string()!=agent_address.to_string()&& old_entry.agent_address.to_string()!=agent_address.to_string(){
+                            Err("an agent can only update their own comment".into())
+                        }else {Ok(())}
+                    },
+                    hdk::EntryValidationData::Delete{old_entry,validation_data,..}=>{
+                        let agent_address = &validation_data.sources()[0];
+                        if old_entry.agent_address.to_string()!=agent_address.to_string() {
+                            Err("an agent can only delete their own comment".into())
+                        }else {Ok(())}
+                    }
+                }
             }
         )
     }
