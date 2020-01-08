@@ -86,6 +86,7 @@ pub struct Edge {
 pub enum Status {
     Uncertain,
     Incomplete,
+    InProcess,
     Complete,
     InReview,
 }
