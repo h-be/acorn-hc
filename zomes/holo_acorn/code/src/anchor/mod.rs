@@ -5,13 +5,10 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 use hdk::entry_definition::ValidatingEntryType;
-use hdk::holochain_core_types::{
-    // agent::AgentId, dna::entry_types::Sharing, entry::Entry, link::LinkMatch,
-    dna::entry_types::Sharing,
-    entry::Entry,
-};
 
-pub fn init() {
+use hdk::holochain_core_types::{dna::entry_types::Sharing, entry::Entry};
+
+pub fn init() -> Result<(), String> {
     let goals_anchor_entry = Entry::App(
         "anchor".into(), // app entry type
         // app entry value. We'll use the value to specify what this anchor is for
@@ -42,12 +39,13 @@ pub fn init() {
         // app entry value. We'll use the value to specify what this anchor is for
         "agents".into(),
     );
-    let _ = hdk::commit_entry(&goal_comment_anchor_entry);
-    let _ = hdk::commit_entry(&goal_vote_anchor_entry);
-    let _ = hdk::commit_entry(&goal_members_anchor_entry);
-    let _ = hdk::commit_entry(&goals_anchor_entry);
-    let _ = hdk::commit_entry(&edges_anchor_entry);
-    let _ = hdk::commit_entry(&agents_anchor_entry);
+    hdk::commit_entry(&goal_comment_anchor_entry)?;
+    hdk::commit_entry(&goal_vote_anchor_entry)?;
+    hdk::commit_entry(&goal_members_anchor_entry)?;
+    hdk::commit_entry(&goals_anchor_entry)?;
+    hdk::commit_entry(&edges_anchor_entry)?;
+    hdk::commit_entry(&agents_anchor_entry)?;
+    Ok(())
 }
 pub fn anchor_def() -> ValidatingEntryType {
     entry!(

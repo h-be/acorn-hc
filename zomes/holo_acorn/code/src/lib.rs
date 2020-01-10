@@ -40,9 +40,7 @@ mod holo_acorn {
 
     #[init]
     pub fn init() {
-        // create anchor entries
-        anchor::init();
-        Ok(())
+        anchor::init()
     }
 
     #[validate_agent]
