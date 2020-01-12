@@ -5,9 +5,10 @@ ui_interfaces = []
 
 [[agents]]
 id = 'hc-run-agent'
-keystore_file = './key.key'
-name = 'Connor Turland'
-public_address = 'HcSciGpYDHTaa5dmw583AO7Jy9kHz9K3gu6MtTsB8Nwbfe3y3hD8rOb9aj5B8za'
+keystore_file = 'unused'
+name = 'acorn user'
+public_address = 'HcScIc8G7X769Nr6cnRxgR73wi8au946z7hc46EMDJjaz8au4bD7V6hj7T6B8fa'
+test_agent = true
 
 [[dnas]]
 file = './dist/acorn-hc.dna.json'
@@ -46,7 +47,3 @@ type = 'cmd'
 [signals]
 consistency = false
 trace = false
-
-#[network]
-#type = "sim2h"
-#sim2h_url = "wss://sim2h.harris-braun.com:9000"
