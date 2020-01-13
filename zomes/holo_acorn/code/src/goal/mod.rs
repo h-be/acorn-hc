@@ -70,6 +70,7 @@ pub struct Edge {
 pub enum Status {
     Uncertain,
     Incomplete,
+    InProcess,
     Complete,
     InReview,
 }
@@ -80,6 +81,7 @@ pub enum Hierarchy {
     Trunk,
     Branch,
     Leaf,
+    NoHierarchy
 }
 #[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
 pub struct TimeFrame {
