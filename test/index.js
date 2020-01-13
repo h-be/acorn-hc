@@ -21,25 +21,6 @@ process.on('unhandledRejection', error => {
 
 const dnaPath = path.join(__dirname, '../dist/acorn-hc.dna.json')
 
-const orchestrator = new Orchestrator({
-  middleware: combine(
-    // squash all instances from all conductors down into a single conductor,
-    // for in-memory testing purposes.
-    // Remove this middleware for other "real" network types which can actually
-    // send messages across conductors
-    // singleConductor,
-    // callSync,
-    // use the tape harness to run the tests, injects the tape API into each scenario
-    // as the second argument
-
-    // must use singleConductor middleware if using in-memory network
-    tapeExecutor(require('tape')),
-    localOnly,
-    singleConductor,
-    callSync
-  )
-})
-
 const globalConfig = {
   logger: {
     type: 'info',
@@ -78,10 +59,29 @@ const globalConfig = {
     state_dump: false
   },
   network: Config.network('memory') // {
-  // type: 'sim2h',
-  // sim2h_url: 'ws://localhost:9000' // 'ws://public.sim2h.net:9000'
+  //   type: 'sim2h',
+  //   sim2h_url: 'ws://localhost:9000' // 'ws://public.sim2h.net:9000'
   // } // Config.network('memory')
 }
+
+const orchestrator = new Orchestrator({
+  middleware: combine(
+    // squash all instances from all conductors down into a single conductor,
+    // for in-memory testing purposes.
+    // Remove this middleware for other "real" network types which can actually
+    // send messages across conductors
+    // singleConductor,
+    // callSync,
+    // use the tape harness to run the tests, injects the tape API into each scenario
+    // as the second argument
+
+    // must use singleConductor middleware if using in-memory network
+    tapeExecutor(require('tape')),
+    localOnly,
+    singleConductor
+    // callSync
+  )
+})
 
 const dna = Config.dna(dnaPath, 'acorn_hc')
 const fullConfig = Config.gen({ app: dna }, globalConfig)
@@ -157,6 +157,7 @@ orchestrator.registerScenario('create profile test', async (s, t) => {
   console.log('members', history1.Ok.members)
   t.equal(history1.Ok.entries.length, 2)
 })
+
 orchestrator.registerScenario('create profile test', async (s, t) => {
   // the 'true' is for 'start', which means boot the Conductors
   const { alice } = await s.players({ alice: fullConfig }, true)
