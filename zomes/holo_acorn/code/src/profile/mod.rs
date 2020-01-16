@@ -47,7 +47,7 @@ impl<T: Into<JsonString> + Debug + Serialize> From<GetResponse<T>> for JsonStrin
 pub enum Status {
     Online,
     Away,
-    Ofline,
+    Offline,
 }
 #[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
 pub struct Profile {
