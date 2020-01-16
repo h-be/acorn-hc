@@ -23,8 +23,8 @@ use hdk_proc_macros::zome;
 //use std::convert::{TryFrom};
 // use std::convert::{TryFrom, TryInto};
 mod profile;
-use crate::profile::GetResponse;
-use crate::profile::Profile;
+use crate::profile::{GetResponse, Profile, Status};
+
 mod anchor;
 mod goal;
 
@@ -88,7 +88,10 @@ mod holo_acorn {
     fn create_whoami(profile: Profile) -> ZomeApiResult<GetResponse<Profile>> {
         profile::create_whoami(profile)
     }
-
+    #[zome_fn("hc_public")]
+    fn update_status(status: Status) -> ZomeApiResult<GetResponse<Profile>> {
+        profile::update_status(status)
+    }
     #[zome_fn("hc_public")]
     fn update_whoami(profile: Profile, address: Address) -> ZomeApiResult<GetResponse<Profile>> {
         profile::update_whoami(profile, address)
