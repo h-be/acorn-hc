@@ -15,7 +15,7 @@ use hdk::holochain_core_types::{
 use hdk::prelude::Entry::App;
 use hdk::{
     entry_definition::ValidatingEntryType,
-    error::ZomeApiResult,
+    error::{ZomeApiError, ZomeApiResult},
     // AGENT_ADDRESS, AGENT_ID_STR,
     AGENT_ADDRESS,
 };
@@ -44,10 +44,17 @@ impl<T: Into<JsonString> + Debug + Serialize> From<GetResponse<T>> for JsonStrin
     }
 }
 #[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
+pub enum Status {
+    Online,
+    Away,
+    Ofline,
+}
+#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
 pub struct Profile {
     first_name: String,
     last_name: String,
     handle: String,
+    status: Status,
     avatar_url: String,
     address: String,
 }
@@ -151,6 +158,24 @@ pub fn update_whoami(profile: Profile, address: Address) -> ZomeApiResult<GetRes
         entry: profile,
         address: address,
     })
+}
+pub fn update_status(status: Status) -> ZomeApiResult<GetResponse<Profile>> {
+    if let Some(GetResponse { entry, address }) = whoami()? {
+        update_whoami(
+            Profile {
+                first_name: entry.first_name,
+                last_name: entry.last_name,
+                handle: entry.handle,
+                status: status,
+
+                avatar_url: entry.avatar_url,
+                address: entry.address,
+            },
+            address,
+        )
+    } else {
+        Err(ZomeApiError::Internal("error".into()))
+    }
 }
 pub fn whoami() -> ZomeApiResult<Option<GetResponse<Profile>>> {
     match hdk::utils::get_links_and_load_type::<Profile>(
