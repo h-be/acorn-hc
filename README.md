@@ -24,10 +24,18 @@ Leave this terminal open and running, as long as you're doing development.
 To rebuild the DNA that holochain uses to run use the `hc` command:
 
 ```
-nix-shell --run `hc package`
+nix-shell --run 'hc package'
 ```
 
 Stop the running conductor (ctrl + c) and rerun the above again if you make changes to the DNA.
+
+## Testing
+
+To run the tests
+
+```
+nix-shell --run acorn-test
+```
 
 ## Updating
 
