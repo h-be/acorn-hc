@@ -587,24 +587,7 @@ pub fn archive_goal(address: Address) -> ZomeApiResult<ArchiveGoalResponse> {
         .filter_map(Result::ok)
         .collect(); // returns vec of the edge addresses which were removed
 
-    let archived_goal_members = inner_fetch_goal_members()?
-        .into_iter()
-        .filter(|get_response: &GetResponse<GoalMember>| {
-            // check whether the parent_address or child_address is equal to the given address.
-            // If so, the edge is connected to the goal being archived.
-            get_response.entry.goal_address == address
-        })
-        .map(|get_response: GetResponse<GoalMember>| {
-            let goal_member_address = get_response.address;
-            // archive the edge with this address
-            match hdk::remove_entry(&goal_member_address) {
-                Ok(_) => Ok(goal_member_address),
-                Err(e) => Err(e),
-            }
-        })
-        // filter out errors
-        .filter_map(Result::ok)
-        .collect(); // returns vec of the goal_member addresses which were removed
+    let archived_goal_members = archive_members_of_goal(&address)?; // returns vec of the goal_member addresses which were removed
     let archived_goal_votes = inner_fetch_goal_votes()?
         .into_iter()
         .filter(|get_response: &GetResponse<GoalVote>| {
@@ -727,11 +710,26 @@ pub fn add_comment_of_goal(goal_comment: GoalComment) -> ZomeApiResult<GetRespon
         address: entry_address,
     })
 }
+pub fn archive_members_of_goal(address: &Address) -> ZomeApiResult<Vec<Address>> {
+    inner_fetch_goal_members()?
+        .into_iter()
+        .filter(|get_response: &GetResponse<GoalMember>| {
+            // check whether the parent_address or child_address is equal to the given address.
+            // If so, the edge is connected to the goal being archived.
+            get_response.entry.goal_address == *address
+        })
+        .map(|get_response: GetResponse<GoalMember>| {
+            let goal_member_address = get_response.address;
+            // archive the edge with this address
+            match hdk::remove_entry(&goal_member_address) {
+                Ok(_) => Ok(goal_member_address),
+                Err(e) => Err(e),
+            }
+        })
+        // filter out errors
+        .collect()
+}
 pub fn archive_member_of_goal(address: Address) -> ZomeApiResult<Address> {
-    let mut goal_member = hdk::utils::get_as_type::<GoalMember>(address.clone())?;
-    goal_member.user_edit_hash = Some(AGENT_ADDRESS.clone());
-    let app_entry = Entry::App("goal_member".into(), goal_member.clone().into());
-    let _ = hdk::update_entry(app_entry, &address)?;
     hdk::remove_entry(&address)?;
     Ok(address)
 }
