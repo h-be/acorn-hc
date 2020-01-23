@@ -5,14 +5,14 @@ ui_interfaces = []
 
 [[agents]]
 id = 'hc-run-agent'
-keystore_file = 'key.key'
+keystore_file = 'unused'
 name = 'acorn user'
 public_address = 'HcScIc8G7X769Nr6cnRxgR73wi8au946z7hc46EMDJjaz8au4bD7V6hj7T6B8fa'
 test_agent = true
 
 [[dnas]]
 file = './dist/acorn-hc.dna.json'
-hash = 'QmaYNyahZ1WhoApiBAHtRmW9Ze2kk3QiTftyv1KujmRVGJ'
+hash = 'QmUd3v4QEV3RpEXizfiNJ1RivdLQf6Q9Kz6nPPgZ64Ssvt'
 id = 'hc-run-dna'
 
 [[instances]]
