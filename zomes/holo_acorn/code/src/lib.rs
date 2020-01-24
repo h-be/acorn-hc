@@ -179,6 +179,10 @@ mod holo_acorn {
         goal::add_comment_of_goal(goal_comment)
     }
     #[zome_fn("hc_public")]
+    fn archive_members_of_goal(goal_address: Address) -> ZomeApiResult<Vec<Address>> {
+        goal::archive_members_of_goal(&goal_address)
+    }
+    #[zome_fn("hc_public")]
     fn archive_member_of_goal(address: Address) -> ZomeApiResult<Address> {
         goal::archive_member_of_goal(address)
     }
