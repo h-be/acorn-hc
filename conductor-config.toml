@@ -34,16 +34,7 @@ id = 'acorn'
 port = 8888
 type = 'websocket'
 
-[[interfaces]]
-admin = false
-id = 'http-interface'
 
-[[interfaces.instances]]
-id = 'acorn'
-
-[interfaces.driver]
-port = 8887
-type = 'http'
 
 [logger]
 state_dump = false
