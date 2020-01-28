@@ -358,10 +358,7 @@ orchestrator.registerScenario(
         hierarchy: "Root",
         status: "Uncertain",
         description: "33",
-        time_frame: {
-          from_date: time,
-          to_date: Date.parse("Aug 9, 2020")
-        }
+        time_frame: null
       },
       address: goal.Ok.goal.address
     });
@@ -417,18 +414,18 @@ orchestrator.registerScenario(
     );
     t.isNotEqual(goal2.Ok.maybe_edge, null);
     t.equal(result_alice.Ok.length, 2);
-    // t.isEquivalent(result_bob.Ok.entry, {
-    //   content: "sample content2",
-    //   user_hash: alice.info("app").agentAddress,
-    //   user_edit_hash: bob.info("app").agentAddress,
-    //   timestamp_created: time2,
-    //   timestamp_updated: time,
-    //   hierarchy: "Root",
-    //   status: "Uncertain",
-    //   tags: null,
-    //   description: "33",
-    //   time_frame: { from_date: time, to_date: 1596945600000 }
-    // });
+    t.deepEqual(result_bob.Ok.entry, {
+      content: "sample content2",
+      user_hash: alice.info("app").agentAddress,
+      user_edit_hash: bob.info("app").agentAddress,
+      timestamp_created: time2,
+      timestamp_updated: time,
+      hierarchy: "Root",
+      status: "Uncertain",
+      tags: null,
+      description: "33",
+      time_frame: null
+    });
     t.deepEqual(result_alex.Ok.entry, result_alex2.Ok[0].entry);
     t.deepEqual(result_alex4.Ok.entry, result_alex5.Ok[0].entry);
     const result_alex7 = await alex.call(
