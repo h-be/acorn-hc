@@ -9,7 +9,7 @@ let
  export artifact='acorn.dna.json'
  export tag=''${CIRCLE_TAG:-${tag}}
  hc package -o "$TMP/$artifact"
- # github-release upload --file "$TMP/$artifact" --owner ${config.release.github.owner} --repo ${config.release.github.repo} --tag $tag --name $artifact --token $GITHUB_DEPLOY_TOKEN
+ github-release upload --file "$TMP/$artifact" --owner ${config.release.github.owner} --repo ${config.release.github.repo} --tag $tag --name $artifact --token $GITHUB_DEPLOY_TOKEN
  '';
 in
 {
