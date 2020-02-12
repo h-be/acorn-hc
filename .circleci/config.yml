@@ -1,4 +1,4 @@
-version: 2
+version: 2.1
 
 jobs:
  tests:
@@ -8,8 +8,26 @@ jobs:
    - checkout
    - run: nix-shell --run acorn-test
 
+ github.wasm:
+  docker:
+   - image: holochain/holonix:latest.master
+  steps:
+   - checkout
+   - run:
+      no_output_timeout: 20m
+      command: nix-shell --run release-github-wasm
+
 workflows:
- version: 2
+ version: 2.1
  tests:
   jobs:
    - tests
+
+ dist:
+  jobs:
+   - github.wasm:
+      filters:
+       branches:
+        ignore: /.*/
+       tags:
+        only: /^v[0-9]+\.[0-9]+\.[0-9]+$/
