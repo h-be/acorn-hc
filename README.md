@@ -42,6 +42,7 @@ nix-shell --run acorn-test
 Edit the `version.current` of the `config.nix` file, and set it to the desired version number of the release.
 
 > TODO: notes about CHANGELOG.md and CHANGELOG-UNRELEASED.md
+
 > TODO: notes about updating Release notes
 
 Run
