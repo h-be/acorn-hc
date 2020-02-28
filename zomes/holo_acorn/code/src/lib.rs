@@ -36,6 +36,7 @@ use goal::{
 
 // these types will come straight through signals to the UI,
 // so they will actually be referenced there. Be mindful of this
+pub const NEW_AGENT_SIGNAL_TYPE: &str = "new_agent";
 pub const GOAL_MAYBE_WITH_EDGE_SIGNAL_TYPE: &str = "goal_maybe_with_edge";
 pub const GOAL_ARCHIVED_SIGNAL_TYPE: &str = "goal_archived";
 pub const GOAL_COMMENT_SIGNAL_TYPE: &str = "goal_comment";
@@ -44,33 +45,46 @@ pub const GOAL_VOTE_SIGNAL_TYPE: &str = "goal_vote";
 
 #[derive(Clone, Debug, Serialize, Deserialize, DefaultJson, PartialEq)]
 #[serde(rename_all = "camelCase")]
+struct NewAgentSignalPayload {
+    agent: Profile,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, DefaultJson, PartialEq)]
+#[serde(rename_all = "camelCase")]
 struct GoalMaybeWithEdgeSignalPayload {
     goal: GoalMaybeWithEdge,
 }
+
 #[derive(Clone, Debug, Serialize, Deserialize, DefaultJson, PartialEq)]
 #[serde(rename_all = "camelCase")]
 struct GoalArchivedSignalPayload {
-    goal: ArchiveGoalResponse,
+    archived: ArchiveGoalResponse,
 }
+
 #[derive(Clone, Debug, Serialize, Deserialize, DefaultJson, PartialEq)]
 #[serde(rename_all = "camelCase")]
 struct GoalCommentSignalPayload {
-    goal: GoalComment,
+    goal_comment: GetResponse<GoalComment>,
 }
+
 #[derive(Clone, Debug, Serialize, Deserialize, DefaultJson, PartialEq)]
 #[serde(rename_all = "camelCase")]
 struct GoalMemberSignalPayload {
-    goal_member: GoalMember,
+    goal_member: GetResponse<GoalMember>,
 }
+
 #[derive(Clone, Debug, Serialize, Deserialize, DefaultJson, PartialEq)]
 #[serde(rename_all = "camelCase")]
 struct GoalVoteSignalPayload {
-    goal_vote: GoalVote,
+    goal_vote: GetResponse<GoalVote>,
 }
 
-/// Fully typed definition of the types of direct messages
+/// Fully typed definition of the types of direct messages.
+/// All of which exist for the purposes of UI signals
+/// at this time.
 #[derive(Clone, Serialize, Deserialize, Debug, DefaultJson, PartialEq)]
-enum DirectMessage {
+pub(crate) enum DirectMessage {
+    NewAgentNotification(NewAgentSignalPayload),
     GoalMaybeWithEdgeNotification(GoalMaybeWithEdgeSignalPayload),
     GoalArchivedNotification(GoalArchivedSignalPayload),
     GoalCommentNotification(GoalCommentSignalPayload),
@@ -78,26 +92,25 @@ enum DirectMessage {
     GoalVoteNotification(GoalVoteSignalPayload),
 }
 
+// send a signal to the UI
 pub(crate) fn signal_ui(message: &DirectMessage) {
     match message {
+        DirectMessage::NewAgentNotification(signal_payload) => {
+            hdk::emit_signal(NEW_AGENT_SIGNAL_TYPE, signal_payload).ok();
+        }
         DirectMessage::GoalMaybeWithEdgeNotification(signal_payload) => {
-            // signal the UI
             hdk::emit_signal(GOAL_MAYBE_WITH_EDGE_SIGNAL_TYPE, signal_payload).ok();
         }
         DirectMessage::GoalArchivedNotification(signal_payload) => {
-            // signal the UI
             hdk::emit_signal(GOAL_ARCHIVED_SIGNAL_TYPE, signal_payload).ok();
         }
         DirectMessage::GoalCommentNotification(signal_payload) => {
-            // signal the UI
             hdk::emit_signal(GOAL_COMMENT_SIGNAL_TYPE, signal_payload).ok();
         }
         DirectMessage::GoalMemberNotification(signal_payload) => {
-            // signal the UI
             hdk::emit_signal(GOAL_MEMBER_SIGNAL_TYPE, signal_payload).ok();
         }
         DirectMessage::GoalVoteNotification(signal_payload) => {
-            // signal the UI
             hdk::emit_signal(GOAL_VOTE_SIGNAL_TYPE, signal_payload).ok();
         }
     };

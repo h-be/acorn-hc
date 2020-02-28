@@ -7,7 +7,6 @@ extern crate serde_json;
 
 extern crate holochain_json_derive;
 
-use crate::profile::GetResponse;
 use hdk::{
     entry_definition::ValidatingEntryType,
     error::{ZomeApiError, ZomeApiResult},
@@ -22,6 +21,12 @@ use hdk::{
     prelude::Entry::App,
     // AGENT_ADDRESS, AGENT_ID_STR,
     AGENT_ADDRESS,
+};
+
+use crate::profile::{notify_all, GetResponse};
+use crate::{
+    DirectMessage, GoalArchivedSignalPayload, GoalCommentSignalPayload,
+    GoalMaybeWithEdgeSignalPayload, GoalMemberSignalPayload, GoalVoteSignalPayload,
 };
 
 // a bit of profile info for an agent
@@ -210,6 +215,33 @@ pub fn goal_vote_def() -> ValidatingEntryType {
     )
 }
 
+fn notify_goal_maybe_with_edge(goal_maybe_with_edge: GoalMaybeWithEdge) -> ZomeApiResult<()> {
+    let message = DirectMessage::GoalMaybeWithEdgeNotification(GoalMaybeWithEdgeSignalPayload {
+        goal: goal_maybe_with_edge.clone(),
+    });
+    notify_all(message)
+}
+
+fn notify_goal_archived(archived: ArchiveGoalResponse) -> ZomeApiResult<()> {
+    let message = DirectMessage::GoalArchivedNotification(GoalArchivedSignalPayload { archived });
+    notify_all(message)
+}
+
+fn notify_goal_comment(goal_comment: GetResponse<GoalComment>) -> ZomeApiResult<()> {
+    let message = DirectMessage::GoalCommentNotification(GoalCommentSignalPayload { goal_comment });
+    notify_all(message)
+}
+
+fn notify_goal_member(goal_member: GetResponse<GoalMember>) -> ZomeApiResult<()> {
+    let message = DirectMessage::GoalMemberNotification(GoalMemberSignalPayload { goal_member });
+    notify_all(message)
+}
+
+fn notify_goal_vote(goal_vote: GetResponse<GoalVote>) -> ZomeApiResult<()> {
+    let message = DirectMessage::GoalVoteNotification(GoalVoteSignalPayload { goal_vote });
+    notify_all(message)
+}
+
 pub fn history_of_goal(address: Address) -> ZomeApiResult<GetHistoryResponse> {
     let anchor_address = Entry::App(
         "anchor".into(),       // app entry type
@@ -328,14 +360,16 @@ pub fn create_goal(
         None => None,
     };
 
-    // format the response as a GetResponse
-    Ok(GoalMaybeWithEdge {
+    let goal_maybe_with_edge = GoalMaybeWithEdge {
         goal: GetResponse {
             entry: goal,
             address: entry_address,
         },
         maybe_edge,
-    })
+    };
+    notify_goal_maybe_with_edge(goal_maybe_with_edge.clone())?;
+    // format the response as a GetResponse
+    Ok(goal_maybe_with_edge)
 }
 
 fn inner_create_edge(edge: &Edge) -> ZomeApiResult<Address> {
@@ -365,40 +399,19 @@ pub fn update_goal(goal: Goal, address: Address) -> ZomeApiResult<GetResponse<Go
     let app_entry = Entry::App("goal".into(), goal.clone().into());
     let _ = hdk::update_entry(app_entry, &address)?;
 
-    // format the response as a GetResponse
-    // pass the OLD address back and allow the UI to continue to use it
-    Ok(GetResponse {
+    let goal = GetResponse {
         entry: goal,
         address,
-    })
-}
-pub fn update_goal_vote(
-    goal_vote: GoalVote,
-    address: Address,
-) -> ZomeApiResult<GetResponse<GoalVote>> {
-    let app_entry = Entry::App("goal_vote".into(), goal_vote.clone().into());
-    let _ = hdk::update_entry(app_entry, &address)?;
+    };
+    let goal_maybe_with_edge = GoalMaybeWithEdge {
+        goal: goal.clone(),
+        maybe_edge: None,
+    };
+    notify_goal_maybe_with_edge(goal_maybe_with_edge)?;
 
     // format the response as a GetResponse
     // pass the OLD address back and allow the UI to continue to use it
-    Ok(GetResponse {
-        entry: goal_vote,
-        address,
-    })
-}
-pub fn update_goal_comment(
-    goal_comment: GoalComment,
-    address: Address,
-) -> ZomeApiResult<GetResponse<GoalComment>> {
-    let app_entry = Entry::App("goal_comment".into(), goal_comment.clone().into());
-    let _ = hdk::update_entry(app_entry, &address)?;
-
-    // format the response as a GetResponse
-    // pass the OLD address back and allow the UI to continue to use it
-    Ok(GetResponse {
-        entry: goal_comment,
-        address,
-    })
+    Ok(goal)
 }
 
 pub fn create_edge(edge: Edge) -> ZomeApiResult<GetResponse<Edge>> {
@@ -620,13 +633,17 @@ pub fn archive_goal(address: Address) -> ZomeApiResult<ArchiveGoalResponse> {
         .filter_map(Result::ok)
         .collect(); // returns vec of the goal_member addresses which were removed
                     // return the address of the archived goal for the UI to use
-    Ok(ArchiveGoalResponse {
+
+    let archive_response = ArchiveGoalResponse {
         address,
         archived_edges,
         archived_goal_members,
         archived_goal_votes,
         archived_goal_comments,
-    })
+    };
+    notify_goal_archived(archive_response.clone())?;
+
+    Ok(archive_response)
 }
 
 pub fn archive_edge(address: Address) -> ZomeApiResult<Address> {
@@ -653,10 +670,13 @@ pub fn add_member_of_goal(goal_member: GoalMember) -> ZomeApiResult<GetResponse<
         "",
     )?;
 
-    Ok(GetResponse {
+    let get_response = GetResponse {
         entry: goal_member,
         address: entry_address,
-    })
+    };
+    notify_goal_member(get_response.clone())?;
+
+    Ok(get_response)
 }
 
 pub fn add_vote_of_goal(goal_vote: GoalVote) -> ZomeApiResult<GetResponse<GoalVote>> {
@@ -677,11 +697,33 @@ pub fn add_vote_of_goal(goal_vote: GoalVote) -> ZomeApiResult<GetResponse<GoalVo
         "",
     )?;
 
-    Ok(GetResponse {
+    let get_response = GetResponse {
         entry: goal_vote,
         address: entry_address,
-    })
+    };
+    notify_goal_vote(get_response.clone())?;
+
+    Ok(get_response)
 }
+
+pub fn update_goal_vote(
+    goal_vote: GoalVote,
+    address: Address,
+) -> ZomeApiResult<GetResponse<GoalVote>> {
+    let app_entry = Entry::App("goal_vote".into(), goal_vote.clone().into());
+    let _ = hdk::update_entry(app_entry, &address)?;
+
+    // format the response as a GetResponse
+    // pass the OLD address back and allow the UI to continue to use it
+    let get_response = GetResponse {
+        entry: goal_vote,
+        address: address,
+    };
+    notify_goal_vote(get_response.clone())?;
+
+    Ok(get_response)
+}
+
 pub fn add_comment_of_goal(goal_comment: GoalComment) -> ZomeApiResult<GetResponse<GoalComment>> {
     let app_entry = Entry::App("goal_comment".into(), goal_comment.clone().into());
     let entry_address = hdk::commit_entry(&app_entry)?;
@@ -700,11 +742,33 @@ pub fn add_comment_of_goal(goal_comment: GoalComment) -> ZomeApiResult<GetRespon
         "",
     )?;
 
-    Ok(GetResponse {
+    let get_response = GetResponse {
         entry: goal_comment,
         address: entry_address,
-    })
+    };
+    notify_goal_comment(get_response.clone())?;
+
+    Ok(get_response)
 }
+
+pub fn update_goal_comment(
+    goal_comment: GoalComment,
+    address: Address,
+) -> ZomeApiResult<GetResponse<GoalComment>> {
+    let app_entry = Entry::App("goal_comment".into(), goal_comment.clone().into());
+    let _ = hdk::update_entry(app_entry, &address)?;
+
+    // format the response as a GetResponse
+    // pass the OLD address back and allow the UI to continue to use it
+    let get_response = GetResponse {
+        entry: goal_comment,
+        address,
+    };
+    notify_goal_comment(get_response.clone())?;
+
+    Ok(get_response)
+}
+
 pub fn archive_members_of_goal(address: &Address) -> ZomeApiResult<Vec<Address>> {
     inner_fetch_goal_members()?
         .into_iter()

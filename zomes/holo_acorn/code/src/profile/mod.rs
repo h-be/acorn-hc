@@ -1,35 +1,30 @@
 extern crate hdk;
 extern crate hdk_proc_macros;
+extern crate holochain_json_derive;
 extern crate serde;
-
 extern crate serde_derive;
 extern crate serde_json;
 
-extern crate holochain_json_derive;
-use hdk::holochain_core_types::{
-    // agent::AgentId, dna::entry_types::Sharing, entry::Entry, link::LinkMatch,
-    dna::entry_types::Sharing,
-    entry::Entry,
-    link::LinkMatch,
-};
-use hdk::prelude::Entry::App;
+use crate::{signal_ui, DirectMessage, NewAgentSignalPayload};
 use hdk::{
     entry_definition::ValidatingEntryType,
     error::{ZomeApiError, ZomeApiResult},
+    holochain_core_types::{
+        // agent::AgentId, dna::entry_types::Sharing, entry::Entry, link::LinkMatch,
+        dna::entry_types::Sharing,
+        entry::Entry,
+        link::LinkMatch,
+    },
+    holochain_json_api::{
+        error::JsonError,
+        json::{default_to_json, JsonString},
+    },
+    holochain_persistence_api::cas::content::{Address, AddressableContent},
+    prelude::Entry::App,
     // AGENT_ADDRESS, AGENT_ID_STR,
     AGENT_ADDRESS,
 };
-
-use hdk::holochain_json_api::{
-    error::JsonError,
-    json::{default_to_json, JsonString},
-};
-
-use hdk::holochain_persistence_api::cas::content::{Address, AddressableContent};
-
 use serde::Serialize;
-//use std::convert::{TryFrom};
-// use std::convert::{TryFrom, TryInto};
 use std::fmt::Debug;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -43,20 +38,20 @@ impl<T: Into<JsonString> + Debug + Serialize> From<GetResponse<T>> for JsonStrin
         default_to_json(u)
     }
 }
-#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
+#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
 pub enum Status {
     Online,
     Away,
     Offline,
 }
-#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
+#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
 pub struct Profile {
     first_name: String,
     last_name: String,
     handle: String,
     status: Status,
     avatar_url: String,
-    address: String,
+    pub address: String,
 }
 pub fn profile_def() -> ValidatingEntryType {
     entry!(
@@ -131,6 +126,36 @@ pub fn profile_def() -> ValidatingEntryType {
         ]
     )
 }
+
+// send the direct messages that will result in
+// signals being emitted to the UI
+pub(crate) fn notify_all(message: DirectMessage) -> ZomeApiResult<()> {
+    fetch_agents()?.iter().for_each(|profile| {
+        // if self, don't waste resources and just trigger a signal directly
+        if profile.address == AGENT_ADDRESS.to_string() {
+            signal_ui(&message);
+        } else {
+            hdk::debug(format!(
+                "Send a message to: {:?}",
+                &profile.address.to_string()
+            ))
+            .ok();
+            hdk::send(
+                Address::from(profile.address.clone()),
+                JsonString::from(message.clone()).into(),
+                1.into(),
+            )
+            .ok();
+        }
+    });
+    Ok(())
+}
+
+fn notify_new_agent(profile: Profile) -> ZomeApiResult<()> {
+    let message = DirectMessage::NewAgentNotification(NewAgentSignalPayload { agent: profile });
+    notify_all(message)
+}
+
 pub fn create_whoami(profile: Profile) -> ZomeApiResult<GetResponse<Profile>> {
     let agents_anchor_entry = Entry::App(
         "anchor".into(), // app entry type
@@ -146,19 +171,27 @@ pub fn create_whoami(profile: Profile) -> ZomeApiResult<GetResponse<Profile>> {
         "",
     )?;
     hdk::link_entries(&AGENT_ADDRESS, &profile_address, "agent->profile", "")?;
+
+    // send update to peers
+    notify_new_agent(profile.clone())?;
+
     Ok(GetResponse {
         entry: profile,
         address: profile_address,
     })
 }
+
 pub fn update_whoami(profile: Profile, address: Address) -> ZomeApiResult<GetResponse<Profile>> {
     let profile_entry = Entry::App("profile".into(), profile.clone().into());
     hdk::update_entry(profile_entry, &address)?;
+    // send update to peers
+    notify_new_agent(profile.clone())?;
     Ok(GetResponse {
         entry: profile,
         address: address,
     })
 }
+
 pub fn update_status(status: Status) -> ZomeApiResult<GetResponse<Profile>> {
     if let Some(GetResponse { entry, address }) = whoami()? {
         update_whoami(
@@ -174,9 +207,12 @@ pub fn update_status(status: Status) -> ZomeApiResult<GetResponse<Profile>> {
             address,
         )
     } else {
-        Err(ZomeApiError::Internal("error".into()))
+        Err(ZomeApiError::Internal(
+            "Could not retrieve the agent profile".into(),
+        ))
     }
 }
+
 pub fn whoami() -> ZomeApiResult<Option<GetResponse<Profile>>> {
     match hdk::utils::get_links_and_load_type::<Profile>(
         &AGENT_ADDRESS,
@@ -195,6 +231,7 @@ pub fn whoami() -> ZomeApiResult<Option<GetResponse<Profile>>> {
         None => Ok(None),
     }
 }
+
 pub fn fetch_agents() -> ZomeApiResult<Vec<Profile>> {
     let anchor_address = Entry::App(
         "anchor".into(), // app entry type
