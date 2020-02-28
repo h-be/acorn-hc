@@ -40,8 +40,11 @@ pub const NEW_AGENT_SIGNAL_TYPE: &str = "new_agent";
 pub const GOAL_MAYBE_WITH_EDGE_SIGNAL_TYPE: &str = "goal_maybe_with_edge";
 pub const GOAL_ARCHIVED_SIGNAL_TYPE: &str = "goal_archived";
 pub const GOAL_COMMENT_SIGNAL_TYPE: &str = "goal_comment";
+pub const GOAL_COMMENT_ARCHIVED_SIGNAL_TYPE: &str = "goal_comment_archived";
 pub const GOAL_MEMBER_SIGNAL_TYPE: &str = "goal_member";
+pub const GOAL_MEMBER_ARCHIVED_SIGNAL_TYPE: &str = "goal_member_archived";
 pub const GOAL_VOTE_SIGNAL_TYPE: &str = "goal_vote";
+pub const GOAL_VOTE_ARCHIVED_SIGNAL_TYPE: &str = "goal_vote_archived";
 
 #[derive(Clone, Debug, Serialize, Deserialize, DefaultJson, PartialEq)]
 #[serde(rename_all = "camelCase")]
@@ -79,6 +82,13 @@ struct GoalVoteSignalPayload {
     goal_vote: GetResponse<GoalVote>,
 }
 
+// Used for GoalComment, GoalMember, and GoalVote
+#[derive(Clone, Debug, Serialize, Deserialize, DefaultJson, PartialEq)]
+#[serde(rename_all = "camelCase")]
+struct EntryArchivedSignalPayload {
+    address: Address,
+}
+
 /// Fully typed definition of the types of direct messages.
 /// All of which exist for the purposes of UI signals
 /// at this time.
@@ -90,28 +100,45 @@ pub(crate) enum DirectMessage {
     GoalCommentNotification(GoalCommentSignalPayload),
     GoalMemberNotification(GoalMemberSignalPayload),
     GoalVoteNotification(GoalVoteSignalPayload),
+    GoalCommentArchivedNotification(EntryArchivedSignalPayload),
+    GoalMemberArchivedNotification(EntryArchivedSignalPayload),
+    GoalVoteArchivedNotification(EntryArchivedSignalPayload),
 }
 
 // send a signal to the UI
 pub(crate) fn signal_ui(message: &DirectMessage) {
     match message {
+        // Agents
         DirectMessage::NewAgentNotification(signal_payload) => {
             hdk::emit_signal(NEW_AGENT_SIGNAL_TYPE, signal_payload).ok();
         }
+        // Goals
         DirectMessage::GoalMaybeWithEdgeNotification(signal_payload) => {
             hdk::emit_signal(GOAL_MAYBE_WITH_EDGE_SIGNAL_TYPE, signal_payload).ok();
         }
         DirectMessage::GoalArchivedNotification(signal_payload) => {
             hdk::emit_signal(GOAL_ARCHIVED_SIGNAL_TYPE, signal_payload).ok();
         }
+        // Goal Comments
         DirectMessage::GoalCommentNotification(signal_payload) => {
             hdk::emit_signal(GOAL_COMMENT_SIGNAL_TYPE, signal_payload).ok();
         }
+        DirectMessage::GoalCommentArchivedNotification(signal_payload) => {
+            hdk::emit_signal(GOAL_COMMENT_ARCHIVED_SIGNAL_TYPE, signal_payload).ok();
+        }
+        // Goal Members
         DirectMessage::GoalMemberNotification(signal_payload) => {
             hdk::emit_signal(GOAL_MEMBER_SIGNAL_TYPE, signal_payload).ok();
         }
+        DirectMessage::GoalMemberArchivedNotification(signal_payload) => {
+            hdk::emit_signal(GOAL_MEMBER_ARCHIVED_SIGNAL_TYPE, signal_payload).ok();
+        }
+        // Goal Votes
         DirectMessage::GoalVoteNotification(signal_payload) => {
             hdk::emit_signal(GOAL_VOTE_SIGNAL_TYPE, signal_payload).ok();
+        }
+        DirectMessage::GoalVoteArchivedNotification(signal_payload) => {
+            hdk::emit_signal(GOAL_VOTE_ARCHIVED_SIGNAL_TYPE, signal_payload).ok();
         }
     };
 }

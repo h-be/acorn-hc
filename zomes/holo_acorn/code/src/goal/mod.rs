@@ -25,7 +25,7 @@ use hdk::{
 
 use crate::profile::{notify_all, GetResponse};
 use crate::{
-    DirectMessage, GoalArchivedSignalPayload, GoalCommentSignalPayload,
+    DirectMessage, EntryArchivedSignalPayload, GoalArchivedSignalPayload, GoalCommentSignalPayload,
     GoalMaybeWithEdgeSignalPayload, GoalMemberSignalPayload, GoalVoteSignalPayload,
 };
 
@@ -242,6 +242,24 @@ fn notify_goal_vote(goal_vote: GetResponse<GoalVote>) -> ZomeApiResult<()> {
     notify_all(message)
 }
 
+fn notify_goal_comment_archived(address: Address) -> ZomeApiResult<()> {
+    let message =
+        DirectMessage::GoalCommentArchivedNotification(EntryArchivedSignalPayload { address });
+    notify_all(message)
+}
+
+fn notify_goal_member_archived(address: Address) -> ZomeApiResult<()> {
+    let message =
+        DirectMessage::GoalMemberArchivedNotification(EntryArchivedSignalPayload { address });
+    notify_all(message)
+}
+
+fn notify_goal_vote_archived(address: Address) -> ZomeApiResult<()> {
+    let message =
+        DirectMessage::GoalVoteArchivedNotification(EntryArchivedSignalPayload { address });
+    notify_all(message)
+}
+
 pub fn history_of_goal(address: Address) -> ZomeApiResult<GetHistoryResponse> {
     let anchor_address = Entry::App(
         "anchor".into(),       // app entry type
@@ -403,6 +421,10 @@ pub fn update_goal(goal: Goal, address: Address) -> ZomeApiResult<GetResponse<Go
         entry: goal,
         address,
     };
+    // be careful of this GOTCHA...
+    // notify_goal_maybe_with_edge
+    // returns a different type response than this function
+    // instead of the normal case where the types match
     let goal_maybe_with_edge = GoalMaybeWithEdge {
         goal: goal.clone(),
         maybe_edge: None,
@@ -650,6 +672,7 @@ pub fn archive_edge(address: Address) -> ZomeApiResult<Address> {
     hdk::remove_entry(&address)?;
     Ok(address)
 }
+
 pub fn add_member_of_goal(goal_member: GoalMember) -> ZomeApiResult<GetResponse<GoalMember>> {
     let mut goal_member = goal_member;
     goal_member.user_edit_hash = Some(AGENT_ADDRESS.clone());
@@ -781,23 +804,32 @@ pub fn archive_members_of_goal(address: &Address) -> ZomeApiResult<Vec<Address>>
             let goal_member_address = get_response.address;
             // archive the edge with this address
             match hdk::remove_entry(&goal_member_address) {
-                Ok(_) => Ok(goal_member_address),
+                Ok(_) => {
+                    notify_goal_member_archived(goal_member_address.clone())?;
+                    Ok(goal_member_address)
+                }
                 Err(e) => Err(e),
             }
         })
         // filter out errors
         .collect()
 }
+
 pub fn archive_member_of_goal(address: Address) -> ZomeApiResult<Address> {
     hdk::remove_entry(&address)?;
+    notify_goal_member_archived(address.clone())?;
     Ok(address)
 }
+
 pub fn archive_vote_of_goal(address: Address) -> ZomeApiResult<Address> {
     hdk::remove_entry(&address)?;
+    notify_goal_vote_archived(address.clone())?;
     Ok(address)
 }
+
 pub fn archive_comment_of_goal(address: Address) -> ZomeApiResult<Address> {
     hdk::remove_entry(&address)?;
+    notify_goal_comment_archived(address.clone())?;
     Ok(address)
 }
 
