@@ -12,11 +12,12 @@ extern crate holochain_json_derive;
 use hdk::{
     entry_definition::ValidatingEntryType,
     error::ZomeApiResult,
+    holochain_json_api::{error::JsonError, json::JsonString},
+    holochain_persistence_api::cas::content::Address,
     // AGENT_ADDRESS, AGENT_ID_STR,
     AGENT_ADDRESS,
 };
-
-use hdk::holochain_persistence_api::cas::content::Address;
+use std::convert::TryInto;
 
 use hdk_proc_macros::zome;
 
@@ -35,6 +36,75 @@ use goal::{
 //The GetResponse struct allows our zome functions to return an entry along with its
 //address so that Redux can know the address of goals and edges
 
+// these types will come straight through signals to the UI,
+// so they will actually be referenced there. Be mindful of this
+pub const GOAL_MAYBE_WITH_EDGE_SIGNAL_TYPE: &str = "goal_maybe_with_edge";
+pub const GOAL_ARCHIVED_SIGNAL_TYPE: &str = "goal_archived";
+pub const GOAL_COMMENT_SIGNAL_TYPE: &str = "goal_comment";
+pub const GOAL_MEMBER_SIGNAL_TYPE: &str = "goal_member";
+pub const GOAL_VOTE_SIGNAL_TYPE: &str = "goal_vote";
+
+#[derive(Clone, Debug, Serialize, Deserialize, DefaultJson, PartialEq)]
+#[serde(rename_all = "camelCase")]
+struct GoalMaybeWithEdgeSignalPayload {
+    goal: GoalMaybeWithEdge,
+}
+#[derive(Clone, Debug, Serialize, Deserialize, DefaultJson, PartialEq)]
+#[serde(rename_all = "camelCase")]
+struct GoalArchivedSignalPayload {
+    goal: ArchiveGoalResponse,
+}
+#[derive(Clone, Debug, Serialize, Deserialize, DefaultJson, PartialEq)]
+#[serde(rename_all = "camelCase")]
+struct GoalCommentSignalPayload {
+    goal: GoalComment,
+}
+#[derive(Clone, Debug, Serialize, Deserialize, DefaultJson, PartialEq)]
+#[serde(rename_all = "camelCase")]
+struct GoalMemberSignalPayload {
+    goal_member: GoalMember,
+}
+#[derive(Clone, Debug, Serialize, Deserialize, DefaultJson, PartialEq)]
+#[serde(rename_all = "camelCase")]
+struct GoalVoteSignalPayload {
+    goal_vote: GoalVote,
+}
+
+/// Fully typed definition of the types of direct messages
+#[derive(Clone, Serialize, Deserialize, Debug, DefaultJson, PartialEq)]
+enum DirectMessage {
+    GoalMaybeWithEdgeNotification(GoalMaybeWithEdgeSignalPayload),
+    GoalArchivedNotification(GoalArchivedSignalPayload),
+    GoalCommentNotification(GoalCommentSignalPayload),
+    GoalMemberNotification(GoalMemberSignalPayload),
+    GoalVoteNotification(GoalVoteSignalPayload)
+}
+
+pub(crate) fn signal_ui(message: &DirectMessage) {
+    match message {
+        DirectMessage::GoalMaybeWithEdgeNotification(signal_payload) => {
+            // signal the UI
+            hdk::emit_signal(GOAL_MAYBE_WITH_EDGE_SIGNAL_TYPE, signal_payload).ok();
+          },
+          DirectMessage::GoalArchivedNotification(signal_payload) => {
+            // signal the UI
+            hdk::emit_signal(GOAL_ARCHIVED_SIGNAL_TYPE, signal_payload).ok();
+          },
+          DirectMessage::GoalCommentNotification(signal_payload) => {
+            // signal the UI
+            hdk::emit_signal(GOAL_COMMENT_SIGNAL_TYPE, signal_payload).ok();
+          },
+          DirectMessage::GoalMemberNotification(signal_payload) => {
+            // signal the UI
+            hdk::emit_signal(GOAL_MEMBER_SIGNAL_TYPE, signal_payload).ok();
+          },
+          DirectMessage::GoalVoteNotification(signal_payload) => {
+            // signal the UI
+            hdk::emit_signal(GOAL_VOTE_SIGNAL_TYPE, signal_payload).ok();
+        },
+    };
+}
+
 #[zome]
 mod holo_acorn {
 
@@ -46,6 +116,19 @@ mod holo_acorn {
     #[validate_agent]
     pub fn validate_agent(validation_data: EntryValidationData<AgentId>) {
         Ok(())
+    }
+
+    #[receive]
+    pub fn receive(from: Address, msg_json: JsonString) -> String {
+        hdk::debug(format!("New direct message from: {:?}", from)).ok();
+        let maybe_message: Result<DirectMessage, _> = JsonString::from_json(&msg_json).try_into();
+        match maybe_message {
+            Err(err) => format!("Err({})", err),
+            Ok(message) => {
+                signal_ui(&message);
+                String::from("Ok")
+            }
+        }
     }
 
     #[entry_def]

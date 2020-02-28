@@ -32,7 +32,7 @@ use serde::Serialize;
 // use std::convert::{TryFrom, TryInto};
 use std::fmt::Debug;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct GetResponse<T> {
     pub entry: T,
     pub address: Address,

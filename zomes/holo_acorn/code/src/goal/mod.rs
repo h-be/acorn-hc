@@ -31,14 +31,14 @@ use crate::profile::GetResponse;
 
 // a bit of profile info for an agent
 // a relationship between a Goal and an Agent
-#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
+#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
 pub struct GoalMember {
     goal_address: Address,
     agent_address: Address,
     user_edit_hash: Option<Address>,
     unix_timestamp: u128,
 }
-#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
+#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
 pub struct GoalVote {
     goal_address: Address,
     urgency: f32,
@@ -48,7 +48,7 @@ pub struct GoalVote {
     agent_address: Address,
     unix_timestamp: u128,
 }
-#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
+#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
 pub struct GoalComment {
     goal_address: Address,
     content: String,
@@ -58,13 +58,13 @@ pub struct GoalComment {
 
 // An edge. This is an arrow on the SoA Tree which directionally links
 // two goals.
-#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
+#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
 pub struct Edge {
     parent_address: Address,
     child_address: Address,
 }
 
-#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
+#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
 pub enum Status {
     Uncertain,
     Incomplete,
@@ -73,7 +73,7 @@ pub enum Status {
     InReview,
 }
 
-#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
+#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
 pub enum Hierarchy {
     Root,
     Trunk,
@@ -81,7 +81,7 @@ pub enum Hierarchy {
     Leaf,
     NoHierarchy,
 }
-#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
+#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
 pub struct TimeFrame {
     from_date: u128,
     to_date: u128,
@@ -90,7 +90,7 @@ pub struct TimeFrame {
 // A Goal Card. This is a card on the SoA Tree which can be small or non-small, complete or
 // incomplete, certain or uncertain, and contains text content.
 // user hash and unix timestamp are included to prevent hash collisions.
-#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
+#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
 pub struct Goal {
     content: String,
     user_hash: Address,
@@ -103,13 +103,13 @@ pub struct Goal {
     description: String,
     time_frame: Option<TimeFrame>,
 }
-#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
+#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
 pub struct GoalMaybeWithEdge {
     goal: GetResponse<Goal>,
     maybe_edge: Option<GetResponse<Edge>>,
 }
 
-#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
+#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
 pub struct ArchiveGoalResponse {
     address: Address,
     archived_edges: Vec<Address>,
