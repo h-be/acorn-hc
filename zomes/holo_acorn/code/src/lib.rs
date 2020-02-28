@@ -21,8 +21,6 @@ use std::convert::TryInto;
 
 use hdk_proc_macros::zome;
 
-//use std::convert::{TryFrom};
-// use std::convert::{TryFrom, TryInto};
 mod profile;
 use crate::profile::{GetResponse, Profile, Status};
 
@@ -77,7 +75,7 @@ enum DirectMessage {
     GoalArchivedNotification(GoalArchivedSignalPayload),
     GoalCommentNotification(GoalCommentSignalPayload),
     GoalMemberNotification(GoalMemberSignalPayload),
-    GoalVoteNotification(GoalVoteSignalPayload)
+    GoalVoteNotification(GoalVoteSignalPayload),
 }
 
 pub(crate) fn signal_ui(message: &DirectMessage) {
@@ -85,23 +83,23 @@ pub(crate) fn signal_ui(message: &DirectMessage) {
         DirectMessage::GoalMaybeWithEdgeNotification(signal_payload) => {
             // signal the UI
             hdk::emit_signal(GOAL_MAYBE_WITH_EDGE_SIGNAL_TYPE, signal_payload).ok();
-          },
-          DirectMessage::GoalArchivedNotification(signal_payload) => {
+        }
+        DirectMessage::GoalArchivedNotification(signal_payload) => {
             // signal the UI
             hdk::emit_signal(GOAL_ARCHIVED_SIGNAL_TYPE, signal_payload).ok();
-          },
-          DirectMessage::GoalCommentNotification(signal_payload) => {
+        }
+        DirectMessage::GoalCommentNotification(signal_payload) => {
             // signal the UI
             hdk::emit_signal(GOAL_COMMENT_SIGNAL_TYPE, signal_payload).ok();
-          },
-          DirectMessage::GoalMemberNotification(signal_payload) => {
+        }
+        DirectMessage::GoalMemberNotification(signal_payload) => {
             // signal the UI
             hdk::emit_signal(GOAL_MEMBER_SIGNAL_TYPE, signal_payload).ok();
-          },
-          DirectMessage::GoalVoteNotification(signal_payload) => {
+        }
+        DirectMessage::GoalVoteNotification(signal_payload) => {
             // signal the UI
             hdk::emit_signal(GOAL_VOTE_SIGNAL_TYPE, signal_payload).ok();
-        },
+        }
     };
 }
 
