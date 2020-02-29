@@ -12,7 +12,7 @@ test_agent = true
 
 [[dnas]]
 file = './dist/acorn-hc.dna.json'
-hash = 'QmWNgHZU83rsd2rVdEUanzRy84faJU1FoXLQcYByFizhz6'
+hash = 'QmYngBdn2WbK8kiCDTz8gZyJ9FgNGTnWd4KdfRjZKwQ2Cc'
 id = 'hc-run-dna'
 
 [[instances]]
@@ -40,6 +40,10 @@ type = 'info'
 
 [logger.rules]
 rules = []
+
+# [network]
+# sim2h_url = 'ws://sim2h.harris-braun.com:9000'
+# type = 'sim2h'
 
 [passphrase_service]
 type = 'cmd'
