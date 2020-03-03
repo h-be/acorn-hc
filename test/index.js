@@ -17,7 +17,7 @@ process.on('unhandledRejection', error => {
   console.error('got unhandledRejection:', error)
 })
 
-const dnaPath = path.join(__dirname, '../dist/acorn-hc.dna.json')
+const dnaPath = path.join(__dirname, '../dist/acorn.dna.json')
 
 const globalConfig = {
   logger: {
