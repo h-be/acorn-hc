@@ -6,6 +6,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+Added push events that propagate to the UI so that users know when new info is created, instead of having to poll and bulk fetch
+
 ### Changed
 
 ### Deprecated
