@@ -1,33 +1,40 @@
 version: 2.1
 
 jobs:
- tests:
-  docker:
-   - image: holochain/holonix:latest
-  steps:
-   - checkout
-   - run: nix-shell --run acorn-test
+  tests:
+    docker:
+      - image: holochain/holonix:latest
+    steps:
+      - checkout
+      - run:
+          no_output_timeout: 20m
+          name: sim2h server
+          command: nix-shell --run sim2h_server
+          background: true
+      - run:
+          no_output_timeout: 20m
+          command: nix-shell --run acorn-test
 
- github-wasm:
-  docker:
-   - image: holochain/holonix:latest.master
-  steps:
-   - checkout
-   - run:
-      no_output_timeout: 20m
-      command: nix-shell --run release-github-wasm
+  github-wasm:
+    docker:
+      - image: holochain/holonix:latest.master
+    steps:
+      - checkout
+      - run:
+          no_output_timeout: 20m
+          command: nix-shell --run release-github-wasm
 
 workflows:
- version: 2.1
- tests:
-  jobs:
-   - tests
+  version: 2.1
+  tests:
+    jobs:
+      - tests
 
- dist:
-  jobs:
-   - github-wasm:
-      filters:
-       branches:
-        ignore: /.*/
-       tags:
-        only: /^v[0-9]+\.[0-9]+\.[0-9]+$/
+  dist:
+    jobs:
+      - github-wasm:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v[0-9]+\.[0-9]+\.[0-9]+$/
