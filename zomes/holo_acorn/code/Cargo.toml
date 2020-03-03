@@ -5,13 +5,13 @@ authors = ["hc-scaffold-framework"]
 edition = "2018"
 
 [dependencies]
-serde = "=1.0.100"
+serde = "=1.0.104"
 serde_json = { version = "=1.0.47", features = ["preserve_order"] }
-serde_derive = "=1.0.100"
-hdk = "=0.0.43-alpha3"
-holochain_wasm_utils = "=0.0.43-alpha3"
-holochain_json_derive = "=0.0.21"
-hdk_proc_macros = "=0.0.43-alpha3"
+serde_derive = "=1.0.104"
+hdk = "=0.0.44-alpha3"
+holochain_wasm_utils = "=0.0.44-alpha3"
+holochain_json_derive = "=0.0.23"
+hdk_proc_macros = "=0.0.44-alpha3"
 
 [lib]
 path = "src/lib.rs"

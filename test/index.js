@@ -26,6 +26,35 @@ const globalConfig = {
       rules: [
         {
           exclude: true,
+          pattern: '.*holochain_core::dht::dht_reducers.*'
+        },
+        {
+          exclude: true,
+          pattern: '.*ws.*'
+        },
+        {
+          exclude: true,
+          pattern: '.*in_stream::tcp.*'
+        },
+        {
+          exclude: true,
+          pattern: '.*holochain_net::sim2h_worker.*'
+        },
+        {
+          exclude: true,
+          pattern:
+            '.*holochain_core::nucleus::reducers::trace_return_hdk_function.*'
+        },
+        {
+          exclude: true,
+          pattern: '.*holochain_core::wasm_engine::api.*'
+        },
+        {
+          exclude: true,
+          pattern: '.*holochain::app.*'
+        },
+        {
+          exclude: true,
           pattern: '.*parity.*'
         },
         {
@@ -58,7 +87,7 @@ const globalConfig = {
   },
   network: {
     type: 'sim2h',
-    sim2h_url: 'ws://public.sim2h.net:9000' // 'ws://public.sim2h.net:9000'
+    sim2h_url: 'ws://localhost:9000' // 'ws://public.sim2h.net:9000'
   } // Config.network('memory')
 }
 
