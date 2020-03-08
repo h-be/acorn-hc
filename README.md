@@ -4,7 +4,6 @@
 
 Holochain backend for Acorn, see [acorn-ui](https://github.com/h-be/acorn-ui) for user interface, and [acorn-docs](https://github.com/h-be/acorn-docs) for general, design, and vision documentation.
 
-
 ## Running
 
 Before starting up the UI development, start up a Holochain Conductor with the Acorn DNA. Here's how:
@@ -24,7 +23,7 @@ Leave this terminal open and running, as long as you're doing development.
 To rebuild the DNA that holochain uses to run use the `hc` command:
 
 ```
-nix-shell --run 'hc package'
+nix-shell --run 'hc package -o dist/acorn.dna.json'
 ```
 
 Stop the running conductor (ctrl + c) and rerun the above again if you make changes to the DNA.
