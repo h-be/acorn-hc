@@ -4,6 +4,8 @@
 
 Holochain backend for Acorn, see [acorn-ui](https://github.com/h-be/acorn-ui) for user interface, and [acorn-docs](https://github.com/h-be/acorn-docs) for general, design, and vision documentation.
 
+To download it and use it, use [holoscape](https://github.com/holochain/holoscape) which has Acorn in its list of installable hApps, or download it directly as a native application for Linux or MacOS from [acorn-release](https://github.com/h-be/acorn-release/releases).
+
 ## Running
 
 Before starting up the UI development, start up a Holochain Conductor with the Acorn DNA. Here's how:
