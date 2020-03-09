@@ -11,7 +11,7 @@ public_address = 'HcScIc8G7X769Nr6cnRxgR73wi8au946z7hc46EMDJjaz8au4bD7V6hj7T6B8f
 test_agent = true
 
 [[dnas]]
-file = './dist/acorn-hc.dna.json'
+file = './dist/acorn.dna.json'
 hash = 'QmYngBdn2WbK8kiCDTz8gZyJ9FgNGTnWd4KdfRjZKwQ2Cc'
 id = 'hc-run-dna'
 
