@@ -42,6 +42,17 @@ impl<T: Into<JsonString> + Debug + Serialize> From<GetResponse<T>> for JsonStrin
     }
 }
 
+
+#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
+pub struct ProjectMeta {
+    creator_address: Address,
+    created_at: u128,
+    name: String,
+    image: Option<String>,
+    passphrase: String
+}
+
+
 // This is a reference to the agent address for any users who have joined this DHT
 #[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
 pub struct Member {
@@ -140,6 +151,22 @@ pub struct GetHistoryResponse {
     entries: Vec<Goal>,
     members: Vec<Vec<GoalMember>>,
     address: Address,
+
+}
+
+
+pub fn projectmeta_def() -> ValidatingEntryType {
+    entry!(
+        name: "projectmeta",
+        description: "this stores metadata about this DNA, like its secret passphrase, name, and image",
+        sharing: Sharing::Public,
+        validation_package: || {
+            hdk::ValidationPackageDefinition::Entry
+        },
+        validation: | _validation_data: hdk::EntryValidationData<ProjectMeta>| {
+            Ok(())
+        }
+    )
 }
 
 pub fn member_def() -> ValidatingEntryType {
@@ -348,6 +375,59 @@ fn notify_goal_vote_archived(address: Address) -> ZomeApiResult<()> {
     let message =
         DirectMessage::GoalVoteArchivedNotification(EntryArchivedSignalPayload { address });
     notify_all(message)
+}
+
+pub fn create_project_meta(projectmeta: ProjectMeta) -> ZomeApiResult<GetResponse<ProjectMeta>> {
+    let projectmeta_anchor_entry = Entry::App(
+        "anchor".into(), // app entry type
+        // app entry value. We'll use the value to specify what this anchor is for
+        "projectmeta".into(),
+    );
+    let projectmeta_entry = Entry::App("projectmeta".into(), projectmeta.clone().into());
+    let projectmeta_address = hdk::commit_entry(&projectmeta_entry)?;
+    hdk::link_entries(
+        &projectmeta_anchor_entry.address(),
+        &projectmeta_address,
+        "anchor->projectmeta",
+        "",
+    )?;
+
+    Ok(GetResponse {
+        entry: projectmeta,
+        address: projectmeta_address,
+    })
+}
+
+pub fn update_project_meta(projectmeta: ProjectMeta, address: Address) -> ZomeApiResult<GetResponse<ProjectMeta>> {
+    let projectmeta_entry = Entry::App("projectmeta".into(), projectmeta.clone().into());
+    hdk::update_entry(projectmeta_entry, &address)?;
+    Ok(GetResponse {
+        entry: projectmeta,
+        address: address,
+    })
+}
+
+pub fn fetch_project_meta() -> ZomeApiResult<GetResponse<ProjectMeta>> {
+    let projectmeta_anchor_entry = Entry::App(
+        "anchor".into(),
+        "projectmeta".into(),
+    );
+    match hdk::utils::get_links_and_load_type::<ProjectMeta>(
+        &projectmeta_anchor_entry.address(),
+        LinkMatch::Exactly("anchor->projectmeta"), // the link type to match
+        LinkMatch::Any,
+    )?
+    .first()
+    {
+        Some(projectmeta) => {
+            let app_entry = Entry::App("projectmeta".into(), projectmeta.into());
+            Ok(GetResponse {
+                entry: projectmeta.clone(),
+                address: app_entry.address(),
+            })
+        }
+        None => Err(ZomeApiError::Internal("no project meta exists".into())),
+    }
 }
 
 pub fn history_of_goal(address: Address) -> ZomeApiResult<GetHistoryResponse> {

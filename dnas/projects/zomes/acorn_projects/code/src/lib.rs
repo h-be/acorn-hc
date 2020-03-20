@@ -25,7 +25,7 @@ mod anchor;
 mod project;
 
 use project::{
-    GetResponse, Member, ArchiveGoalResponse, Edge, GetHistoryResponse, Goal, GoalComment, GoalMaybeWithEdge,
+    GetResponse, ProjectMeta, Member, ArchiveGoalResponse, Edge, GetHistoryResponse, Goal, GoalComment, GoalMaybeWithEdge,
     GoalMember, GoalVote,
 };
 //The GetResponse struct allows our zome functions to return an entry along with its
@@ -168,6 +168,11 @@ mod holo_acorn {
     }
 
     #[entry_def]
+    fn projectmeta_def() -> ValidatingEntryType {
+        project::projectmeta_def()
+    }
+
+    #[entry_def]
     fn member_def() -> ValidatingEntryType {
         project::member_def()
     }
@@ -201,6 +206,21 @@ mod holo_acorn {
     #[entry_def]
     fn anchor_def() -> ValidatingEntryType {
         anchor::anchor_def()
+    }
+
+    #[zome_fn("hc_public")]
+    fn create_project_meta(projectmeta: ProjectMeta) -> ZomeApiResult<GetResponse<ProjectMeta>> {
+        project::create_project_meta(projectmeta)
+    }
+
+    #[zome_fn("hc_public")]
+    fn update_project_meta(projectmeta: ProjectMeta, address: Address) -> ZomeApiResult<GetResponse<ProjectMeta>> {
+        project::update_project_meta(projectmeta, address)
+    }
+
+    #[zome_fn("hc_public")]
+    fn fetch_project_meta() -> ZomeApiResult<GetResponse<ProjectMeta>> {
+        project::fetch_project_meta()
     }
 
 

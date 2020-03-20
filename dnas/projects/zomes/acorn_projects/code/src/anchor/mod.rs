@@ -39,12 +39,18 @@ pub fn init() -> Result<(), String> {
         // app entry value. We'll use the value to specify what this anchor is for
         "members".into(),
     );
+    let projectmeta_anchor_entry = Entry::App(
+        "anchor".into(), // app entry type
+        // app entry value. We'll use the value to specify what this anchor is for
+        "projectmeta".into(),
+    );
     hdk::commit_entry(&goal_comment_anchor_entry)?;
     hdk::commit_entry(&goal_vote_anchor_entry)?;
     hdk::commit_entry(&goal_members_anchor_entry)?;
     hdk::commit_entry(&goals_anchor_entry)?;
     hdk::commit_entry(&edges_anchor_entry)?;
     hdk::commit_entry(&members_anchor_entry)?;
+    hdk::commit_entry(&projectmeta_anchor_entry)?;
     Ok(())
 }
 
@@ -60,6 +66,16 @@ pub fn anchor_def() -> ValidatingEntryType {
             Ok(())
         },
         links: [
+            to!(
+                "projectmeta",
+                link_type: "anchor->projectmeta",
+                validation_package: || {
+                    hdk::ValidationPackageDefinition::Entry
+                },
+                validation: | _validation_data: hdk::LinkValidationData| {
+                    Ok(())
+                }
+            ),
             to!(
                 "member",
                 link_type: "anchor->member",
