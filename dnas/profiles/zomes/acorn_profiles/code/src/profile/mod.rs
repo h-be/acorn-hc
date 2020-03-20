@@ -8,8 +8,8 @@ extern crate serde_json;
 // uncomment the next line, and recomment the following one
 // if you're trying to send yourself signals, for development
 // purposes
-// use crate::{signal_ui, DirectMessage, NewAgentSignalPayload};
-use crate::{DirectMessage, NewAgentSignalPayload};
+use crate::{signal_ui, DirectMessage, NewAgentSignalPayload};
+// use crate::{DirectMessage, NewAgentSignalPayload};
 use hdk::{
     entry_definition::ValidatingEntryType,
     error::{ZomeApiError, ZomeApiResult},
@@ -42,6 +42,7 @@ impl<T: Into<JsonString> + Debug + Serialize> From<GetResponse<T>> for JsonStrin
         default_to_json(u)
     }
 }
+
 #[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
 pub enum Status {
     Online,
@@ -133,13 +134,13 @@ pub fn profile_def() -> ValidatingEntryType {
 
 // send the direct messages that will result in
 // signals being emitted to the UI
-pub(crate) fn notify_all(message: DirectMessage) -> ZomeApiResult<()> {
+fn notify_all(message: DirectMessage) -> ZomeApiResult<()> {
     fetch_agents()?.iter().for_each(|profile| {
         // useful for development purposes
         // uncomment to send signals to oneself
-        // if profile.address == AGENT_ADDRESS.to_string() {
-        //     signal_ui(&message);
-        // }
+        if profile.address == AGENT_ADDRESS.to_string() {
+            signal_ui(&message);
+        }
 
         if profile.address != AGENT_ADDRESS.to_string() {
             hdk::debug(format!(

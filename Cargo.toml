@@ -1,5 +1,6 @@
 [workspace]
 
 members = [
-  "zomes/holo_acorn/code",
+  "dnas/projects/zomes/acorn_projects/code",
+  "dnas/profiles/zomes/acorn_profiles/code",
 ]

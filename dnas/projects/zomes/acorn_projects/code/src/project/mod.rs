@@ -16,20 +16,38 @@ use hdk::{
         entry::Entry,
         link::LinkMatch,
     },
-    holochain_json_api::{error::JsonError, json::JsonString},
+    holochain_json_api::{error::JsonError, json::{default_to_json, JsonString},},
     holochain_persistence_api::cas::content::{Address, AddressableContent},
     prelude::Entry::App,
     // AGENT_ADDRESS, AGENT_ID_STR,
     AGENT_ADDRESS,
 };
+use serde::Serialize;
+use std::fmt::Debug;
 
-use crate::profile::{notify_all, GetResponse};
 use crate::{
-    DirectMessage, EntryArchivedSignalPayload, GoalArchivedSignalPayload, GoalCommentSignalPayload,
+    signal_ui, DirectMessage, NewMemberSignalPayload, EntryArchivedSignalPayload, GoalArchivedSignalPayload, GoalCommentSignalPayload,
     GoalMaybeWithEdgeSignalPayload, GoalMemberSignalPayload, GoalVoteSignalPayload,
 };
 
-// a bit of profile info for an agent
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub struct GetResponse<T> {
+    pub entry: T,
+    pub address: Address,
+}
+
+impl<T: Into<JsonString> + Debug + Serialize> From<GetResponse<T>> for JsonString {
+    fn from(u: GetResponse<T>) -> JsonString {
+        default_to_json(u)
+    }
+}
+
+// This is a reference to the agent address for any users who have joined this DHT
+#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
+pub struct Member {
+    pub address: String,
+}
+
 // a relationship between a Goal and an Agent
 #[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
 pub struct GoalMember {
@@ -123,6 +141,21 @@ pub struct GetHistoryResponse {
     members: Vec<Vec<GoalMember>>,
     address: Address,
 }
+
+pub fn member_def() -> ValidatingEntryType {
+    entry!(
+        name: "member",
+        description: "this represents the presence of an agent within this DHT, and provides a key for looking up their profile info from another registry",
+        sharing: Sharing::Public,
+        validation_package: || {
+            hdk::ValidationPackageDefinition::Entry
+        },
+        validation: | _validation_data: hdk::EntryValidationData<Member>| {
+            Ok(())
+        }
+    )
+}
+
 //The GetResponse struct allows our zome functions to return an entry along with its
 //address so that Redux can know the address of goals and edges
 pub fn edge_def() -> ValidatingEntryType {
@@ -213,6 +246,63 @@ pub fn goal_vote_def() -> ValidatingEntryType {
             Ok(())
         }
     )
+}
+
+pub fn init() -> Result<(), String> {
+    let members_anchor_entry = Entry::App(
+        "anchor".into(), // app entry type
+        // app entry value. We'll use the value to specify what this anchor is for
+        "members".into(),
+    );
+    let member = Member {
+        address: AGENT_ADDRESS.to_string()
+    };
+    let member_entry = Entry::App("member".into(), member.clone().into());
+    let member_address = hdk::commit_entry(&member_entry)?;
+    hdk::link_entries(
+        &members_anchor_entry.address(),
+        &member_address,
+        "anchor->member",
+        "",
+    )?;
+
+    // send update to peers
+    notify_member(member.clone())?;
+    Ok(())
+}
+
+// send the direct messages that will result in
+// signals being emitted to the UI
+fn notify_all(message: DirectMessage) -> ZomeApiResult<()> {
+    fetch_members()?.iter().for_each(|member| {
+        // useful for development purposes
+        // uncomment to send signals to oneself
+        if member.address == AGENT_ADDRESS.to_string() {
+            signal_ui(&message);
+        }
+
+        if member.address != AGENT_ADDRESS.to_string() {
+            hdk::debug(format!(
+                "Send a message to: {:?}",
+                &member.address.to_string()
+            ))
+            .ok();
+            hdk::send(
+                Address::from(member.address.clone()),
+                JsonString::from(message.clone()).into(),
+                1.into(),
+            )
+            .ok();
+        }
+    });
+    Ok(())
+}
+
+fn notify_member(member: Member) -> ZomeApiResult<()> {
+    let message = DirectMessage::NewMemberNotification(NewMemberSignalPayload {
+        member: member.clone(),
+    });
+    notify_all(message)
 }
 
 fn notify_goal_maybe_with_edge(goal_maybe_with_edge: GoalMaybeWithEdge) -> ZomeApiResult<()> {
@@ -841,4 +931,23 @@ pub fn fetch_goal_votes() -> ZomeApiResult<Vec<GetResponse<GoalVote>>> {
 }
 pub fn fetch_goal_comments() -> ZomeApiResult<Vec<GetResponse<GoalComment>>> {
     inner_fetch_goal_comments()
+}
+
+
+pub fn fetch_members() -> ZomeApiResult<Vec<Member>> {
+    let anchor_address = Entry::App(
+        "anchor".into(), // app entry type
+        // app entry value. We'll use the value to specify what this anchor is for
+        "members".into(),
+    )
+    .address();
+
+    Ok(
+        // return all the Member objects from the entries linked to the members anchor (drop entries with wrong type)
+        hdk::utils::get_links_and_load_type(
+            &anchor_address,
+            LinkMatch::Exactly("anchor->member"), // the link type to match
+            LinkMatch::Any,
+        )?,
+    )
 }

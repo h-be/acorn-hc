@@ -4,31 +4,49 @@ ui_bundles = []
 ui_interfaces = []
 
 [[agents]]
-id = 'hc-run-agent'
+id = 'development-agent'
 keystore_file = 'unused'
 name = 'acorn user'
 public_address = 'HcScIc8G7X769Nr6cnRxgR73wi8au946z7hc46EMDJjaz8au4bD7V6hj7T6B8fa'
 test_agent = true
 
 [[dnas]]
-file = './dist/acorn.dna.json'
-hash = 'QmYngBdn2WbK8kiCDTz8gZyJ9FgNGTnWd4KdfRjZKwQ2Cc'
-id = 'hc-run-dna'
+file = './dnas/profiles/dist/profiles.dna.json'
+hash = 'QmeAyJ8Zw335GH8DGDCNkHRGyeKTv2cddUPkFQNuzHjhD4'
+id = 'profiles-dna'
+
+[[dnas]]
+file = './dna/QmZMPCoaitDzF498VjGHDuGz5vq41g1xFMq6KqFgdKoFna.dna.json'
+hash = 'QmZMPCoaitDzF498VjGHDuGz5vq41g1xFMq6KqFgdKoFna'
+id = '_acorn_projects_dna_0.39446223089992405'
+uuid = 'uuid-atrium-dealmaker-chivalry-amniotic-spokesman'
 
 [[instances]]
-agent = 'hc-run-agent'
-dna = 'hc-run-dna'
-id = 'acorn'
+agent = 'development-agent'
+dna = 'profiles-dna'
+id = 'profiles-instance'
 
 [instances.storage]
 type = 'memory'
+
+[[instances]]
+agent = 'development-agent'
+dna = '_acorn_projects_dna_0.39446223089992405'
+id = '_acorn_projects_instance_0.39446223089992405'
+
+[instances.storage]
+path = './storage/_acorn_projects_instance_0.39446223089992405'
+type = 'lmdb'
 
 [[interfaces]]
 admin = true
 id = 'websocket-interface'
 
 [[interfaces.instances]]
-id = 'acorn'
+id = 'profiles-instance'
+
+[[interfaces.instances]]
+id = '_acorn_projects_instance_0.39446223089992405'
 
 [interfaces.driver]
 port = 8888
@@ -40,10 +58,6 @@ type = 'info'
 
 [logger.rules]
 rules = []
-
-# [network]
-# sim2h_url = 'ws://sim2h.harris-braun.com:9000'
-# type = 'sim2h'
 
 [passphrase_service]
 type = 'cmd'
