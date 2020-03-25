@@ -26,7 +26,7 @@ mod project;
 
 use project::{
     GetResponse, ProjectMeta, Member, ArchiveGoalResponse, Edge, GetHistoryResponse, Goal, GoalComment, GoalMaybeWithEdge,
-    GoalMember, GoalVote,
+    GoalMember, GoalVote, EntryPointResponse, EntryPoint
 };
 //The GetResponse struct allows our zome functions to return an entry along with its
 //address so that Redux can know the address of goals and edges
@@ -34,6 +34,8 @@ use project::{
 // these types will come straight through signals to the UI,
 // so they will actually be referenced there. Be mindful of this
 pub const NEW_MEMBER_SIGNAL_TYPE: &str = "new_member";
+pub const ENTRY_POINT_SIGNAL_TYPE: &str = "entry_point";
+pub const ENTRY_POINT_ARCHIVED_SIGNAL_TYPE: &str = "entry_point_archived";
 pub const GOAL_MAYBE_WITH_EDGE_SIGNAL_TYPE: &str = "goal_maybe_with_edge";
 pub const GOAL_ARCHIVED_SIGNAL_TYPE: &str = "goal_archived";
 pub const GOAL_COMMENT_SIGNAL_TYPE: &str = "goal_comment";
@@ -47,6 +49,12 @@ pub const GOAL_VOTE_ARCHIVED_SIGNAL_TYPE: &str = "goal_vote_archived";
 #[serde(rename_all = "camelCase")]
 struct NewMemberSignalPayload {
     member: Member,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, DefaultJson, PartialEq)]
+#[serde(rename_all = "camelCase")]
+struct EntryPointSignalPayload {
+    entry_point: EntryPointResponse,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, DefaultJson, PartialEq)]
@@ -79,7 +87,7 @@ struct GoalVoteSignalPayload {
     goal_vote: GetResponse<GoalVote>,
 }
 
-// Used for GoalComment, GoalMember, and GoalVote
+// Used for GoalComment, GoalMember, GoalVote, and EntryPoint
 #[derive(Clone, Debug, Serialize, Deserialize, DefaultJson, PartialEq)]
 #[serde(rename_all = "camelCase")]
 struct EntryArchivedSignalPayload {
@@ -92,11 +100,13 @@ struct EntryArchivedSignalPayload {
 #[derive(Clone, Serialize, Deserialize, Debug, DefaultJson, PartialEq)]
 pub(crate) enum DirectMessage {
     NewMemberNotification(NewMemberSignalPayload),
+    EntryPointNotification(EntryPointSignalPayload),
     GoalMaybeWithEdgeNotification(GoalMaybeWithEdgeSignalPayload),
     GoalArchivedNotification(GoalArchivedSignalPayload),
     GoalCommentNotification(GoalCommentSignalPayload),
     GoalMemberNotification(GoalMemberSignalPayload),
     GoalVoteNotification(GoalVoteSignalPayload),
+    EntryPointArchivedNotification(EntryArchivedSignalPayload),
     GoalCommentArchivedNotification(EntryArchivedSignalPayload),
     GoalMemberArchivedNotification(EntryArchivedSignalPayload),
     GoalVoteArchivedNotification(EntryArchivedSignalPayload),
@@ -105,9 +115,16 @@ pub(crate) enum DirectMessage {
 // send a signal to the UI
 pub(crate) fn signal_ui(message: &DirectMessage) {
     match message {
-        // Agents
+        // Members
         DirectMessage::NewMemberNotification(signal_payload) => {
             hdk::emit_signal(NEW_MEMBER_SIGNAL_TYPE, signal_payload).ok();
+        }
+        // EntryPoints
+        DirectMessage::EntryPointNotification(signal_payload) => {
+            hdk::emit_signal(ENTRY_POINT_SIGNAL_TYPE, signal_payload).ok();
+        }
+        DirectMessage::EntryPointArchivedNotification(signal_payload) => {
+            hdk::emit_signal(ENTRY_POINT_ARCHIVED_SIGNAL_TYPE, signal_payload).ok();
         }
         // Goals
         DirectMessage::GoalMaybeWithEdgeNotification(signal_payload) => {
@@ -173,6 +190,11 @@ mod holo_acorn {
     }
 
     #[entry_def]
+    fn entry_point_def() -> ValidatingEntryType {
+        project::entry_point_def()
+    }
+
+    #[entry_def]
     fn member_def() -> ValidatingEntryType {
         project::member_def()
     }
@@ -221,6 +243,21 @@ mod holo_acorn {
     #[zome_fn("hc_public")]
     fn fetch_project_meta() -> ZomeApiResult<GetResponse<ProjectMeta>> {
         project::fetch_project_meta()
+    }
+
+    #[zome_fn("hc_public")]
+    fn create_entry_point(entry_point: EntryPoint) -> ZomeApiResult<EntryPointResponse> {
+        project::create_entry_point(entry_point)
+    }
+
+    #[zome_fn("hc_public")]
+    fn archive_entry_point(address: Address) -> ZomeApiResult<Address> {
+        project::archive_entry_point(address)
+    }
+
+    #[zome_fn("hc_public")]
+    fn fetch_entry_points() -> ZomeApiResult<Vec<EntryPointResponse>> {
+        project::fetch_entry_points()
     }
 
 
