@@ -6,10 +6,12 @@ let
  script = pkgs.writeShellScriptBin "release-github-wasm"
  ''
  set -euxo pipefail
- export artifact='acorn.dna.json'
+ export profiles_artifact='./dnas/profiles/dist/profiles.dna.json'
+ export projects_artifact='./dnas/projects/dist/projects.dna.json'
  export tag=''${CIRCLE_TAG:-${tag}}
- hc package -o "$TMP/$artifact"
- github-release upload --file "$TMP/$artifact" --owner ${config.release.github.owner} --repo ${config.release.github.repo} --tag $tag --name $artifact --token $GITHUB_DEPLOY_TOKEN
+ acorn-package
+ github-release upload --file "$profiles_artifact" --owner ${config.release.github.owner} --repo ${config.release.github.repo} --tag $tag --name $artifact --token $GITHUB_DEPLOY_TOKEN
+ github-release upload --file "$projects_artifact" --owner ${config.release.github.owner} --repo ${config.release.github.repo} --tag $tag --name $artifact --token $GITHUB_DEPLOY_TOKEN
  '';
 in
 {
