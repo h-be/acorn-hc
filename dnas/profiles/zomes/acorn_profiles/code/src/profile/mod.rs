@@ -8,8 +8,8 @@ extern crate serde_json;
 // uncomment the next line, and recomment the following one
 // if you're trying to send yourself signals, for development
 // purposes
-use crate::{signal_ui, DirectMessage, NewAgentSignalPayload};
-// use crate::{DirectMessage, NewAgentSignalPayload};
+// use crate::{signal_ui, DirectMessage, NewAgentSignalPayload};
+use crate::{DirectMessage, NewAgentSignalPayload};
 use hdk::{
     entry_definition::ValidatingEntryType,
     error::{ZomeApiError, ZomeApiResult},
@@ -138,9 +138,9 @@ fn notify_all(message: DirectMessage) -> ZomeApiResult<()> {
     fetch_agents()?.iter().for_each(|profile| {
         // useful for development purposes
         // uncomment to send signals to oneself
-        if profile.address == AGENT_ADDRESS.to_string() {
-            signal_ui(&message);
-        }
+        // if profile.address == AGENT_ADDRESS.to_string() {
+        //     signal_ui(&message);
+        // }
 
         if profile.address != AGENT_ADDRESS.to_string() {
             hdk::debug(format!(

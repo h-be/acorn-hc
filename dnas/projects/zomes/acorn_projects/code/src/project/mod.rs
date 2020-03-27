@@ -28,8 +28,9 @@ use hdk::{
 use serde::Serialize;
 use std::fmt::Debug;
 
+// add signal_ui in to send messages to self
 use crate::{
-    signal_ui, DirectMessage, EntryArchivedSignalPayload, EntryPointSignalPayload,
+    DirectMessage, EntryArchivedSignalPayload, EntryPointSignalPayload,
     GoalArchivedSignalPayload, GoalCommentSignalPayload, GoalMaybeWithEdgeSignalPayload,
     GoalMemberSignalPayload, GoalVoteSignalPayload, NewMemberSignalPayload,
 };
@@ -337,9 +338,9 @@ fn notify_all(message: DirectMessage) -> ZomeApiResult<()> {
     fetch_members()?.iter().for_each(|member| {
         // useful for development purposes
         // uncomment to send signals to oneself
-        if member.address == AGENT_ADDRESS.to_string() {
-            signal_ui(&message);
-        }
+        // if member.address == AGENT_ADDRESS.to_string() {
+        //     signal_ui(&message);
+        // }
 
         if member.address != AGENT_ADDRESS.to_string() {
             hdk::debug(format!(
