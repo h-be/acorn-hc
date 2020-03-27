@@ -164,6 +164,7 @@ pub struct ArchiveGoalResponse {
     archived_goal_members: Vec<Address>,
     archived_goal_votes: Vec<Address>,
     archived_goal_comments: Vec<Address>,
+    archived_entry_points: Vec<Address>,
 }
 #[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
 pub struct GetHistoryResponse {
