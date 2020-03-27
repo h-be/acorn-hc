@@ -1,0 +1,14 @@
+{
+  "name": "Acorn Project",
+  "description": "Acorn Project",
+  "authors": [
+    {
+      "identifier": "Author Name <author@name.com>",
+      "public_key_source": "",
+      "signature": ""
+    }
+  ],
+  "version": "0.1.0",
+  "dht": {},
+  "properties": null
+}

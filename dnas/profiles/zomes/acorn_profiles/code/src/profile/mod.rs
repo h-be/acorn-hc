@@ -42,6 +42,7 @@ impl<T: Into<JsonString> + Debug + Serialize> From<GetResponse<T>> for JsonStrin
         default_to_json(u)
     }
 }
+
 #[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
 pub enum Status {
     Online,
@@ -133,7 +134,7 @@ pub fn profile_def() -> ValidatingEntryType {
 
 // send the direct messages that will result in
 // signals being emitted to the UI
-pub(crate) fn notify_all(message: DirectMessage) -> ZomeApiResult<()> {
+fn notify_all(message: DirectMessage) -> ZomeApiResult<()> {
     fetch_agents()?.iter().for_each(|profile| {
         // useful for development purposes
         // uncomment to send signals to oneself
@@ -221,20 +222,24 @@ pub fn update_status(status: Status) -> ZomeApiResult<GetResponse<Profile>> {
 }
 
 pub fn whoami() -> ZomeApiResult<Option<GetResponse<Profile>>> {
-    match hdk::utils::get_links_and_load_type::<Profile>(
+    let all_profiles = hdk::get_links(
         &AGENT_ADDRESS,
         LinkMatch::Exactly("agent->profile"), // the link type to match
         LinkMatch::Any,
     )?
-    .first()
-    {
-        Some(my_profile) => {
-            let app_entry = Entry::App("profile".into(), my_profile.into());
-            Ok(Some(GetResponse {
-                entry: my_profile.clone(),
-                address: app_entry.address(),
-            }))
-        }
+    .addresses();
+    let maybe_profile_address = all_profiles.first();
+
+    // do it this way so that we always keep the original profile entry address
+    // from the UI perspective
+    match maybe_profile_address {
+        Some(profile_address) => match hdk::utils::get_as_type(profile_address.clone()) {
+            Ok(profile) => Ok(Some(GetResponse {
+                entry: profile,
+                address: profile_address.clone(),
+            })),
+            Err(e) => Err(e),
+        },
         None => Ok(None),
     }
 }

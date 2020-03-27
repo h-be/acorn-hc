@@ -34,19 +34,32 @@ pub fn init() -> Result<(), String> {
         // app entry value. We'll use the value to specify what this anchor is for
         "goal_comments".into(),
     );
-    let agents_anchor_entry = Entry::App(
+    let members_anchor_entry = Entry::App(
         "anchor".into(), // app entry type
         // app entry value. We'll use the value to specify what this anchor is for
-        "agents".into(),
+        "members".into(),
+    );
+    let projectmeta_anchor_entry = Entry::App(
+        "anchor".into(), // app entry type
+        // app entry value. We'll use the value to specify what this anchor is for
+        "projectmeta".into(),
+    );
+    let entry_points_anchor_entry = Entry::App(
+        "anchor".into(), // app entry type
+        // app entry value. We'll use the value to specify what this anchor is for
+        "entry_points".into(),
     );
     hdk::commit_entry(&goal_comment_anchor_entry)?;
     hdk::commit_entry(&goal_vote_anchor_entry)?;
     hdk::commit_entry(&goal_members_anchor_entry)?;
     hdk::commit_entry(&goals_anchor_entry)?;
     hdk::commit_entry(&edges_anchor_entry)?;
-    hdk::commit_entry(&agents_anchor_entry)?;
+    hdk::commit_entry(&members_anchor_entry)?;
+    hdk::commit_entry(&projectmeta_anchor_entry)?;
+    hdk::commit_entry(&entry_points_anchor_entry)?;
     Ok(())
 }
+
 pub fn anchor_def() -> ValidatingEntryType {
     entry!(
         name: "anchor",
@@ -60,8 +73,18 @@ pub fn anchor_def() -> ValidatingEntryType {
         },
         links: [
             to!(
-                "profile",
-                link_type: "anchor->profiles",
+                "projectmeta",
+                link_type: "anchor->projectmeta",
+                validation_package: || {
+                    hdk::ValidationPackageDefinition::Entry
+                },
+                validation: | _validation_data: hdk::LinkValidationData| {
+                    Ok(())
+                }
+            ),
+            to!(
+                "member",
+                link_type: "anchor->member",
                 validation_package: || {
                     hdk::ValidationPackageDefinition::Entry
                 },
@@ -112,6 +135,16 @@ pub fn anchor_def() -> ValidatingEntryType {
             to!(
                 "goal_comment",
                 link_type: "anchor->goal_comment",
+                validation_package: || {
+                    hdk::ValidationPackageDefinition::Entry
+                },
+                validation: | _validation_data: hdk::LinkValidationData| {
+                    Ok(())
+                }
+            ),
+            to!(
+                "entry_point",
+                link_type: "anchor->entry_point",
                 validation_package: || {
                     hdk::ValidationPackageDefinition::Entry
                 },

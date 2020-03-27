@@ -16,20 +16,69 @@ use hdk::{
         entry::Entry,
         link::LinkMatch,
     },
-    holochain_json_api::{error::JsonError, json::JsonString},
+    holochain_json_api::{
+        error::JsonError,
+        json::{default_to_json, JsonString},
+    },
     holochain_persistence_api::cas::content::{Address, AddressableContent},
     prelude::Entry::App,
     // AGENT_ADDRESS, AGENT_ID_STR,
     AGENT_ADDRESS,
 };
+use serde::Serialize;
+use std::fmt::Debug;
 
-use crate::profile::{notify_all, GetResponse};
+// add signal_ui in to send messages to self
 use crate::{
-    DirectMessage, EntryArchivedSignalPayload, GoalArchivedSignalPayload, GoalCommentSignalPayload,
-    GoalMaybeWithEdgeSignalPayload, GoalMemberSignalPayload, GoalVoteSignalPayload,
+    DirectMessage, EntryArchivedSignalPayload, EntryPointSignalPayload,
+    GoalArchivedSignalPayload, GoalCommentSignalPayload, GoalMaybeWithEdgeSignalPayload,
+    GoalMemberSignalPayload, GoalVoteSignalPayload, NewMemberSignalPayload,
 };
 
-// a bit of profile info for an agent
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub struct GetResponse<T> {
+    pub entry: T,
+    pub address: Address,
+}
+
+impl<T: Into<JsonString> + Debug + Serialize> From<GetResponse<T>> for JsonString {
+    fn from(u: GetResponse<T>) -> JsonString {
+        default_to_json(u)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
+pub struct ProjectMeta {
+    creator_address: Address,
+    created_at: u128,
+    name: String,
+    image: Option<String>,
+    passphrase: String,
+}
+
+// The "Entry" in EntryPoint is not a reference to Holochain "Entries"
+// it is rather the concept of an Entrance, as in a doorway, to the tree
+#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
+pub struct EntryPoint {
+    color: String,
+    creator_address: Address,
+    created_at: u128,
+    goal_address: Address,
+}
+
+#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
+pub struct EntryPointResponse {
+    entry_point: EntryPoint,
+    goal: Goal,
+    entry_point_address: Address,
+}
+
+// This is a reference to the agent address for any users who have joined this DHT
+#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
+pub struct Member {
+    pub address: String,
+}
+
 // a relationship between a Goal and an Agent
 #[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
 pub struct GoalMember {
@@ -116,6 +165,7 @@ pub struct ArchiveGoalResponse {
     archived_goal_members: Vec<Address>,
     archived_goal_votes: Vec<Address>,
     archived_goal_comments: Vec<Address>,
+    archived_entry_points: Vec<Address>,
 }
 #[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
 pub struct GetHistoryResponse {
@@ -123,6 +173,50 @@ pub struct GetHistoryResponse {
     members: Vec<Vec<GoalMember>>,
     address: Address,
 }
+
+pub fn projectmeta_def() -> ValidatingEntryType {
+    entry!(
+        name: "projectmeta",
+        description: "this stores metadata about this DNA, like its secret passphrase, name, and image",
+        sharing: Sharing::Public,
+        validation_package: || {
+            hdk::ValidationPackageDefinition::Entry
+        },
+        validation: | _validation_data: hdk::EntryValidationData<ProjectMeta>| {
+            Ok(())
+        }
+    )
+}
+
+pub fn entry_point_def() -> ValidatingEntryType {
+    entry!(
+        name: "entry_point",
+        description: "this stores a reference to a Goal which forms an entrance way into the tree",
+        sharing: Sharing::Public,
+        validation_package: || {
+            hdk::ValidationPackageDefinition::Entry
+        },
+        validation: | _validation_data: hdk::EntryValidationData<EntryPoint>| {
+            // should validate that the Goal exists
+            Ok(())
+        }
+    )
+}
+
+pub fn member_def() -> ValidatingEntryType {
+    entry!(
+        name: "member",
+        description: "this represents the presence of an agent within this DHT, and provides a key for looking up their profile info from another registry",
+        sharing: Sharing::Public,
+        validation_package: || {
+            hdk::ValidationPackageDefinition::Entry
+        },
+        validation: | _validation_data: hdk::EntryValidationData<Member>| {
+            Ok(())
+        }
+    )
+}
+
 //The GetResponse struct allows our zome functions to return an entry along with its
 //address so that Redux can know the address of goals and edges
 pub fn edge_def() -> ValidatingEntryType {
@@ -215,6 +309,76 @@ pub fn goal_vote_def() -> ValidatingEntryType {
     )
 }
 
+pub fn init() -> Result<(), String> {
+    let members_anchor_entry = Entry::App(
+        "anchor".into(), // app entry type
+        // app entry value. We'll use the value to specify what this anchor is for
+        "members".into(),
+    );
+    let member = Member {
+        address: AGENT_ADDRESS.to_string(),
+    };
+    let member_entry = Entry::App("member".into(), member.clone().into());
+    let member_address = hdk::commit_entry(&member_entry)?;
+    hdk::link_entries(
+        &members_anchor_entry.address(),
+        &member_address,
+        "anchor->member",
+        "",
+    )?;
+
+    // send update to peers
+    notify_member(member.clone())?;
+    Ok(())
+}
+
+// send the direct messages that will result in
+// signals being emitted to the UI
+fn notify_all(message: DirectMessage) -> ZomeApiResult<()> {
+    fetch_members()?.iter().for_each(|member| {
+        // useful for development purposes
+        // uncomment to send signals to oneself
+        // if member.address == AGENT_ADDRESS.to_string() {
+        //     signal_ui(&message);
+        // }
+
+        if member.address != AGENT_ADDRESS.to_string() {
+            hdk::debug(format!(
+                "Send a message to: {:?}",
+                &member.address.to_string()
+            ))
+            .ok();
+            hdk::send(
+                Address::from(member.address.clone()),
+                JsonString::from(message.clone()).into(),
+                1.into(),
+            )
+            .ok();
+        }
+    });
+    Ok(())
+}
+
+fn notify_member(member: Member) -> ZomeApiResult<()> {
+    let message = DirectMessage::NewMemberNotification(NewMemberSignalPayload {
+        member: member.clone(),
+    });
+    notify_all(message)
+}
+
+fn notify_entry_point(entry_point_response: EntryPointResponse) -> ZomeApiResult<()> {
+    let message = DirectMessage::EntryPointNotification(EntryPointSignalPayload {
+        entry_point: entry_point_response.clone(),
+    });
+    notify_all(message)
+}
+
+fn notify_entry_point_archived(address: Address) -> ZomeApiResult<()> {
+    let message =
+        DirectMessage::EntryPointArchivedNotification(EntryArchivedSignalPayload { address });
+    notify_all(message)
+}
+
 fn notify_goal_maybe_with_edge(goal_maybe_with_edge: GoalMaybeWithEdge) -> ZomeApiResult<()> {
     let message = DirectMessage::GoalMaybeWithEdgeNotification(GoalMaybeWithEdgeSignalPayload {
         goal: goal_maybe_with_edge.clone(),
@@ -258,6 +422,101 @@ fn notify_goal_vote_archived(address: Address) -> ZomeApiResult<()> {
     let message =
         DirectMessage::GoalVoteArchivedNotification(EntryArchivedSignalPayload { address });
     notify_all(message)
+}
+
+pub fn create_project_meta(projectmeta: ProjectMeta) -> ZomeApiResult<GetResponse<ProjectMeta>> {
+    let projectmeta_anchor_entry = Entry::App(
+        "anchor".into(), // app entry type
+        // app entry value. We'll use the value to specify what this anchor is for
+        "projectmeta".into(),
+    );
+    let projectmeta_entry = Entry::App("projectmeta".into(), projectmeta.clone().into());
+    let projectmeta_address = hdk::commit_entry(&projectmeta_entry)?;
+    hdk::link_entries(
+        &projectmeta_anchor_entry.address(),
+        &projectmeta_address,
+        "anchor->projectmeta",
+        "",
+    )?;
+
+    Ok(GetResponse {
+        entry: projectmeta,
+        address: projectmeta_address,
+    })
+}
+
+pub fn update_project_meta(
+    projectmeta: ProjectMeta,
+    address: Address,
+) -> ZomeApiResult<GetResponse<ProjectMeta>> {
+    let projectmeta_entry = Entry::App("projectmeta".into(), projectmeta.clone().into());
+    hdk::update_entry(projectmeta_entry, &address)?;
+    Ok(GetResponse {
+        entry: projectmeta,
+        address: address,
+    })
+}
+
+pub fn fetch_project_meta() -> ZomeApiResult<GetResponse<ProjectMeta>> {
+    let projectmeta_anchor_entry = Entry::App("anchor".into(), "projectmeta".into());
+    match hdk::utils::get_links_and_load_type::<ProjectMeta>(
+        &projectmeta_anchor_entry.address(),
+        LinkMatch::Exactly("anchor->projectmeta"), // the link type to match
+        LinkMatch::Any,
+    )?
+    .first()
+    {
+        Some(projectmeta) => {
+            let app_entry = Entry::App("projectmeta".into(), projectmeta.into());
+            Ok(GetResponse {
+                entry: projectmeta.clone(),
+                address: app_entry.address(),
+            })
+        }
+        None => Err(ZomeApiError::Internal("no project meta exists".into())),
+    }
+}
+
+pub fn create_entry_point(entry_point: EntryPoint) -> ZomeApiResult<EntryPointResponse> {
+    // if the goal doesn't exist, this will return an error for this function
+    // which is right
+    let goal = hdk::utils::get_as_type::<Goal>(entry_point.goal_address.clone())?;
+
+    let app_entry = Entry::App("entry_point".into(), entry_point.clone().into());
+    let entry_address = hdk::commit_entry(&app_entry)?;
+
+    // link new entry_point to the entry_points anchor
+    let anchor_address = Entry::App(
+        "anchor".into(),       // app entry type
+        "entry_points".into(), // app entry value
+    )
+    .address();
+
+    hdk::link_entries(
+        &anchor_address,
+        &app_entry.address(),
+        "anchor->entry_point",
+        "",
+    )?;
+
+    let entry_point_response = EntryPointResponse {
+        entry_point,
+        goal,
+        entry_point_address: entry_address,
+    };
+    notify_entry_point(entry_point_response.clone())?;
+
+    Ok(entry_point_response)
+}
+
+pub fn archive_entry_point(address: Address) -> ZomeApiResult<Address> {
+    hdk::remove_entry(&address)?;
+    notify_entry_point_archived(address.clone())?;
+    Ok(address)
+}
+
+pub fn fetch_entry_points() -> ZomeApiResult<Vec<EntryPointResponse>> {
+    inner_fetch_entry_points()
 }
 
 pub fn history_of_goal(address: Address) -> ZomeApiResult<GetHistoryResponse> {
@@ -588,6 +847,36 @@ fn inner_fetch_edges() -> ZomeApiResult<Vec<GetResponse<Edge>>> {
         .collect(),
     )
 }
+pub fn inner_fetch_entry_points() -> ZomeApiResult<Vec<EntryPointResponse>> {
+    let anchor_address = Entry::App(
+        "anchor".into(), // app entry type
+        // app entry value. We'll use the value to specify what this anchor is for
+        "entry_points".into(),
+    )
+    .address();
+
+    let entry_points = hdk::utils::get_links_and_load_type(
+        &anchor_address,
+        LinkMatch::Exactly("anchor->entry_point"), // the link type to match
+        LinkMatch::Any,
+    )?
+    .into_iter()
+    .map(|entry_point: EntryPoint| {
+        let entry_address = Entry::App("entry_point".into(), entry_point.clone().into()).address();
+        match hdk::utils::get_as_type(entry_point.goal_address.clone()) {
+            Ok(goal) => Ok(EntryPointResponse {
+                entry_point: entry_point,
+                goal: goal,
+                entry_point_address: entry_address,
+            }),
+            Err(e) => Err(e),
+        }
+    })
+    .filter_map(Result::ok)
+    .collect();
+
+    Ok(entry_points)
+}
 
 pub fn fetch_edges() -> ZomeApiResult<Vec<GetResponse<Edge>>> {
     inner_fetch_edges()
@@ -655,6 +944,22 @@ pub fn archive_goal(address: Address) -> ZomeApiResult<ArchiveGoalResponse> {
         .filter_map(Result::ok)
         .collect(); // returns vec of the goal_member addresses which were removed
                     // return the address of the archived goal for the UI to use
+    let archived_entry_points = inner_fetch_entry_points()?
+        .into_iter()
+        .filter(|entry_point_response: &EntryPointResponse| {
+            entry_point_response.entry_point.goal_address == address
+        })
+        .map(|entry_point_response: EntryPointResponse| {
+            let entry_point_address = entry_point_response.entry_point_address;
+            match hdk::remove_entry(&entry_point_address) {
+                Ok(_) => Ok(entry_point_address),
+                Err(e) => Err(e),
+            }
+        })
+        // filter out errors
+        .filter_map(Result::ok)
+        .collect(); // returns vec of the entry_points addresses which were removed
+                    // return the address of the archived goal for the UI to use
 
     let archive_response = ArchiveGoalResponse {
         address,
@@ -662,6 +967,7 @@ pub fn archive_goal(address: Address) -> ZomeApiResult<ArchiveGoalResponse> {
         archived_goal_members,
         archived_goal_votes,
         archived_goal_comments,
+        archived_entry_points,
     };
     notify_goal_archived(archive_response.clone())?;
 
@@ -841,4 +1147,22 @@ pub fn fetch_goal_votes() -> ZomeApiResult<Vec<GetResponse<GoalVote>>> {
 }
 pub fn fetch_goal_comments() -> ZomeApiResult<Vec<GetResponse<GoalComment>>> {
     inner_fetch_goal_comments()
+}
+
+pub fn fetch_members() -> ZomeApiResult<Vec<Member>> {
+    let anchor_address = Entry::App(
+        "anchor".into(), // app entry type
+        // app entry value. We'll use the value to specify what this anchor is for
+        "members".into(),
+    )
+    .address();
+
+    Ok(
+        // return all the Member objects from the entries linked to the members anchor (drop entries with wrong type)
+        hdk::utils::get_links_and_load_type(
+            &anchor_address,
+            LinkMatch::Exactly("anchor->member"), // the link type to match
+            LinkMatch::Any,
+        )?,
+    )
 }

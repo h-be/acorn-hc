@@ -15,28 +15,27 @@ use hdk::{
     holochain_json_api::{error::JsonError, json::JsonString},
     holochain_persistence_api::cas::content::Address,
     // AGENT_ADDRESS, AGENT_ID_STR,
-    AGENT_ADDRESS,
+    // AGENT_ADDRESS,
 };
 use std::convert::TryInto;
 
 use hdk_proc_macros::zome;
 
-mod profile;
-use crate::profile::{GetResponse, Profile, Status};
-
 mod anchor;
-mod goal;
+mod project;
 
-use goal::{
-    ArchiveGoalResponse, Edge, GetHistoryResponse, Goal, GoalComment, GoalMaybeWithEdge,
-    GoalMember, GoalVote,
+use project::{
+    ArchiveGoalResponse, Edge, EntryPoint, EntryPointResponse, GetHistoryResponse, GetResponse,
+    Goal, GoalComment, GoalMaybeWithEdge, GoalMember, GoalVote, Member, ProjectMeta,
 };
 //The GetResponse struct allows our zome functions to return an entry along with its
 //address so that Redux can know the address of goals and edges
 
 // these types will come straight through signals to the UI,
 // so they will actually be referenced there. Be mindful of this
-pub const NEW_AGENT_SIGNAL_TYPE: &str = "new_agent";
+pub const NEW_MEMBER_SIGNAL_TYPE: &str = "new_member";
+pub const ENTRY_POINT_SIGNAL_TYPE: &str = "entry_point";
+pub const ENTRY_POINT_ARCHIVED_SIGNAL_TYPE: &str = "entry_point_archived";
 pub const GOAL_MAYBE_WITH_EDGE_SIGNAL_TYPE: &str = "goal_maybe_with_edge";
 pub const GOAL_ARCHIVED_SIGNAL_TYPE: &str = "goal_archived";
 pub const GOAL_COMMENT_SIGNAL_TYPE: &str = "goal_comment";
@@ -48,8 +47,14 @@ pub const GOAL_VOTE_ARCHIVED_SIGNAL_TYPE: &str = "goal_vote_archived";
 
 #[derive(Clone, Debug, Serialize, Deserialize, DefaultJson, PartialEq)]
 #[serde(rename_all = "camelCase")]
-struct NewAgentSignalPayload {
-    agent: Profile,
+struct NewMemberSignalPayload {
+    member: Member,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, DefaultJson, PartialEq)]
+#[serde(rename_all = "camelCase")]
+struct EntryPointSignalPayload {
+    entry_point: EntryPointResponse,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, DefaultJson, PartialEq)]
@@ -82,7 +87,7 @@ struct GoalVoteSignalPayload {
     goal_vote: GetResponse<GoalVote>,
 }
 
-// Used for GoalComment, GoalMember, and GoalVote
+// Used for GoalComment, GoalMember, GoalVote, and EntryPoint
 #[derive(Clone, Debug, Serialize, Deserialize, DefaultJson, PartialEq)]
 #[serde(rename_all = "camelCase")]
 struct EntryArchivedSignalPayload {
@@ -94,12 +99,14 @@ struct EntryArchivedSignalPayload {
 /// at this time.
 #[derive(Clone, Serialize, Deserialize, Debug, DefaultJson, PartialEq)]
 pub(crate) enum DirectMessage {
-    NewAgentNotification(NewAgentSignalPayload),
+    NewMemberNotification(NewMemberSignalPayload),
+    EntryPointNotification(EntryPointSignalPayload),
     GoalMaybeWithEdgeNotification(GoalMaybeWithEdgeSignalPayload),
     GoalArchivedNotification(GoalArchivedSignalPayload),
     GoalCommentNotification(GoalCommentSignalPayload),
     GoalMemberNotification(GoalMemberSignalPayload),
     GoalVoteNotification(GoalVoteSignalPayload),
+    EntryPointArchivedNotification(EntryArchivedSignalPayload),
     GoalCommentArchivedNotification(EntryArchivedSignalPayload),
     GoalMemberArchivedNotification(EntryArchivedSignalPayload),
     GoalVoteArchivedNotification(EntryArchivedSignalPayload),
@@ -108,9 +115,16 @@ pub(crate) enum DirectMessage {
 // send a signal to the UI
 pub(crate) fn signal_ui(message: &DirectMessage) {
     match message {
-        // Agents
-        DirectMessage::NewAgentNotification(signal_payload) => {
-            hdk::emit_signal(NEW_AGENT_SIGNAL_TYPE, signal_payload).ok();
+        // Members
+        DirectMessage::NewMemberNotification(signal_payload) => {
+            hdk::emit_signal(NEW_MEMBER_SIGNAL_TYPE, signal_payload).ok();
+        }
+        // EntryPoints
+        DirectMessage::EntryPointNotification(signal_payload) => {
+            hdk::emit_signal(ENTRY_POINT_SIGNAL_TYPE, signal_payload).ok();
+        }
+        DirectMessage::EntryPointArchivedNotification(signal_payload) => {
+            hdk::emit_signal(ENTRY_POINT_ARCHIVED_SIGNAL_TYPE, signal_payload).ok();
         }
         // Goals
         DirectMessage::GoalMaybeWithEdgeNotification(signal_payload) => {
@@ -148,7 +162,8 @@ mod holo_acorn {
 
     #[init]
     pub fn init() {
-        anchor::init()
+        anchor::init()?;
+        project::init()
     }
 
     #[validate_agent]
@@ -170,31 +185,41 @@ mod holo_acorn {
     }
 
     #[entry_def]
-    fn profile_def() -> ValidatingEntryType {
-        profile::profile_def()
+    fn projectmeta_def() -> ValidatingEntryType {
+        project::projectmeta_def()
+    }
+
+    #[entry_def]
+    fn entry_point_def() -> ValidatingEntryType {
+        project::entry_point_def()
+    }
+
+    #[entry_def]
+    fn member_def() -> ValidatingEntryType {
+        project::member_def()
     }
 
     #[entry_def]
     fn edge_def() -> ValidatingEntryType {
-        goal::edge_def()
+        project::edge_def()
     }
 
     #[entry_def]
     fn goal_def() -> ValidatingEntryType {
-        goal::goal_def()
+        project::goal_def()
     }
     #[entry_def]
     fn goal_comment_def() -> ValidatingEntryType {
-        goal::goal_comment_def()
+        project::goal_comment_def()
     }
 
     #[entry_def]
     fn goal_member_def() -> ValidatingEntryType {
-        goal::goal_member_def()
+        project::goal_member_def()
     }
     #[entry_def]
     fn goal_vote_def() -> ValidatingEntryType {
-        goal::goal_vote_def()
+        project::goal_vote_def()
     }
 
     // The anchor type. Anchors are app entries with type anchor. The value is how we find
@@ -206,34 +231,46 @@ mod holo_acorn {
     }
 
     #[zome_fn("hc_public")]
-    fn create_whoami(profile: Profile) -> ZomeApiResult<GetResponse<Profile>> {
-        profile::create_whoami(profile)
-    }
-    #[zome_fn("hc_public")]
-    fn update_status(status: Status) -> ZomeApiResult<GetResponse<Profile>> {
-        profile::update_status(status)
-    }
-    #[zome_fn("hc_public")]
-    fn update_whoami(profile: Profile, address: Address) -> ZomeApiResult<GetResponse<Profile>> {
-        profile::update_whoami(profile, address)
+    fn create_project_meta(projectmeta: ProjectMeta) -> ZomeApiResult<GetResponse<ProjectMeta>> {
+        project::create_project_meta(projectmeta)
     }
 
     #[zome_fn("hc_public")]
-    fn whoami() -> ZomeApiResult<Option<GetResponse<Profile>>> {
-        profile::whoami()
+    fn update_project_meta(
+        projectmeta: ProjectMeta,
+        address: Address,
+    ) -> ZomeApiResult<GetResponse<ProjectMeta>> {
+        project::update_project_meta(projectmeta, address)
     }
 
     #[zome_fn("hc_public")]
-    fn fetch_agent_address() -> ZomeApiResult<Address> {
-        Ok(AGENT_ADDRESS.clone())
+    fn fetch_project_meta() -> ZomeApiResult<GetResponse<ProjectMeta>> {
+        project::fetch_project_meta()
     }
+
+    #[zome_fn("hc_public")]
+    fn create_entry_point(entry_point: EntryPoint) -> ZomeApiResult<EntryPointResponse> {
+        project::create_entry_point(entry_point)
+    }
+
+    #[zome_fn("hc_public")]
+    fn archive_entry_point(address: Address) -> ZomeApiResult<Address> {
+        project::archive_entry_point(address)
+    }
+
+    #[zome_fn("hc_public")]
+    fn fetch_entry_points() -> ZomeApiResult<Vec<EntryPointResponse>> {
+        project::fetch_entry_points()
+    }
+
+    #[zome_fn("hc_public")]
+    fn fetch_members() -> ZomeApiResult<Vec<Member>> {
+        project::fetch_members()
+    }
+
     #[zome_fn("hc_public")]
     fn history_of_goal(address: Address) -> ZomeApiResult<GetHistoryResponse> {
-        goal::history_of_goal(address)
-    }
-    #[zome_fn("hc_public")]
-    fn fetch_agents() -> ZomeApiResult<Vec<Profile>> {
-        profile::fetch_agents()
+        project::history_of_goal(address)
     }
 
     #[zome_fn("hc_public")]
@@ -241,91 +278,91 @@ mod holo_acorn {
         goal: Goal,
         maybe_parent_address: Option<Address>,
     ) -> ZomeApiResult<GoalMaybeWithEdge> {
-        goal::create_goal(goal, maybe_parent_address)
+        project::create_goal(goal, maybe_parent_address)
     }
 
     #[zome_fn("hc_public")]
     fn update_goal(goal: Goal, address: Address) -> ZomeApiResult<GetResponse<Goal>> {
-        goal::update_goal(goal, address)
+        project::update_goal(goal, address)
     }
     #[zome_fn("hc_public")]
     fn update_goal_vote(
         goal_vote: GoalVote,
         address: Address,
     ) -> ZomeApiResult<GetResponse<GoalVote>> {
-        goal::update_goal_vote(goal_vote, address)
+        project::update_goal_vote(goal_vote, address)
     }
     #[zome_fn("hc_public")]
     fn update_goal_comment(
         goal_comment: GoalComment,
         address: Address,
     ) -> ZomeApiResult<GetResponse<GoalComment>> {
-        goal::update_goal_comment(goal_comment, address)
+        project::update_goal_comment(goal_comment, address)
     }
 
     #[zome_fn("hc_public")]
     fn create_edge(edge: Edge) -> ZomeApiResult<GetResponse<Edge>> {
-        goal::create_edge(edge)
+        project::create_edge(edge)
     }
     #[zome_fn("hc_public")]
     fn fetch_goals() -> ZomeApiResult<Vec<GetResponse<Goal>>> {
-        goal::fetch_goals()
+        project::fetch_goals()
     }
 
     #[zome_fn("hc_public")]
     fn fetch_edges() -> ZomeApiResult<Vec<GetResponse<Edge>>> {
-        goal::fetch_edges()
+        project::fetch_edges()
     }
 
     #[zome_fn("hc_public")]
     fn archive_goal(address: Address) -> ZomeApiResult<ArchiveGoalResponse> {
-        goal::archive_goal(address)
+        project::archive_goal(address)
     }
 
     #[zome_fn("hc_public")]
     fn archive_edge(address: Address) -> ZomeApiResult<Address> {
-        goal::archive_edge(address)
+        project::archive_edge(address)
     }
     #[zome_fn("hc_public")]
     fn add_member_of_goal(goal_member: GoalMember) -> ZomeApiResult<GetResponse<GoalMember>> {
-        goal::add_member_of_goal(goal_member)
+        project::add_member_of_goal(goal_member)
     }
 
     #[zome_fn("hc_public")]
     fn add_vote_of_goal(goal_vote: GoalVote) -> ZomeApiResult<GetResponse<GoalVote>> {
-        goal::add_vote_of_goal(goal_vote)
+        project::add_vote_of_goal(goal_vote)
     }
     #[zome_fn("hc_public")]
     fn add_comment_of_goal(goal_comment: GoalComment) -> ZomeApiResult<GetResponse<GoalComment>> {
-        goal::add_comment_of_goal(goal_comment)
+        project::add_comment_of_goal(goal_comment)
     }
     #[zome_fn("hc_public")]
     fn archive_members_of_goal(goal_address: Address) -> ZomeApiResult<Vec<Address>> {
-        goal::archive_members_of_goal(&goal_address)
+        project::archive_members_of_goal(&goal_address)
     }
     #[zome_fn("hc_public")]
     fn archive_member_of_goal(address: Address) -> ZomeApiResult<Address> {
-        goal::archive_member_of_goal(address)
+        project::archive_member_of_goal(address)
     }
     #[zome_fn("hc_public")]
     fn archive_vote_of_goal(address: Address) -> ZomeApiResult<Address> {
-        goal::archive_vote_of_goal(address)
+        project::archive_vote_of_goal(address)
     }
     #[zome_fn("hc_public")]
     fn archive_comment_of_goal(address: Address) -> ZomeApiResult<Address> {
-        goal::archive_comment_of_goal(address)
+        project::archive_comment_of_goal(address)
     }
 
     #[zome_fn("hc_public")]
     fn fetch_goal_members() -> ZomeApiResult<Vec<GetResponse<GoalMember>>> {
-        goal::fetch_goal_members()
+        project::fetch_goal_members()
     }
     #[zome_fn("hc_public")]
     fn fetch_goal_votes() -> ZomeApiResult<Vec<GetResponse<GoalVote>>> {
-        goal::fetch_goal_votes()
+        project::fetch_goal_votes()
     }
     #[zome_fn("hc_public")]
     fn fetch_goal_comments() -> ZomeApiResult<Vec<GetResponse<GoalComment>>> {
-        goal::fetch_goal_comments()
+        project::fetch_goal_comments()
     }
 }
