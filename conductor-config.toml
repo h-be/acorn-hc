@@ -12,14 +12,8 @@ test_agent = true
 
 [[dnas]]
 file = './dnas/profiles/dist/profiles.dna.json'
-hash = 'QmeAyJ8Zw335GH8DGDCNkHRGyeKTv2cddUPkFQNuzHjhD4'
+hash = 'QmdGgs8UFtqyV9ed7offX4znEEdZJ3QXEfUjCjBQ44Dbyv'
 id = 'profiles-dna'
-
-[[dnas]]
-file = './dna/QmZMPCoaitDzF498VjGHDuGz5vq41g1xFMq6KqFgdKoFna.dna.json'
-hash = 'QmZMPCoaitDzF498VjGHDuGz5vq41g1xFMq6KqFgdKoFna'
-id = '_acorn_projects_dna_0.39446223089992405'
-uuid = 'uuid-atrium-dealmaker-chivalry-amniotic-spokesman'
 
 [[instances]]
 agent = 'development-agent'
@@ -29,24 +23,12 @@ id = 'profiles-instance'
 [instances.storage]
 type = 'memory'
 
-[[instances]]
-agent = 'development-agent'
-dna = '_acorn_projects_dna_0.39446223089992405'
-id = '_acorn_projects_instance_0.39446223089992405'
-
-[instances.storage]
-path = './storage/_acorn_projects_instance_0.39446223089992405'
-type = 'lmdb'
-
 [[interfaces]]
 admin = true
 id = 'websocket-interface'
 
 [[interfaces.instances]]
 id = 'profiles-instance'
-
-[[interfaces.instances]]
-id = '_acorn_projects_instance_0.39446223089992405'
 
 [interfaces.driver]
 port = 8888
