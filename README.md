@@ -11,6 +11,7 @@ Before starting up the UI development, start up a Holochain Conductor with the A
 Enter a nix shell:
 
 ```
+nix-shell --run acorn-package
 nix-shell --run acorn-hc
 ```
 
@@ -23,7 +24,7 @@ Leave this terminal open and running, as long as you're doing development.
 To rebuild the DNA that holochain uses to run use the `hc` command:
 
 ```
-nix-shell --run 'hc package -o dist/acorn.dna.json'
+nix-shell --run acorn-package
 ```
 
 Stop the running conductor (ctrl + c) and rerun the above again if you make changes to the DNA.
@@ -34,6 +35,14 @@ To run the tests
 
 ```
 nix-shell --run acorn-test
+```
+
+## Formatting
+
+To format the Rust code of both DNAs
+
+```
+nix-shell --run acorn-fmt
 ```
 
 ## Releasing
