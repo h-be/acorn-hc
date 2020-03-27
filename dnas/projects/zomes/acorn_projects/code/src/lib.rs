@@ -25,8 +25,8 @@ mod anchor;
 mod project;
 
 use project::{
-    GetResponse, ProjectMeta, Member, ArchiveGoalResponse, Edge, GetHistoryResponse, Goal, GoalComment, GoalMaybeWithEdge,
-    GoalMember, GoalVote, EntryPointResponse, EntryPoint
+    ArchiveGoalResponse, Edge, EntryPoint, EntryPointResponse, GetHistoryResponse, GetResponse,
+    Goal, GoalComment, GoalMaybeWithEdge, GoalMember, GoalVote, Member, ProjectMeta,
 };
 //The GetResponse struct allows our zome functions to return an entry along with its
 //address so that Redux can know the address of goals and edges
@@ -236,7 +236,10 @@ mod holo_acorn {
     }
 
     #[zome_fn("hc_public")]
-    fn update_project_meta(projectmeta: ProjectMeta, address: Address) -> ZomeApiResult<GetResponse<ProjectMeta>> {
+    fn update_project_meta(
+        projectmeta: ProjectMeta,
+        address: Address,
+    ) -> ZomeApiResult<GetResponse<ProjectMeta>> {
         project::update_project_meta(projectmeta, address)
     }
 
@@ -259,7 +262,6 @@ mod holo_acorn {
     fn fetch_entry_points() -> ZomeApiResult<Vec<EntryPointResponse>> {
         project::fetch_entry_points()
     }
-
 
     #[zome_fn("hc_public")]
     fn fetch_members() -> ZomeApiResult<Vec<Member>> {

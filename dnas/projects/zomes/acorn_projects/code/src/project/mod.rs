@@ -16,7 +16,10 @@ use hdk::{
         entry::Entry,
         link::LinkMatch,
     },
-    holochain_json_api::{error::JsonError, json::{default_to_json, JsonString},},
+    holochain_json_api::{
+        error::JsonError,
+        json::{default_to_json, JsonString},
+    },
     holochain_persistence_api::cas::content::{Address, AddressableContent},
     prelude::Entry::App,
     // AGENT_ADDRESS, AGENT_ID_STR,
@@ -26,8 +29,9 @@ use serde::Serialize;
 use std::fmt::Debug;
 
 use crate::{
-    signal_ui, DirectMessage, NewMemberSignalPayload, EntryPointSignalPayload, EntryArchivedSignalPayload, GoalArchivedSignalPayload, GoalCommentSignalPayload,
-    GoalMaybeWithEdgeSignalPayload, GoalMemberSignalPayload, GoalVoteSignalPayload,
+    signal_ui, DirectMessage, EntryArchivedSignalPayload, EntryPointSignalPayload,
+    GoalArchivedSignalPayload, GoalCommentSignalPayload, GoalMaybeWithEdgeSignalPayload,
+    GoalMemberSignalPayload, GoalVoteSignalPayload, NewMemberSignalPayload,
 };
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -42,14 +46,13 @@ impl<T: Into<JsonString> + Debug + Serialize> From<GetResponse<T>> for JsonStrin
     }
 }
 
-
 #[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
 pub struct ProjectMeta {
     creator_address: Address,
     created_at: u128,
     name: String,
     image: Option<String>,
-    passphrase: String
+    passphrase: String,
 }
 
 // The "Entry" in EntryPoint is not a reference to Holochain "Entries"
@@ -66,9 +69,8 @@ pub struct EntryPoint {
 pub struct EntryPointResponse {
     entry_point: EntryPoint,
     goal: Goal,
-    entry_point_address: Address
+    entry_point_address: Address,
 }
-
 
 // This is a reference to the agent address for any users who have joined this DHT
 #[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
@@ -169,7 +171,6 @@ pub struct GetHistoryResponse {
     members: Vec<Vec<GoalMember>>,
     address: Address,
 }
-
 
 pub fn projectmeta_def() -> ValidatingEntryType {
     entry!(
@@ -313,7 +314,7 @@ pub fn init() -> Result<(), String> {
         "members".into(),
     );
     let member = Member {
-        address: AGENT_ADDRESS.to_string()
+        address: AGENT_ADDRESS.to_string(),
     };
     let member_entry = Entry::App("member".into(), member.clone().into());
     let member_address = hdk::commit_entry(&member_entry)?;
@@ -371,7 +372,8 @@ fn notify_entry_point(entry_point_response: EntryPointResponse) -> ZomeApiResult
 }
 
 fn notify_entry_point_archived(address: Address) -> ZomeApiResult<()> {
-    let message = DirectMessage::EntryPointArchivedNotification(EntryArchivedSignalPayload { address });
+    let message =
+        DirectMessage::EntryPointArchivedNotification(EntryArchivedSignalPayload { address });
     notify_all(message)
 }
 
@@ -441,7 +443,10 @@ pub fn create_project_meta(projectmeta: ProjectMeta) -> ZomeApiResult<GetRespons
     })
 }
 
-pub fn update_project_meta(projectmeta: ProjectMeta, address: Address) -> ZomeApiResult<GetResponse<ProjectMeta>> {
+pub fn update_project_meta(
+    projectmeta: ProjectMeta,
+    address: Address,
+) -> ZomeApiResult<GetResponse<ProjectMeta>> {
     let projectmeta_entry = Entry::App("projectmeta".into(), projectmeta.clone().into());
     hdk::update_entry(projectmeta_entry, &address)?;
     Ok(GetResponse {
@@ -451,10 +456,7 @@ pub fn update_project_meta(projectmeta: ProjectMeta, address: Address) -> ZomeAp
 }
 
 pub fn fetch_project_meta() -> ZomeApiResult<GetResponse<ProjectMeta>> {
-    let projectmeta_anchor_entry = Entry::App(
-        "anchor".into(),
-        "projectmeta".into(),
-    );
+    let projectmeta_anchor_entry = Entry::App("anchor".into(), "projectmeta".into());
     match hdk::utils::get_links_and_load_type::<ProjectMeta>(
         &projectmeta_anchor_entry.address(),
         LinkMatch::Exactly("anchor->projectmeta"), // the link type to match
@@ -474,7 +476,6 @@ pub fn fetch_project_meta() -> ZomeApiResult<GetResponse<ProjectMeta>> {
 }
 
 pub fn create_entry_point(entry_point: EntryPoint) -> ZomeApiResult<EntryPointResponse> {
-
     // if the goal doesn't exist, this will return an error for this function
     // which is right
     let goal = hdk::utils::get_as_type::<Goal>(entry_point.goal_address.clone())?;
@@ -484,7 +485,7 @@ pub fn create_entry_point(entry_point: EntryPoint) -> ZomeApiResult<EntryPointRe
 
     // link new entry_point to the entry_points anchor
     let anchor_address = Entry::App(
-        "anchor".into(),     // app entry type
+        "anchor".into(),       // app entry type
         "entry_points".into(), // app entry value
     )
     .address();
@@ -513,35 +514,7 @@ pub fn archive_entry_point(address: Address) -> ZomeApiResult<Address> {
 }
 
 pub fn fetch_entry_points() -> ZomeApiResult<Vec<EntryPointResponse>> {
-    let anchor_address = Entry::App(
-        "anchor".into(), // app entry type
-        // app entry value. We'll use the value to specify what this anchor is for
-        "entry_points".into(),
-    )
-    .address();
-
-    let entry_points = hdk::utils::get_links_and_load_type(
-        &anchor_address,
-        LinkMatch::Exactly("anchor->entry_point"), // the link type to match
-        LinkMatch::Any,
-    )?
-    .into_iter()
-    .map(|entry_point: EntryPoint| {
-        let entry_address = Entry::App("entry_point".into(), entry_point.clone().into()).address();
-        match hdk::utils::get_as_type(entry_point.goal_address.clone()) {
-            Ok(goal) => Ok(EntryPointResponse {
-                entry_point: entry_point,
-                goal: goal,
-                entry_point_address: entry_address,
-            }),
-            Err(e) => Err(e),
-        }
-    })
-    .filter_map(Result::ok)
-    .collect();
-
-
-    Ok(entry_points)
+    inner_fetch_entry_points()
 }
 
 pub fn history_of_goal(address: Address) -> ZomeApiResult<GetHistoryResponse> {
@@ -872,6 +845,36 @@ fn inner_fetch_edges() -> ZomeApiResult<Vec<GetResponse<Edge>>> {
         .collect(),
     )
 }
+pub fn inner_fetch_entry_points() -> ZomeApiResult<Vec<EntryPointResponse>> {
+    let anchor_address = Entry::App(
+        "anchor".into(), // app entry type
+        // app entry value. We'll use the value to specify what this anchor is for
+        "entry_points".into(),
+    )
+    .address();
+
+    let entry_points = hdk::utils::get_links_and_load_type(
+        &anchor_address,
+        LinkMatch::Exactly("anchor->entry_point"), // the link type to match
+        LinkMatch::Any,
+    )?
+    .into_iter()
+    .map(|entry_point: EntryPoint| {
+        let entry_address = Entry::App("entry_point".into(), entry_point.clone().into()).address();
+        match hdk::utils::get_as_type(entry_point.goal_address.clone()) {
+            Ok(goal) => Ok(EntryPointResponse {
+                entry_point: entry_point,
+                goal: goal,
+                entry_point_address: entry_address,
+            }),
+            Err(e) => Err(e),
+        }
+    })
+    .filter_map(Result::ok)
+    .collect();
+
+    Ok(entry_points)
+}
 
 pub fn fetch_edges() -> ZomeApiResult<Vec<GetResponse<Edge>>> {
     inner_fetch_edges()
@@ -939,6 +942,22 @@ pub fn archive_goal(address: Address) -> ZomeApiResult<ArchiveGoalResponse> {
         .filter_map(Result::ok)
         .collect(); // returns vec of the goal_member addresses which were removed
                     // return the address of the archived goal for the UI to use
+    let archived_entry_points = inner_fetch_entry_points()?
+        .into_iter()
+        .filter(|entry_point_response: &EntryPointResponse| {
+            entry_point_response.entry_point.goal_address == address
+        })
+        .map(|entry_point_response: EntryPointResponse| {
+            let entry_point_address = entry_point_response.entry_point_address;
+            match hdk::remove_entry(&entry_point_address) {
+                Ok(_) => Ok(entry_point_address),
+                Err(e) => Err(e),
+            }
+        })
+        // filter out errors
+        .filter_map(Result::ok)
+        .collect(); // returns vec of the entry_points addresses which were removed
+                    // return the address of the archived goal for the UI to use
 
     let archive_response = ArchiveGoalResponse {
         address,
@@ -946,6 +965,7 @@ pub fn archive_goal(address: Address) -> ZomeApiResult<ArchiveGoalResponse> {
         archived_goal_members,
         archived_goal_votes,
         archived_goal_comments,
+        archived_entry_points,
     };
     notify_goal_archived(archive_response.clone())?;
 
@@ -1126,7 +1146,6 @@ pub fn fetch_goal_votes() -> ZomeApiResult<Vec<GetResponse<GoalVote>>> {
 pub fn fetch_goal_comments() -> ZomeApiResult<Vec<GetResponse<GoalComment>>> {
     inner_fetch_goal_comments()
 }
-
 
 pub fn fetch_members() -> ZomeApiResult<Vec<Member>> {
     let anchor_address = Entry::App(
