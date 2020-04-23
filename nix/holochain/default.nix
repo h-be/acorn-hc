@@ -4,11 +4,11 @@ let
   ''
   set -euxo pipefail
   # don't error if it doesn't exist to remove
-  rm --force my-conductor-config.toml
-  cp conductor-config.toml my-conductor-config.toml
+  rm --force conductor-config.toml
+  cp starter.conductor-config.toml conductor-config.toml
   hc hash --path dnas/profiles/dist/profiles.dna.json | awk '/DNA Hash: /{print $NF}' | tr -d '\n' > profiles_dna_address
   node update-dna-address.js
-  holochain -c ./my-conductor-config.toml
+  holochain -c ./conductor-config.toml
   '';
 
   acorn-fmt = pkgs.writeShellScriptBin "acorn-fmt"

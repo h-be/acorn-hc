@@ -1,10 +1,8 @@
 bridges = []
 persistence_dir = '.'
-ui_bundles = []
-ui_interfaces = []
 
 [[agents]]
-id = 'development-agent'
+id = 'acorn-profiles-instance-agent'
 keystore_file = 'unused'
 name = 'acorn user'
 public_address = 'HcScIc8G7X769Nr6cnRxgR73wi8au946z7hc46EMDJjaz8au4bD7V6hj7T6B8fa'
@@ -13,26 +11,39 @@ test_agent = true
 [[dnas]]
 file = './dnas/profiles/dist/profiles.dna.json'
 hash = 'QmTT6oSPHNFn4x9ssBM14M1HznLVGjrFKCyBcsTyBudzfg'
-id = 'profiles-dna'
+id = 'acorn-profiles-dna'
 
 [[instances]]
-agent = 'development-agent'
-dna = 'profiles-dna'
-id = 'profiles-instance'
+agent = 'acorn-profiles-instance-agent'
+dna = 'acorn-profiles-dna'
+id = 'acorn-profiles-instance'
 
 [instances.storage]
 type = 'memory'
 
 [[interfaces]]
 admin = true
-id = 'websocket-interface'
+id = 'Acorn-interface'
 
 [[interfaces.instances]]
-id = 'profiles-instance'
+id = 'acorn-profiles-instance'
 
 [interfaces.driver]
 port = 8888
 type = 'websocket'
+
+[[ui_bundles]]
+hash = 'QmTT6oSPHNFn4x9ssBM14M1HznLVGjrFKCyBcsTyBudzfg'
+id = 'dna-connections'
+root_dir = './irrelevant'
+
+[[ui_interfaces]]
+bind_address = '127.0.0.1'
+bundle = 'dna-connections'
+dna_interface = 'Acorn-interface'
+id = 'dna-connections-interface'
+port = 3111
+reroute_to_root = true
 
 [logger]
 state_dump = false
