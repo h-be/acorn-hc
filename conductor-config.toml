@@ -12,7 +12,7 @@ test_agent = true
 
 [[dnas]]
 file = './dnas/profiles/dist/profiles.dna.json'
-hash = 'QmdGgs8UFtqyV9ed7offX4znEEdZJ3QXEfUjCjBQ44Dbyv'
+hash = 'QmTT6oSPHNFn4x9ssBM14M1HznLVGjrFKCyBcsTyBudzfg'
 id = 'profiles-dna'
 
 [[instances]]
