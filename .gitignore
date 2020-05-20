@@ -9,3 +9,4 @@ storage
 .cargo
 **/.DS_Store
 .prettierrc
+.vscode
