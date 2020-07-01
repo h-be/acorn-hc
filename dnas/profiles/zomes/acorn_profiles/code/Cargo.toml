@@ -1,6 +1,6 @@
 [package]
 name = "acorn_profiles"
-version = "0.3.2"
+version = "0.3.4"
 authors = ["hc-scaffold-framework"]
 edition = "2018"
 

@@ -2,7 +2,7 @@
 # It is not intended for manual editing.
 [[package]]
 name = "acorn_profiles"
-version = "0.3.2"
+version = "0.3.4"
 dependencies = [
  "hdk 0.0.47-alpha1 (registry+https://github.com/rust-lang/crates.io-index)",
  "hdk_proc_macros 0.0.47-alpha1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -15,7 +15,7 @@ dependencies = [
 
 [[package]]
 name = "acorn_projects"
-version = "0.3.2"
+version = "0.3.4"
 dependencies = [
  "hdk 0.0.47-alpha1 (registry+https://github.com/rust-lang/crates.io-index)",
  "hdk_proc_macros 0.0.47-alpha1 (registry+https://github.com/rust-lang/crates.io-index)",
