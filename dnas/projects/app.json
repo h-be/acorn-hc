@@ -10,5 +10,7 @@
   ],
   "version": "0.1.0",
   "dht": {},
-  "properties": null
+  "properties": {
+      "sim2h_url": "ws://sim2h.harris-braun.com:9051/"
+  }
 }
