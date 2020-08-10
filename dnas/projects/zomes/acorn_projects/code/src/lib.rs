@@ -26,7 +26,7 @@ mod project;
 
 use project::{
   ArchiveGoalResponse, Edge, EntryPoint, EntryPointResponse, GetHistoryResponse, GetResponse, Goal,
-  GoalComment, GoalMaybeWithEdge, GoalMember, GoalVote, Member, ProjectMeta,
+  GoalComment, GoalMaybeWithEdge, GoalMember, GoalVote, Member, ProjectMeta, GoalEdgeInput,
 };
 //The GetResponse struct allows our zome functions to return an entry along with its
 //address so that Redux can know the address of goals and edges
@@ -293,9 +293,9 @@ mod holo_acorn {
   #[zome_fn("hc_public")]
   fn create_goal(
     goal: Goal,
-    maybe_parent_address: Option<Address>,
+    maybe_goal_edge_input: Option<GoalEdgeInput>,
   ) -> ZomeApiResult<GoalMaybeWithEdge> {
-    project::create_goal(goal, maybe_parent_address)
+    project::create_goal(goal, maybe_goal_edge_input)
   }
 
   #[zome_fn("hc_public")]

@@ -136,7 +136,7 @@ orchestrator.registerScenario('create goal test', async (s, t) => {
       status: 'Uncertain',
       description: ''
     },
-    maybe_parent_address: null
+    maybe_goal_edge_input: null
   })
 
   // Wait for all network activity to
@@ -185,7 +185,7 @@ orchestrator.registerScenario(
         status: 'Uncertain',
         description: ''
       },
-      maybe_parent_address: null
+      maybe_goal_edge_input: null
     })
     await s.consistency()
     const addr2 = await alice.call(
@@ -201,7 +201,7 @@ orchestrator.registerScenario(
           status: 'Uncertain',
           description: ''
         },
-        maybe_parent_address: null
+        maybe_goal_edge_input: null
       }
     )
     await s.consistency()
@@ -297,7 +297,7 @@ orchestrator.registerScenario('create goal test', async (s, t) => {
       status: 'Uncertain',
       description: ''
     },
-    maybe_parent_address: null
+    maybe_goal_edge_input: null
   })
 
   // Wait for all network activity to
@@ -413,7 +413,7 @@ orchestrator.registerScenario(
         status: 'Uncertain',
         description: ''
       },
-      maybe_parent_address: null
+      maybe_goal_edge_input: null
     })
 
     const goal2 = await bob.call('projects', 'acorn_projects', 'create_goal', {
@@ -429,7 +429,10 @@ orchestrator.registerScenario(
           to_date: Date.parse('Aug 9, 2020')
         }
       },
-      maybe_parent_address: goal.Ok.goal.address
+      maybe_goal_edge_input: {
+        parent_address: goal.Ok.goal.address,
+        randomizer: Date.now()
+      }
     })
 
     // Wait for all network activity to
@@ -604,7 +607,7 @@ orchestrator.registerScenario(
           status: 'Uncertain',
           description: ''
         },
-        maybe_parent_address: null
+        maybe_goal_edge_input: null
       }
     )
     await s.consistency()
@@ -663,7 +666,7 @@ orchestrator.registerScenario('alex and alice are commenting', async (s, t) => {
       status: 'Uncertain',
       description: ''
     },
-    maybe_parent_address: null
+    maybe_goal_edge_input: null
   })
   const comment1 = await alice.call(
     'projects',
