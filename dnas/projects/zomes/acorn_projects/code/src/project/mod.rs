@@ -35,6 +35,12 @@ use crate::{
   GoalMemberSignalPayload, GoalVoteSignalPayload, NewMemberSignalPayload,
 };
 
+#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
+pub struct GoalEdgeInput {
+  parent_address: Address,
+  randomizer: u128,
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct GetResponse<T> {
   pub entry: T,
@@ -111,6 +117,7 @@ pub struct GoalComment {
 pub struct Edge {
   parent_address: Address,
   child_address: Address,
+  randomizer: u128,
 }
 
 #[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
@@ -612,7 +619,7 @@ pub fn history_of_goal(address: Address) -> ZomeApiResult<GetHistoryResponse> {
 
 pub fn create_goal(
   goal: Goal,
-  maybe_parent_address: Option<Address>,
+  maybe_goal_edge_input: Option<GoalEdgeInput>,
 ) -> ZomeApiResult<GoalMaybeWithEdge> {
   let app_entry = Entry::App("goal".into(), goal.clone().into());
   let entry_address = hdk::commit_entry(&app_entry)?;
@@ -627,11 +634,12 @@ pub fn create_goal(
   hdk::link_entries(&anchor_address, &app_entry.address(), "anchor->goal", "")?;
 
   // if a parent address was provided, link the goal with its parent
-  let maybe_edge = match maybe_parent_address {
-    Some(parent_address) => {
+  let maybe_edge = match maybe_goal_edge_input {
+    Some(goal_edge_input) => {
       let edge: Edge = Edge {
-        parent_address: parent_address,
+        parent_address: goal_edge_input.parent_address,
         child_address: entry_address.clone(),
+        randomizer: goal_edge_input.randomizer,
       };
       let edge_address = inner_create_edge(&edge)?;
       Some(GetResponse {
