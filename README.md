@@ -50,6 +50,7 @@ nix-shell --run acorn-fmt
 ## Releasing
 
 Edit the `version.current` of the `config.nix` file, and set it to the desired version number of the release.
+Also edit the `version` property of `dnas/projects/zomes/acorn_projects/code/Cargo.toml` and `dnas/profiles/zomes/acorn_profiles/code/Cargo.toml`, and then run `nix-shell --run acorn-package` so that the `Cargo.lock` file is updated as well. 
 
 > TODO: notes about CHANGELOG.md and CHANGELOG-UNRELEASED.md
 
