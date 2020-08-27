@@ -1,6 +1,6 @@
 [workspace]
 
 members = [
-  "dnas/projects/zomes/acorn_projects/code",
-  "dnas/profiles/zomes/acorn_profiles/code",
+  "dnas/profiles/zomes/acorn_profiles",
+  # "dnas/projects/zomes/acorn_projects",
 ]

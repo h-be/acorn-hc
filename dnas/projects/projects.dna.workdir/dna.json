@@ -1,0 +1,10 @@
+{
+  "name": "projects",
+  "uuid": "",
+  "properties": null,
+  "zomes": {
+    "acorn_projects": {
+      "wasm_path": "../../../target/wasm32-unknown-unknown/release/acorn_projects.wasm"
+    }
+  }
+}

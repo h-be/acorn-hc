@@ -1,0 +1,10 @@
+{
+  "name": "profiles",
+  "uuid": "",
+  "properties": null,
+  "zomes": {
+    "acorn_profiles": {
+      "wasm_path": "../../../target/wasm32-unknown-unknown/release/acorn_profiles.wasm"
+    }
+  }
+}

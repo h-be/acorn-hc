@@ -1,0 +1,12 @@
+[package]
+name = "acorn_profiles"
+version = "0.3.6"
+edition = "2018"
+
+[dependencies]
+serde = "=1.0.104"
+hdk3 = { path = "../../../../../holochain/crates/hdk" }
+
+[lib]
+path = "src/lib.rs"
+crate-type = ["cdylib"]
