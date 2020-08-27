@@ -2,7 +2,7 @@ use hdk3::prelude::*;
 
 mod profile;
 use crate::profile::{
-    AgentsOutput, Profile, ProfileResponse, UpdateStatusInput, UpdateWhoAmIInput,
+    AgentsOutput, Profile, ProfileResponse, UpdateWhoAmIInput,
     WhoAmIOutput, AGENTS_PATH,
 };
 
@@ -17,11 +17,6 @@ entry_defs![Path::entry_def(), Profile::entry_def()];
 #[hdk_extern]
 fn create_whoami(profile: Profile) -> ExternResult<ProfileResponse> {
     profile::create_whoami(profile)
-}
-
-#[hdk_extern]
-fn update_status(update_status_input: UpdateStatusInput) -> ExternResult<ProfileResponse> {
-    profile::update_status(update_status_input)
 }
 
 #[hdk_extern]

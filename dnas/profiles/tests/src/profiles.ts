@@ -77,23 +77,6 @@ module.exports = (orchestrator) => {
 
     await delay(2000)
 
-    // UPDATE STATUS
-    const update_status = await conductor.call(
-      'bobbo',
-      'acorn_profiles',
-      'update_status',
-      {
-        status: 'Away',
-      }
-    )
-    console.log(update_status)
-    t.deepEqual(update_status.entry, {
-      ...profile2,
-      status: 'Away',
-    })
-
-    await delay(2000)
-
     // WHOAMI
     const whoami2 = await conductor.call(
       'bobbo',
@@ -104,7 +87,7 @@ module.exports = (orchestrator) => {
     console.log(whoami2)
     t.deepEqual(whoami2.entry, {
       ...profile2,
-      status: 'Away',
+      status: 'Offline',
     })
   })
 }

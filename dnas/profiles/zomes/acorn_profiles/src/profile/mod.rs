@@ -115,30 +115,6 @@ pub fn update_whoami(update_who_am_i: UpdateWhoAmIInput) -> ExternResult<Profile
 }
 
 #[derive(Serialize, Deserialize, SerializedBytes)]
-pub struct UpdateStatusInput {
-    status: String,
-}
-pub fn update_status(update_status_input: UpdateStatusInput) -> ExternResult<ProfileResponse> {
-    match whoami()?.0 {
-        Some(ProfileResponse { entry, address }) => update_whoami(UpdateWhoAmIInput {
-            profile: Profile {
-                first_name: entry.first_name,
-                last_name: entry.last_name,
-                handle: entry.handle,
-                avatar_url: entry.avatar_url,
-                address: entry.address,
-                status: Status::from(update_status_input.status),
-                // ..entry
-            },
-            address,
-        }),
-        _ => Err(WasmError::Zome(
-            "Could not retrieve the agent profile".into(),
-        )),
-    }
-}
-
-#[derive(Serialize, Deserialize, SerializedBytes)]
 pub struct WhoAmIOutput(Option<ProfileResponse>);
 
 fn get_latest_for_entry(entry_address: EntryHash) -> ExternResult<Option<(Entry, HeaderHash)>> {
@@ -150,28 +126,31 @@ fn get_latest_for_entry(entry_address: EntryHash) -> ExternResult<Option<(Entry,
             // I DUNNO, is the LAST one the most recent one?
             // How are they sorted?
             _ => {
-              let mut sortlist = details.updates.to_vec();
-              // unix timestamp should work for sorting
-              // ascending or descending?
-              sortlist.sort_by_key(|header| header.timestamp.0);
-              // debug!(sortlist);
-              let _ = debug!(sortlist.len());
-              Some(sortlist.first().unwrap().entry_hash.clone())
-            },
+                let mut sortlist = details.updates.to_vec();
+                // unix timestamp should work for sorting
+                // ascending or descending?
+                sortlist.sort_by_key(|header| header.timestamp.0);
+                // debug!(sortlist);
+                let _ = debug!(sortlist.len());
+                Some(sortlist.first().unwrap().entry_hash.clone())
+            }
         },
         _ => None,
     };
-    
+
     // Second, go and get that entry, and return it and its header_address
     match maybe_latest_entry_address {
-      Some(latest_entry_address) => match get!(latest_entry_address)? {
-        Some(element) => match element.entry().as_option() {
-          Some(entry) => Ok(Some((entry.to_owned(), element.header_address().to_owned()))),
-          None => Ok(None)
+        Some(latest_entry_address) => match get!(latest_entry_address)? {
+            Some(element) => match element.entry().as_option() {
+                Some(entry) => Ok(Some((
+                    entry.to_owned(),
+                    element.header_address().to_owned(),
+                ))),
+                None => Ok(None),
+            },
+            None => Ok(None),
         },
-        None => Ok(None)
-      },
-      None => Ok(None)
+        None => Ok(None),
     }
 }
 
