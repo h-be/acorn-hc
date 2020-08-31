@@ -99,7 +99,7 @@ module.exports = (orchestrator) => {
       avatar_url: 'test',
       address: '123123',
     }
-    const update_whoami2 = await conductor.call(
+    await conductor.call(
       'bobbo',
       'acorn_profiles',
       'update_whoami',
