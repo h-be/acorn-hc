@@ -89,5 +89,32 @@ module.exports = (orchestrator) => {
       ...profile2,
       status: 'Offline',
     })
+
+    // UPDATE WHOAMI Again
+    const profile3 = {
+      first_name: 'c',
+      last_name: 't',
+      handle: 'ct',
+      status: 'Away',
+      avatar_url: 'test',
+      address: '123123',
+    }
+    const update_whoami2 = await conductor.call(
+      'bobbo',
+      'acorn_profiles',
+      'update_whoami',
+      {
+        profile: profile3,
+        address: create_whoami.address,
+      }
+    )
+    await delay(2000)
+    const whoami3 = await conductor.call(
+      'bobbo',
+      'acorn_profiles',
+      'whoami',
+      null
+    )
+    t.deepEqual(whoami3.entry, profile3)
   })
 }

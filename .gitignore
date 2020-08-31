@@ -1,3 +1,5 @@
+**/*.dna.gz
+
 conductor-config.toml
 profiles_dna_address
 dna

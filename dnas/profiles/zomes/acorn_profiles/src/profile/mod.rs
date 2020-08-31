@@ -68,7 +68,7 @@ pub struct Profile {
     handle: String,
     status: Status,
     avatar_url: String,
-    pub address: String,
+    address: String,
 }
 
 pub fn create_whoami(profile: Profile) -> ExternResult<ProfileResponse> {
@@ -122,17 +122,12 @@ fn get_latest_for_entry(entry_address: EntryHash) -> ExternResult<Option<(Entry,
     let maybe_latest_entry_address = match get_details!(entry_address.clone())? {
         Some(Details::Entry(details)) => match details.updates.len() {
             0 => Some(entry_address),
-            // at least 1 update, get the LAST one
-            // I DUNNO, is the LAST one the most recent one?
-            // How are they sorted?
             _ => {
                 let mut sortlist = details.updates.to_vec();
                 // unix timestamp should work for sorting
-                // ascending or descending?
                 sortlist.sort_by_key(|header| header.timestamp.0);
-                // debug!(sortlist);
-                let _ = debug!(sortlist.len());
-                Some(sortlist.first().unwrap().entry_hash.clone())
+                // sorts in ascending order, so take the last element
+                Some(sortlist.last().unwrap().entry_hash.clone())
             }
         },
         _ => None,
