@@ -71,6 +71,15 @@ pub struct Profile {
     address: String,
 }
 
+#[hdk_extern]
+fn validate(_: Entry) -> ExternResult<ValidateCallbackResult> {
+  // HOLD
+  // have to hold on this until we get more than entry in the validation callback
+  // which will come soon, according to David M.
+  let _ = debug!("in validation callback");
+    Ok(ValidateCallbackResult::Valid)
+}
+
 pub fn create_whoami(profile: Profile) -> ExternResult<ProfileResponse> {
     // // send update to peers
     // // notify_new_agent(profile.clone())?;

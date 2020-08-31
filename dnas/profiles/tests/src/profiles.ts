@@ -5,10 +5,13 @@ const delay = (ms) => new Promise((r) => setTimeout(r, ms))
 
 // Configure a conductor with two identical DNAs,
 // differentiated by UUID, nicknamed "alice" and "bobbo"
-const config = Config.gen({
-  alice: Config.dna('../profiles.dna.gz', null),
-  bobbo: Config.dna('../profiles.dna.gz', null),
-})
+const config = Config.gen(
+  {
+    alice: Config.dna('../profiles.dna.gz', null),
+    bobbo: Config.dna('../profiles.dna.gz', null),
+  }
+  // { logger: Config.logger(true) }
+)
 
 module.exports = (orchestrator) => {
   orchestrator.registerScenario('profiles test', async (s, t) => {
@@ -99,15 +102,10 @@ module.exports = (orchestrator) => {
       avatar_url: 'test',
       address: '123123',
     }
-    await conductor.call(
-      'bobbo',
-      'acorn_profiles',
-      'update_whoami',
-      {
-        profile: profile3,
-        address: create_whoami.address,
-      }
-    )
+    await conductor.call('bobbo', 'acorn_profiles', 'update_whoami', {
+      profile: profile3,
+      address: create_whoami.address,
+    })
     await delay(2000)
     const whoami3 = await conductor.call(
       'bobbo',
