@@ -4,11 +4,39 @@ use dna_help::get_latest_for_entry;
 
 pub const AGENTS_PATH: &str = "agents";
 
+#[hdk_entry(id = "profile")]
+#[derive(Clone, PartialEq, Constructor)]
+pub struct Profile {
+    first_name: String,
+    last_name: String,
+    handle: String,
+    status: Status,
+    avatar_url: String,
+    address: String,
+}
+
 #[derive(Serialize, Deserialize, SerializedBytes)]
 pub struct ProfileResponse {
     pub entry: Profile,
     pub address: HeaderHash,
 }
+
+#[derive(Serialize, Deserialize, SerializedBytes)]
+pub struct UpdateWhoAmIInput {
+    profile: Profile,
+    address: HeaderHash,
+}
+
+#[derive(Serialize, Deserialize, SerializedBytes)]
+struct AgentAddressOutput(String);
+
+#[derive(Serialize, Deserialize, SerializedBytes)]
+pub struct AgentsOutput(Vec<Profile>);
+
+#[derive(Serialize, Deserialize, SerializedBytes)]
+pub struct WhoAmIOutput(Option<ProfileResponse>);
+
+struct GetError(());
 
 #[derive(SerializedBytes, Debug, Clone, PartialEq)]
 pub enum Status {
@@ -62,17 +90,6 @@ impl<'de> Deserialize<'de> for Status {
     }
 }
 
-#[hdk_entry(id = "profile")]
-#[derive(Clone, PartialEq, Constructor)]
-pub struct Profile {
-    first_name: String,
-    last_name: String,
-    handle: String,
-    status: Status,
-    avatar_url: String,
-    address: String,
-}
-
 #[hdk_extern]
 fn validate(_: Entry) -> ExternResult<ValidateCallbackResult> {
     // HOLD
@@ -82,6 +99,7 @@ fn validate(_: Entry) -> ExternResult<ValidateCallbackResult> {
     Ok(ValidateCallbackResult::Valid)
 }
 
+#[hdk_extern]
 pub fn create_whoami(profile: Profile) -> ExternResult<ProfileResponse> {
     // // send update to peers
     // // notify_new_agent(profile.clone())?;
@@ -106,11 +124,7 @@ pub fn create_whoami(profile: Profile) -> ExternResult<ProfileResponse> {
     })
 }
 
-#[derive(Serialize, Deserialize, SerializedBytes)]
-pub struct UpdateWhoAmIInput {
-    profile: Profile,
-    address: HeaderHash,
-}
+#[hdk_extern]
 pub fn update_whoami(update_who_am_i: UpdateWhoAmIInput) -> ExternResult<ProfileResponse> {
     update_entry!(
         update_who_am_i.address.clone(),
@@ -125,10 +139,8 @@ pub fn update_whoami(update_who_am_i: UpdateWhoAmIInput) -> ExternResult<Profile
     })
 }
 
-#[derive(Serialize, Deserialize, SerializedBytes)]
-pub struct WhoAmIOutput(Option<ProfileResponse>);
-
-pub fn whoami() -> ExternResult<WhoAmIOutput> {
+#[hdk_extern]
+pub fn whoami(_: ()) -> ExternResult<WhoAmIOutput> {
     let agent_pubkey = agent_info!()?.agent_initial_pubkey;
     let agent_entry_hash = EntryHash::from(agent_pubkey);
 
@@ -150,12 +162,10 @@ pub fn whoami() -> ExternResult<WhoAmIOutput> {
     }
 }
 
-#[derive(Serialize, Deserialize, SerializedBytes)]
-pub struct AgentsOutput(Vec<Profile>);
 
-struct GetError(());
 
-pub fn fetch_agents() -> ExternResult<AgentsOutput> {
+#[hdk_extern]
+pub fn fetch_agents(_: ()) -> ExternResult<AgentsOutput> {
     let agents_path_address = Path::from(AGENTS_PATH).hash()?;
     let links = get_links!(agents_path_address)?;
     let agents = links
@@ -174,6 +184,12 @@ pub fn fetch_agents() -> ExternResult<AgentsOutput> {
         // return all the Profile objects from the entries linked to the profiles anchor (drop entries with wrong type)
         AgentsOutput(agents),
     )
+}
+
+#[hdk_extern]
+fn fetch_agent_address(_: ()) -> ExternResult<AgentAddressOutput> {
+    let agent_info = agent_info!()?;
+    Ok(AgentAddressOutput(agent_info.agent_initial_pubkey.to_string()))
 }
 
 // pub fn profile_def() -> ValidatingEntryType {

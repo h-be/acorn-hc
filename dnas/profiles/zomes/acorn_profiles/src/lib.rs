@@ -1,9 +1,9 @@
 use hdk3::prelude::*;
 
 mod profile;
-use crate::profile::{
-    AgentsOutput, Profile, ProfileResponse, UpdateWhoAmIInput,
-    WhoAmIOutput, AGENTS_PATH,
+
+use profile::{
+    Profile, AGENTS_PATH,
 };
 
 #[hdk_extern]
@@ -14,35 +14,6 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
 
 entry_defs![Path::entry_def(), Profile::entry_def()];
 
-#[hdk_extern]
-fn create_whoami(profile: Profile) -> ExternResult<ProfileResponse> {
-    profile::create_whoami(profile)
-}
-
-#[hdk_extern]
-fn update_whoami(who_am_i_input: UpdateWhoAmIInput) -> ExternResult<ProfileResponse> {
-    profile::update_whoami(who_am_i_input)
-}
-
-#[hdk_extern]
-fn whoami(_: ()) -> ExternResult<WhoAmIOutput> {
-    profile::whoami()
-}
-
-#[derive(Serialize, Deserialize, SerializedBytes)]
-struct AgentAddressOutput(String);
-
-// fn fetch_agent_address(_: ()) -> ExternResult<AgentPubKey> {
-#[hdk_extern]
-fn fetch_agent_address(_: ()) -> ExternResult<AgentAddressOutput> {
-    let agent_info = agent_info!()?;
-    Ok(AgentAddressOutput(agent_info.agent_initial_pubkey.to_string()))
-}
-
-#[hdk_extern]
-fn fetch_agents(_: ()) -> ExternResult<AgentsOutput> {
-    profile::fetch_agents()
-}
 
 // The GetResponse struct allows our zome functions to return an entry along with its
 // address so that Redux can know the address of goals and edges

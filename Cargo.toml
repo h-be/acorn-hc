@@ -3,5 +3,5 @@
 members = [
   "crates/dna_help",
   "dnas/profiles/zomes/acorn_profiles",
-  # "dnas/projects/zomes/acorn_projects",
+  "dnas/projects/zomes/acorn_projects",
 ]

@@ -1,59 +1,12 @@
-extern crate hdk;
-extern crate hdk_proc_macros;
-extern crate serde;
+use hdk3::prelude::*;
 
-extern crate serde_derive;
-extern crate serde_json;
 
-extern crate holochain_json_derive;
+/*
+  ENTRY TYPES
+*/
 
-use hdk::{
-  entry_definition::ValidatingEntryType,
-  error::{ZomeApiError, ZomeApiResult},
-  holochain_core_types::{
-    // agent::AgentId, dna::entry_types::Sharing, entry::Entry, link::LinkMatch,
-    dna::entry_types::Sharing,
-    entry::Entry,
-    link::LinkMatch,
-  },
-  holochain_json_api::{
-    error::JsonError,
-    json::{default_to_json, JsonString},
-  },
-  holochain_persistence_api::cas::content::{Address, AddressableContent},
-  prelude::Entry::App,
-  // AGENT_ADDRESS, AGENT_ID_STR,
-  AGENT_ADDRESS,
-};
-use serde::Serialize;
-use std::fmt::Debug;
-
-// add signal_ui in to send messages to self
-use crate::{
-  DirectMessage, EdgeSignalPayload, EntryArchivedSignalPayload, EntryPointSignalPayload,
-  GoalArchivedSignalPayload, GoalCommentSignalPayload, GoalMaybeWithEdgeSignalPayload,
-  GoalMemberSignalPayload, GoalVoteSignalPayload, NewMemberSignalPayload,
-};
-
-#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
-pub struct GoalEdgeInput {
-  parent_address: Address,
-  randomizer: u128,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub struct GetResponse<T> {
-  pub entry: T,
-  pub address: Address,
-}
-
-impl<T: Into<JsonString> + Debug + Serialize> From<GetResponse<T>> for JsonString {
-  fn from(u: GetResponse<T>) -> JsonString {
-    default_to_json(u)
-  }
-}
-
-#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
+#[hdk_entry(id = "project_meta")]
+#[derive(Debug, SerializedBytes, Clone, PartialEq)]
 pub struct ProjectMeta {
   creator_address: Address,
   created_at: u128,
@@ -64,7 +17,8 @@ pub struct ProjectMeta {
 
 // The "Entry" in EntryPoint is not a reference to Holochain "Entries"
 // it is rather the concept of an Entrance, as in a doorway, to the tree
-#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
+#[hdk_entry(id = "entry_point")]
+#[derive(Debug, SerializedBytes, Clone, PartialEq)]
 pub struct EntryPoint {
   color: String,
   creator_address: Address,
@@ -72,28 +26,25 @@ pub struct EntryPoint {
   goal_address: Address,
 }
 
-#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
-pub struct EntryPointResponse {
-  entry_point: EntryPoint,
-  goal: Goal,
-  entry_point_address: Address,
-}
-
 // This is a reference to the agent address for any users who have joined this DHT
-#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
+#[hdk_entry(id = "member")]
+#[derive(Debug, SerializedBytes, Clone, PartialEq)]
 pub struct Member {
   pub address: String,
 }
 
 // a relationship between a Goal and an Agent
-#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
+#[hdk_entry(id = "goal_member")]
+#[derive(Debug, SerializedBytes, Clone, PartialEq)]
 pub struct GoalMember {
   goal_address: Address,
   agent_address: Address,
   user_edit_hash: Option<Address>,
   unix_timestamp: u128,
 }
-#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
+
+#[hdk_entry(id = "goal_vote")]
+#[derive(Debug, SerializedBytes, Clone, PartialEq)]
 pub struct GoalVote {
   goal_address: Address,
   urgency: f32,
@@ -103,7 +54,10 @@ pub struct GoalVote {
   agent_address: Address,
   unix_timestamp: u128,
 }
-#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
+
+
+#[hdk_entry(id = "goal_comment")]
+#[derive(Debug, SerializedBytes, Clone, PartialEq)]
 pub struct GoalComment {
   goal_address: Address,
   content: String,
@@ -113,40 +67,20 @@ pub struct GoalComment {
 
 // An edge. This is an arrow on the SoA Tree which directionally links
 // two goals.
-#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
+#[hdk_entry(id = "edge")]
+#[derive(Debug, SerializedBytes, Clone, PartialEq)]
 pub struct Edge {
   parent_address: Address,
   child_address: Address,
   randomizer: u128,
 }
 
-#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
-pub enum Status {
-  Uncertain,
-  Incomplete,
-  InProcess,
-  Complete,
-  InReview,
-}
-
-#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
-pub enum Hierarchy {
-  Root,
-  Trunk,
-  Branch,
-  Leaf,
-  NoHierarchy,
-}
-#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
-pub struct TimeFrame {
-  from_date: u128,
-  to_date: u128,
-}
 
 // A Goal Card. This is a card on the SoA Tree which can be small or non-small, complete or
 // incomplete, certain or uncertain, and contains text content.
 // user hash and unix timestamp are included to prevent hash collisions.
-#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
+#[hdk_entry(id = "goal")]
+#[derive(Debug, SerializedBytes, Clone, PartialEq)]
 pub struct Goal {
   content: String,
   user_hash: Address,
@@ -159,13 +93,72 @@ pub struct Goal {
   description: String,
   time_frame: Option<TimeFrame>,
 }
-#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
+
+/*
+
+  END ENTRY TYPES
+
+*/
+
+
+#[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone, PartialEq)]
+pub struct GoalEdgeInput {
+  parent_address: Address,
+  randomizer: u128,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, SerializedBytes)]
+pub struct GetResponse<T> {
+  pub entry: T,
+  pub address: Address,
+}
+
+#[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone, PartialEq)]
+pub struct EntryPointResponse {
+  entry_point: EntryPoint,
+  goal: Goal,
+  entry_point_address: Address,
+}
+
+
+/* 
+  substructures of a Goal
+*/
+#[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone, PartialEq)]
+pub enum Status {
+  Uncertain,
+  Incomplete,
+  InProcess,
+  Complete,
+  InReview,
+}
+
+#[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone, PartialEq)]
+pub enum Hierarchy {
+  Root,
+  Trunk,
+  Branch,
+  Leaf,
+  NoHierarchy,
+}
+#[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone, PartialEq)]
+pub struct TimeFrame {
+  from_date: u128,
+  to_date: u128,
+}
+/*
+
+  end substructures of a Goal
+
+  */
+
+#[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone, PartialEq)]
 pub struct GoalMaybeWithEdge {
   goal: GetResponse<Goal>,
   maybe_edge: Option<GetResponse<Edge>>,
 }
 
-#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone, PartialEq)]
 pub struct ArchiveGoalResponse {
   address: Address,
   archived_edges: Vec<Address>,
@@ -174,147 +167,13 @@ pub struct ArchiveGoalResponse {
   archived_goal_comments: Vec<Address>,
   archived_entry_points: Vec<Address>,
 }
-#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
+#[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone)]
 pub struct GetHistoryResponse {
   entries: Vec<Goal>,
   members: Vec<Vec<GoalMember>>,
   address: Address,
 }
 
-pub fn projectmeta_def() -> ValidatingEntryType {
-  entry!(
-      name: "projectmeta",
-      description: "this stores metadata about this DNA, like its secret passphrase, name, and image",
-      sharing: Sharing::Public,
-      validation_package: || {
-          hdk::ValidationPackageDefinition::Entry
-      },
-      validation: | _validation_data: hdk::EntryValidationData<ProjectMeta>| {
-          Ok(())
-      }
-  )
-}
-
-pub fn entry_point_def() -> ValidatingEntryType {
-  entry!(
-      name: "entry_point",
-      description: "this stores a reference to a Goal which forms an entrance way into the tree",
-      sharing: Sharing::Public,
-      validation_package: || {
-          hdk::ValidationPackageDefinition::Entry
-      },
-      validation: | _validation_data: hdk::EntryValidationData<EntryPoint>| {
-          // should validate that the Goal exists
-          Ok(())
-      }
-  )
-}
-
-pub fn member_def() -> ValidatingEntryType {
-  entry!(
-      name: "member",
-      description: "this represents the presence of an agent within this DHT, and provides a key for looking up their profile info from another registry",
-      sharing: Sharing::Public,
-      validation_package: || {
-          hdk::ValidationPackageDefinition::Entry
-      },
-      validation: | _validation_data: hdk::EntryValidationData<Member>| {
-          Ok(())
-      }
-  )
-}
-
-//The GetResponse struct allows our zome functions to return an entry along with its
-//address so that Redux can know the address of goals and edges
-pub fn edge_def() -> ValidatingEntryType {
-  entry!(
-      name: "edge",
-      description: "this is an entry representing a edge",
-      sharing: Sharing::Public,
-      validation_package: || {
-          hdk::ValidationPackageDefinition::Entry
-      },
-      validation: | _validation_data: hdk::EntryValidationData<Edge>| {
-          Ok(())
-      }
-  )
-}
-
-pub fn goal_def() -> ValidatingEntryType {
-  entry!(
-      name: "goal",
-      description: "this is an entry representing a goal",
-      sharing: Sharing::Public,
-      validation_package: || {
-          hdk::ValidationPackageDefinition::Entry
-      },
-      validation: | _validation_data: hdk::EntryValidationData<Goal>| {
-           Ok(())
-      }
-  )
-}
-pub fn goal_comment_def() -> ValidatingEntryType {
-  entry!(
-      name: "goal_comment",
-      description: "this is an entry representing a goal",
-      sharing: Sharing::Public,
-      validation_package: || {
-          hdk::ValidationPackageDefinition::Entry
-      },
-      validation: | validation_data: hdk::EntryValidationData<GoalComment>| {
-          match validation_data{
-              hdk::EntryValidationData::Create{entry,validation_data}=>{
-                  let agent_address = &validation_data.sources()[0];
-                  if entry.agent_address.to_string()!=agent_address.to_string() {
-                      Err("only the same agent making a comment can make it in their name".into())
-                  }else {Ok(())}
-              },
-              hdk::EntryValidationData::Modify{
-                  new_entry,
-                  old_entry,validation_data,..}=>{
-                  let agent_address = &validation_data.sources()[0];
-
-                  if new_entry.agent_address.to_string()!=agent_address.to_string()&& old_entry.agent_address.to_string()!=agent_address.to_string(){
-                      Err("an agent can only update their own comment".into())
-                  }else {Ok(())}
-              },
-              hdk::EntryValidationData::Delete{old_entry,validation_data,..}=>{
-                  let agent_address = &validation_data.sources()[0];
-                  if old_entry.agent_address.to_string()!=agent_address.to_string() {
-                      Err("an agent can only delete their own comment".into())
-                  }else {Ok(())}
-              }
-          }
-      }
-  )
-}
-
-pub fn goal_member_def() -> ValidatingEntryType {
-  entry!(
-      name: "goal_member",
-      description: "this is an entry representing a connection from a Goal to an Agent",
-      sharing: Sharing::Public,
-      validation_package: || {
-          hdk::ValidationPackageDefinition::Entry
-      },
-      validation: | _validation_data: hdk::EntryValidationData<GoalMember>| {
-          Ok(())
-      }
-  )
-}
-pub fn goal_vote_def() -> ValidatingEntryType {
-  entry!(
-      name: "goal_vote",
-      description: "this is an entry representing a connection from a Goal to an Vote (priority)",
-      sharing: Sharing::Public,
-      validation_package: || {
-          hdk::ValidationPackageDefinition::Entry
-      },
-      validation: | _validation_data: hdk::EntryValidationData<GoalVote>| {
-          Ok(())
-      }
-  )
-}
 
 pub fn init() -> Result<(), String> {
   let members_anchor_entry = Entry::App(
@@ -335,113 +194,13 @@ pub fn init() -> Result<(), String> {
   )?;
 
   // send update to peers
-  notify_member(member.clone())?;
+  // notify_member(member.clone())?;
   Ok(())
 }
 
-// send the direct messages that will result in
-// signals being emitted to the UI
-fn notify_all(message: DirectMessage) -> ZomeApiResult<()> {
-  fetch_members()?.iter().for_each(|member| {
-    // useful for development purposes
-    // uncomment to send signals to oneself
-    // if member.address == AGENT_ADDRESS.to_string() {
-    //     signal_ui(&message);
-    // }
 
-    if member.address != AGENT_ADDRESS.to_string() {
-      hdk::debug(format!(
-        "Send a message to: {:?}",
-        &member.address.to_string()
-      ))
-      .ok();
-      hdk::send(
-        Address::from(member.address.clone()),
-        JsonString::from(message.clone()).into(),
-        1.into(),
-      )
-      .ok();
-    }
-  });
-  Ok(())
-}
 
-fn notify_member(member: Member) -> ZomeApiResult<()> {
-  let message = DirectMessage::NewMemberNotification(NewMemberSignalPayload {
-    member: member.clone(),
-  });
-  notify_all(message)
-}
-
-fn notify_entry_point(entry_point_response: EntryPointResponse) -> ZomeApiResult<()> {
-  let message = DirectMessage::EntryPointNotification(EntryPointSignalPayload {
-    entry_point: entry_point_response.clone(),
-  });
-  notify_all(message)
-}
-
-fn notify_entry_point_archived(address: Address) -> ZomeApiResult<()> {
-  let message =
-    DirectMessage::EntryPointArchivedNotification(EntryArchivedSignalPayload { address });
-  notify_all(message)
-}
-
-fn notify_goal_maybe_with_edge(goal_maybe_with_edge: GoalMaybeWithEdge) -> ZomeApiResult<()> {
-  let message = DirectMessage::GoalMaybeWithEdgeNotification(GoalMaybeWithEdgeSignalPayload {
-    goal: goal_maybe_with_edge.clone(),
-  });
-  notify_all(message)
-}
-
-// handles create and update cases
-fn notify_edge(edge: GetResponse<Edge>) -> ZomeApiResult<()> {
-  let message = DirectMessage::EdgeNotification(EdgeSignalPayload { edge });
-  notify_all(message)
-}
-
-fn notify_edge_archived(address: Address) -> ZomeApiResult<()> {
-  let message = DirectMessage::EdgeArchivedNotification(EntryArchivedSignalPayload { address });
-  notify_all(message)
-}
-
-fn notify_goal_archived(archived: ArchiveGoalResponse) -> ZomeApiResult<()> {
-  let message = DirectMessage::GoalArchivedNotification(GoalArchivedSignalPayload { archived });
-  notify_all(message)
-}
-
-fn notify_goal_comment(goal_comment: GetResponse<GoalComment>) -> ZomeApiResult<()> {
-  let message = DirectMessage::GoalCommentNotification(GoalCommentSignalPayload { goal_comment });
-  notify_all(message)
-}
-
-fn notify_goal_member(goal_member: GetResponse<GoalMember>) -> ZomeApiResult<()> {
-  let message = DirectMessage::GoalMemberNotification(GoalMemberSignalPayload { goal_member });
-  notify_all(message)
-}
-
-fn notify_goal_vote(goal_vote: GetResponse<GoalVote>) -> ZomeApiResult<()> {
-  let message = DirectMessage::GoalVoteNotification(GoalVoteSignalPayload { goal_vote });
-  notify_all(message)
-}
-
-fn notify_goal_comment_archived(address: Address) -> ZomeApiResult<()> {
-  let message =
-    DirectMessage::GoalCommentArchivedNotification(EntryArchivedSignalPayload { address });
-  notify_all(message)
-}
-
-fn notify_goal_member_archived(address: Address) -> ZomeApiResult<()> {
-  let message =
-    DirectMessage::GoalMemberArchivedNotification(EntryArchivedSignalPayload { address });
-  notify_all(message)
-}
-
-fn notify_goal_vote_archived(address: Address) -> ZomeApiResult<()> {
-  let message = DirectMessage::GoalVoteArchivedNotification(EntryArchivedSignalPayload { address });
-  notify_all(message)
-}
-
-pub fn create_project_meta(projectmeta: ProjectMeta) -> ZomeApiResult<GetResponse<ProjectMeta>> {
+pub fn create_project_meta(projectmeta: ProjectMeta) -> ExternResult<GetResponse<ProjectMeta>> {
   let projectmeta_anchor_entry = Entry::App(
     "anchor".into(), // app entry type
     // app entry value. We'll use the value to specify what this anchor is for
@@ -465,7 +224,7 @@ pub fn create_project_meta(projectmeta: ProjectMeta) -> ZomeApiResult<GetRespons
 pub fn update_project_meta(
   projectmeta: ProjectMeta,
   address: Address,
-) -> ZomeApiResult<GetResponse<ProjectMeta>> {
+) -> ExternResult<GetResponse<ProjectMeta>> {
   let projectmeta_entry = Entry::App("projectmeta".into(), projectmeta.clone().into());
   hdk::update_entry(projectmeta_entry, &address)?;
   Ok(GetResponse {
@@ -474,7 +233,7 @@ pub fn update_project_meta(
   })
 }
 
-pub fn fetch_project_meta() -> ZomeApiResult<GetResponse<ProjectMeta>> {
+pub fn fetch_project_meta() -> ExternResult<GetResponse<ProjectMeta>> {
   let projectmeta_anchor_entry = Entry::App("anchor".into(), "projectmeta".into());
   match hdk::utils::get_links_and_load_type::<ProjectMeta>(
     &projectmeta_anchor_entry.address(),
@@ -494,7 +253,7 @@ pub fn fetch_project_meta() -> ZomeApiResult<GetResponse<ProjectMeta>> {
   }
 }
 
-pub fn create_entry_point(entry_point: EntryPoint) -> ZomeApiResult<EntryPointResponse> {
+pub fn create_entry_point(entry_point: EntryPoint) -> ExternResult<EntryPointResponse> {
   // if the goal doesn't exist, this will return an error for this function
   // which is right
   let goal = hdk::utils::get_as_type::<Goal>(entry_point.goal_address.clone())?;
@@ -521,22 +280,22 @@ pub fn create_entry_point(entry_point: EntryPoint) -> ZomeApiResult<EntryPointRe
     goal,
     entry_point_address: entry_address,
   };
-  notify_entry_point(entry_point_response.clone())?;
+  // notify_entry_point(entry_point_response.clone())?;
 
   Ok(entry_point_response)
 }
 
-pub fn archive_entry_point(address: Address) -> ZomeApiResult<Address> {
+pub fn archive_entry_point(address: Address) -> ExternResult<Address> {
   hdk::remove_entry(&address)?;
-  notify_entry_point_archived(address.clone())?;
+  // notify_entry_point_archived(address.clone())?;
   Ok(address)
 }
 
-pub fn fetch_entry_points() -> ZomeApiResult<Vec<EntryPointResponse>> {
+pub fn fetch_entry_points() -> ExternResult<Vec<EntryPointResponse>> {
   inner_fetch_entry_points()
 }
 
-pub fn history_of_goal(address: Address) -> ZomeApiResult<GetHistoryResponse> {
+pub fn history_of_goal(address: Address) -> ExternResult<GetHistoryResponse> {
   let anchor_address = Entry::App(
     "anchor".into(),       // app entry type
     "goal_members".into(), // app entry value
@@ -620,7 +379,7 @@ pub fn history_of_goal(address: Address) -> ZomeApiResult<GetHistoryResponse> {
 pub fn create_goal(
   goal: Goal,
   maybe_goal_edge_input: Option<GoalEdgeInput>,
-) -> ZomeApiResult<GoalMaybeWithEdge> {
+) -> ExternResult<GoalMaybeWithEdge> {
   let app_entry = Entry::App("goal".into(), goal.clone().into());
   let entry_address = hdk::commit_entry(&app_entry)?;
 
@@ -657,12 +416,12 @@ pub fn create_goal(
     },
     maybe_edge,
   };
-  notify_goal_maybe_with_edge(goal_maybe_with_edge.clone())?;
+  // notify_goal_maybe_with_edge(goal_maybe_with_edge.clone())?;
   // format the response as a GetResponse
   Ok(goal_maybe_with_edge)
 }
 
-fn inner_create_edge(edge: &Edge) -> ZomeApiResult<Address> {
+fn inner_create_edge(edge: &Edge) -> ExternResult<Address> {
   let app_entry = Entry::App("edge".into(), edge.clone().into());
   let entry_address = hdk::commit_entry(&app_entry)?;
 
@@ -678,7 +437,7 @@ fn inner_create_edge(edge: &Edge) -> ZomeApiResult<Address> {
   Ok(entry_address)
 }
 
-pub fn update_goal(goal: Goal, address: Address) -> ZomeApiResult<GetResponse<Goal>> {
+pub fn update_goal(goal: Goal, address: Address) -> ExternResult<GetResponse<Goal>> {
   let mut goal = goal;
   let old_goal = hdk::utils::get_as_type::<Goal>(address.clone())?;
   if goal.timestamp_updated == None {
@@ -697,18 +456,18 @@ pub fn update_goal(goal: Goal, address: Address) -> ZomeApiResult<GetResponse<Go
   // notify_goal_maybe_with_edge
   // returns a different type response than this function
   // instead of the normal case where the types match
-  let goal_maybe_with_edge = GoalMaybeWithEdge {
-    goal: goal.clone(),
-    maybe_edge: None,
-  };
-  notify_goal_maybe_with_edge(goal_maybe_with_edge)?;
+  // let goal_maybe_with_edge = GoalMaybeWithEdge {
+  //   goal: goal.clone(),
+  //   maybe_edge: None,
+  // };
+  // notify_goal_maybe_with_edge(goal_maybe_with_edge)?;
 
   // format the response as a GetResponse
   // pass the OLD address back and allow the UI to continue to use it
   Ok(goal)
 }
 
-pub fn create_edge(edge: Edge) -> ZomeApiResult<GetResponse<Edge>> {
+pub fn create_edge(edge: Edge) -> ExternResult<GetResponse<Edge>> {
   let entry_address = inner_create_edge(&edge)?;
 
   let get_response = GetResponse {
@@ -716,12 +475,12 @@ pub fn create_edge(edge: Edge) -> ZomeApiResult<GetResponse<Edge>> {
     address: entry_address,
   };
 
-  notify_edge(get_response.clone())?;
+  // notify_edge(get_response.clone())?;
 
   Ok(get_response)
 }
 
-pub fn update_edge(edge: Edge, address: Address) -> ZomeApiResult<GetResponse<Edge>> {
+pub fn update_edge(edge: Edge, address: Address) -> ExternResult<GetResponse<Edge>> {
   let app_entry = Entry::App("edge".into(), edge.clone().into());
   let _ = hdk::update_entry(app_entry, &address)?;
 
@@ -730,12 +489,12 @@ pub fn update_edge(edge: Edge, address: Address) -> ZomeApiResult<GetResponse<Ed
     address: address,
   };
 
-  notify_edge(get_response.clone())?;
+  // notify_edge(get_response.clone())?;
 
   Ok(get_response)
 }
 
-pub fn fetch_goals() -> ZomeApiResult<Vec<GetResponse<Goal>>> {
+pub fn fetch_goals() -> ExternResult<Vec<GetResponse<Goal>>> {
   // set up the anchor entry and compute its address
   let anchor_address = Entry::App(
     "anchor".into(), // app entry type
@@ -768,7 +527,7 @@ pub fn fetch_goals() -> ZomeApiResult<Vec<GetResponse<Goal>>> {
   )
 }
 
-fn inner_fetch_goal_members() -> ZomeApiResult<Vec<GetResponse<GoalMember>>> {
+fn inner_fetch_goal_members() -> ExternResult<Vec<GetResponse<GoalMember>>> {
   // set up the anchor entry and compute its address
   let anchor_address = Entry::App(
     "anchor".into(),       // app entry type
@@ -796,7 +555,7 @@ fn inner_fetch_goal_members() -> ZomeApiResult<Vec<GetResponse<GoalMember>>> {
     .collect(),
   )
 }
-fn inner_fetch_goal_votes() -> ZomeApiResult<Vec<GetResponse<GoalVote>>> {
+fn inner_fetch_goal_votes() -> ExternResult<Vec<GetResponse<GoalVote>>> {
   // set up the anchor entry and compute its address
   let anchor_address = Entry::App(
     "anchor".into(),     // app entry type
@@ -824,7 +583,7 @@ fn inner_fetch_goal_votes() -> ZomeApiResult<Vec<GetResponse<GoalVote>>> {
     .collect(),
   )
 }
-fn inner_fetch_goal_comments() -> ZomeApiResult<Vec<GetResponse<GoalComment>>> {
+fn inner_fetch_goal_comments() -> ExternResult<Vec<GetResponse<GoalComment>>> {
   // set up the anchor entry and compute its address
   let anchor_address = Entry::App(
     "anchor".into(),        // app entry type
@@ -852,7 +611,7 @@ fn inner_fetch_goal_comments() -> ZomeApiResult<Vec<GetResponse<GoalComment>>> {
     .collect(),
   )
 }
-fn inner_fetch_edges() -> ZomeApiResult<Vec<GetResponse<Edge>>> {
+fn inner_fetch_edges() -> ExternResult<Vec<GetResponse<Edge>>> {
   // set up the anchor entry and compute its address
   let anchor_address = Entry::App(
     "anchor".into(), // app entry type
@@ -883,7 +642,7 @@ fn inner_fetch_edges() -> ZomeApiResult<Vec<GetResponse<Edge>>> {
     .collect(),
   )
 }
-pub fn inner_fetch_entry_points() -> ZomeApiResult<Vec<EntryPointResponse>> {
+pub fn inner_fetch_entry_points() -> ExternResult<Vec<EntryPointResponse>> {
   let anchor_address = Entry::App(
     "anchor".into(), // app entry type
     // app entry value. We'll use the value to specify what this anchor is for
@@ -914,11 +673,11 @@ pub fn inner_fetch_entry_points() -> ZomeApiResult<Vec<EntryPointResponse>> {
   Ok(entry_points)
 }
 
-pub fn fetch_edges() -> ZomeApiResult<Vec<GetResponse<Edge>>> {
+pub fn fetch_edges() -> ExternResult<Vec<GetResponse<Edge>>> {
   inner_fetch_edges()
 }
 
-pub fn archive_goal(address: Address) -> ZomeApiResult<ArchiveGoalResponse> {
+pub fn archive_goal(address: Address) -> ExternResult<ArchiveGoalResponse> {
   // commit the removeEntry. Returns the address of the removeEntry
   hdk::remove_entry(&address)?;
 
@@ -1004,18 +763,18 @@ pub fn archive_goal(address: Address) -> ZomeApiResult<ArchiveGoalResponse> {
     archived_goal_comments,
     archived_entry_points,
   };
-  notify_goal_archived(archive_response.clone())?;
+  // notify_goal_archived(archive_response.clone())?;
 
   Ok(archive_response)
 }
 
-pub fn archive_edge(address: Address) -> ZomeApiResult<Address> {
+pub fn archive_edge(address: Address) -> ExternResult<Address> {
   hdk::remove_entry(&address)?;
-  notify_edge_archived(address.clone())?;
+  // notify_edge_archived(address.clone())?;
   Ok(address)
 }
 
-pub fn add_member_of_goal(goal_member: GoalMember) -> ZomeApiResult<GetResponse<GoalMember>> {
+pub fn add_member_of_goal(goal_member: GoalMember) -> ExternResult<GetResponse<GoalMember>> {
   let mut goal_member = goal_member;
   goal_member.user_edit_hash = Some(AGENT_ADDRESS.clone());
   let app_entry = Entry::App("goal_member".into(), goal_member.clone().into());
@@ -1039,12 +798,12 @@ pub fn add_member_of_goal(goal_member: GoalMember) -> ZomeApiResult<GetResponse<
     entry: goal_member,
     address: entry_address,
   };
-  notify_goal_member(get_response.clone())?;
+  // notify_goal_member(get_response.clone())?;
 
   Ok(get_response)
 }
 
-pub fn add_vote_of_goal(goal_vote: GoalVote) -> ZomeApiResult<GetResponse<GoalVote>> {
+pub fn add_vote_of_goal(goal_vote: GoalVote) -> ExternResult<GetResponse<GoalVote>> {
   let app_entry = Entry::App("goal_vote".into(), goal_vote.clone().into());
   let entry_address = hdk::commit_entry(&app_entry)?;
 
@@ -1066,7 +825,7 @@ pub fn add_vote_of_goal(goal_vote: GoalVote) -> ZomeApiResult<GetResponse<GoalVo
     entry: goal_vote,
     address: entry_address,
   };
-  notify_goal_vote(get_response.clone())?;
+  // notify_goal_vote(get_response.clone())?;
 
   Ok(get_response)
 }
@@ -1074,7 +833,7 @@ pub fn add_vote_of_goal(goal_vote: GoalVote) -> ZomeApiResult<GetResponse<GoalVo
 pub fn update_goal_vote(
   goal_vote: GoalVote,
   address: Address,
-) -> ZomeApiResult<GetResponse<GoalVote>> {
+) -> ExternResult<GetResponse<GoalVote>> {
   let app_entry = Entry::App("goal_vote".into(), goal_vote.clone().into());
   let _ = hdk::update_entry(app_entry, &address)?;
 
@@ -1084,12 +843,12 @@ pub fn update_goal_vote(
     entry: goal_vote,
     address: address,
   };
-  notify_goal_vote(get_response.clone())?;
+  // notify_goal_vote(get_response.clone())?;
 
   Ok(get_response)
 }
 
-pub fn add_comment_of_goal(goal_comment: GoalComment) -> ZomeApiResult<GetResponse<GoalComment>> {
+pub fn add_comment_of_goal(goal_comment: GoalComment) -> ExternResult<GetResponse<GoalComment>> {
   let app_entry = Entry::App("goal_comment".into(), goal_comment.clone().into());
   let entry_address = hdk::commit_entry(&app_entry)?;
 
@@ -1111,7 +870,7 @@ pub fn add_comment_of_goal(goal_comment: GoalComment) -> ZomeApiResult<GetRespon
     entry: goal_comment,
     address: entry_address,
   };
-  notify_goal_comment(get_response.clone())?;
+  // notify_goal_comment(get_response.clone())?;
 
   Ok(get_response)
 }
@@ -1119,7 +878,7 @@ pub fn add_comment_of_goal(goal_comment: GoalComment) -> ZomeApiResult<GetRespon
 pub fn update_goal_comment(
   goal_comment: GoalComment,
   address: Address,
-) -> ZomeApiResult<GetResponse<GoalComment>> {
+) -> ExternResult<GetResponse<GoalComment>> {
   let app_entry = Entry::App("goal_comment".into(), goal_comment.clone().into());
   let _ = hdk::update_entry(app_entry, &address)?;
 
@@ -1129,12 +888,12 @@ pub fn update_goal_comment(
     entry: goal_comment,
     address,
   };
-  notify_goal_comment(get_response.clone())?;
+  // notify_goal_comment(get_response.clone())?;
 
   Ok(get_response)
 }
 
-pub fn archive_members_of_goal(address: &Address) -> ZomeApiResult<Vec<Address>> {
+pub fn archive_members_of_goal(address: &Address) -> ExternResult<Vec<Address>> {
   inner_fetch_goal_members()?
     .into_iter()
     .filter(|get_response: &GetResponse<GoalMember>| {
@@ -1157,35 +916,35 @@ pub fn archive_members_of_goal(address: &Address) -> ZomeApiResult<Vec<Address>>
     .collect()
 }
 
-pub fn archive_member_of_goal(address: Address) -> ZomeApiResult<Address> {
+pub fn archive_member_of_goal(address: Address) -> ExternResult<Address> {
   hdk::remove_entry(&address)?;
-  notify_goal_member_archived(address.clone())?;
+  // notify_goal_member_archived(address.clone())?;
   Ok(address)
 }
 
-pub fn archive_vote_of_goal(address: Address) -> ZomeApiResult<Address> {
+pub fn archive_vote_of_goal(address: Address) -> ExternResult<Address> {
   hdk::remove_entry(&address)?;
-  notify_goal_vote_archived(address.clone())?;
+  // notify_goal_vote_archived(address.clone())?;
   Ok(address)
 }
 
-pub fn archive_comment_of_goal(address: Address) -> ZomeApiResult<Address> {
+pub fn archive_comment_of_goal(address: Address) -> ExternResult<Address> {
   hdk::remove_entry(&address)?;
-  notify_goal_comment_archived(address.clone())?;
+  // notify_goal_comment_archived(address.clone())?;
   Ok(address)
 }
 
-pub fn fetch_goal_members() -> ZomeApiResult<Vec<GetResponse<GoalMember>>> {
+pub fn fetch_goal_members() -> ExternResult<Vec<GetResponse<GoalMember>>> {
   inner_fetch_goal_members()
 }
-pub fn fetch_goal_votes() -> ZomeApiResult<Vec<GetResponse<GoalVote>>> {
+pub fn fetch_goal_votes() -> ExternResult<Vec<GetResponse<GoalVote>>> {
   inner_fetch_goal_votes()
 }
-pub fn fetch_goal_comments() -> ZomeApiResult<Vec<GetResponse<GoalComment>>> {
+pub fn fetch_goal_comments() -> ExternResult<Vec<GetResponse<GoalComment>>> {
   inner_fetch_goal_comments()
 }
 
-pub fn fetch_members() -> ZomeApiResult<Vec<Member>> {
+pub fn fetch_members() -> ExternResult<Vec<Member>> {
   let anchor_address = Entry::App(
     "anchor".into(), // app entry type
     // app entry value. We'll use the value to specify what this anchor is for
@@ -1202,3 +961,105 @@ pub fn fetch_members() -> ZomeApiResult<Vec<Member>> {
     )?,
   )
 }
+
+// send the direct messages that will result in
+// signals being emitted to the UI
+// fn notify_all(message: DirectMessage) -> ExternResult<()> {
+//   fetch_members()?.iter().for_each(|member| {
+//     // useful for development purposes
+//     // uncomment to send signals to oneself
+//     // if member.address == AGENT_ADDRESS.to_string() {
+//     //     signal_ui(&message);
+//     // }
+
+//     if member.address != AGENT_ADDRESS.to_string() {
+//       hdk::debug(format!(
+//         "Send a message to: {:?}",
+//         &member.address.to_string()
+//       ))
+//       .ok();
+//       hdk::send(
+//         Address::from(member.address.clone()),
+//         JsonString::from(message.clone()).into(),
+//         1.into(),
+//       )
+//       .ok();
+//     }
+//   });
+//   Ok(())
+// }
+
+// fn notify_member(member: Member) -> ExternResult<()> {
+//   let message = DirectMessage::NewMemberNotification(NewMemberSignalPayload {
+//     member: member.clone(),
+//   });
+//   notify_all(message)
+// }
+
+// fn notify_entry_point(entry_point_response: EntryPointResponse) -> ExternResult<()> {
+//   let message = DirectMessage::EntryPointNotification(EntryPointSignalPayload {
+//     entry_point: entry_point_response.clone(),
+//   });
+//   notify_all(message)
+// }
+
+// fn notify_entry_point_archived(address: Address) -> ExternResult<()> {
+//   let message =
+//     DirectMessage::EntryPointArchivedNotification(EntryArchivedSignalPayload { address });
+//   notify_all(message)
+// }
+
+// fn notify_goal_maybe_with_edge(goal_maybe_with_edge: GoalMaybeWithEdge) -> ExternResult<()> {
+//   let message = DirectMessage::GoalMaybeWithEdgeNotification(GoalMaybeWithEdgeSignalPayload {
+//     goal: goal_maybe_with_edge.clone(),
+//   });
+//   notify_all(message)
+// }
+
+// // handles create and update cases
+// fn notify_edge(edge: GetResponse<Edge>) -> ExternResult<()> {
+//   let message = DirectMessage::EdgeNotification(EdgeSignalPayload { edge });
+//   notify_all(message)
+// }
+
+// fn notify_edge_archived(address: Address) -> ExternResult<()> {
+//   let message = DirectMessage::EdgeArchivedNotification(EntryArchivedSignalPayload { address });
+//   notify_all(message)
+// }
+
+// fn notify_goal_archived(archived: ArchiveGoalResponse) -> ExternResult<()> {
+//   let message = DirectMessage::GoalArchivedNotification(GoalArchivedSignalPayload { archived });
+//   notify_all(message)
+// }
+
+// fn notify_goal_comment(goal_comment: GetResponse<GoalComment>) -> ExternResult<()> {
+//   let message = DirectMessage::GoalCommentNotification(GoalCommentSignalPayload { goal_comment });
+//   notify_all(message)
+// }
+
+// fn notify_goal_member(goal_member: GetResponse<GoalMember>) -> ExternResult<()> {
+//   let message = DirectMessage::GoalMemberNotification(GoalMemberSignalPayload { goal_member });
+//   notify_all(message)
+// }
+
+// fn notify_goal_vote(goal_vote: GetResponse<GoalVote>) -> ExternResult<()> {
+//   let message = DirectMessage::GoalVoteNotification(GoalVoteSignalPayload { goal_vote });
+//   notify_all(message)
+// }
+
+// fn notify_goal_comment_archived(address: Address) -> ExternResult<()> {
+//   let message =
+//     DirectMessage::GoalCommentArchivedNotification(EntryArchivedSignalPayload { address });
+//   notify_all(message)
+// }
+
+// fn notify_goal_member_archived(address: Address) -> ExternResult<()> {
+//   let message =
+//     DirectMessage::GoalMemberArchivedNotification(EntryArchivedSignalPayload { address });
+//   notify_all(message)
+// }
+
+// fn notify_goal_vote_archived(address: Address) -> ExternResult<()> {
+//   let message = DirectMessage::GoalVoteArchivedNotification(EntryArchivedSignalPayload { address });
+//   notify_all(message)
+// }

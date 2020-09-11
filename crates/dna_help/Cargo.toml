@@ -7,6 +7,5 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-serde = "=1.0.104"
 hdk3 = { git = "ssh://git@github.com/holo-host/holochain.git", rev = "eb0eb3a2c6229d8c8567567cdd0858f3da9173e6", package = "hdk3" }
 
