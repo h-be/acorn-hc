@@ -36,7 +36,7 @@ struct AgentAddressOutput(String);
 #[hdk_extern]
 fn fetch_agent_address(_: ()) -> ExternResult<AgentAddressOutput> {
     let agent_info = agent_info!()?;
-    Ok(AgentAddressOutput(agent_info.agent_pubkey.to_string()))
+    Ok(AgentAddressOutput(agent_info.agent_initial_pubkey.to_string()))
 }
 
 #[hdk_extern]

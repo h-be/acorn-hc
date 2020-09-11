@@ -1,14 +1,13 @@
 import { Config } from '@holochain/tryorama'
 import * as _ from 'lodash'
-
-const delay = (ms) => new Promise((r) => setTimeout(r, ms))
+import { delay } from './timer'
 
 // Configure a conductor with two identical DNAs,
 // differentiated by UUID, nicknamed "alice" and "bobbo"
 const config = Config.gen(
   {
-    alice: Config.dna('../profiles.dna.gz', null),
-    bobbo: Config.dna('../profiles.dna.gz', null),
+    alice: Config.dna('../dnas/profiles/profiles.dna.gz', null),
+    bobbo: Config.dna('../dnas/profiles/profiles.dna.gz', null),
   }
   // { logger: Config.logger(true) }
 )
@@ -36,7 +35,6 @@ module.exports = (orchestrator) => {
       'create_whoami',
       profile
     )
-    console.log(create_whoami)
 
     const fetchAgentsResult = await conductor.call(
       'bobbo',
@@ -44,7 +42,6 @@ module.exports = (orchestrator) => {
       'fetch_agents',
       null
     )
-    console.log(fetchAgentsResult)
 
     t.deepEqual(fetchAgentsResult, [profile])
 
@@ -55,7 +52,6 @@ module.exports = (orchestrator) => {
       'fetch_agent_address',
       null
     )
-    console.log(agent_address)
 
     // UPDATE WHOAMI
     const profile2 = {
@@ -75,7 +71,6 @@ module.exports = (orchestrator) => {
         address: create_whoami.address,
       }
     )
-    console.log(update_whoami)
     t.deepEqual(update_whoami.entry, profile2)
 
     await delay(2000)
@@ -87,7 +82,6 @@ module.exports = (orchestrator) => {
       'whoami',
       null
     )
-    console.log(whoami2)
     t.deepEqual(whoami2.entry, {
       ...profile2,
       status: 'Offline',

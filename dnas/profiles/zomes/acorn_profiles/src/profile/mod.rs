@@ -1,4 +1,6 @@
 use hdk3::prelude::*;
+use derive_more::*;
+use dna_help::get_latest_for_entry;
 
 pub const AGENTS_PATH: &str = "agents";
 
@@ -60,8 +62,8 @@ impl<'de> Deserialize<'de> for Status {
     }
 }
 
-#[hdk_entry(id = "profile", required_validations = 5)]
-#[derive(Clone)]
+#[hdk_entry(id = "profile")]
+#[derive(Clone, PartialEq, Constructor)]
 pub struct Profile {
     first_name: String,
     last_name: String,
@@ -73,10 +75,10 @@ pub struct Profile {
 
 #[hdk_extern]
 fn validate(_: Entry) -> ExternResult<ValidateCallbackResult> {
-  // HOLD
-  // have to hold on this until we get more than entry in the validation callback
-  // which will come soon, according to David M.
-  let _ = debug!("in validation callback");
+    // HOLD
+    // have to hold on this until we get more than entry in the validation callback
+    // which will come soon, according to David M.
+    let _ = debug!("in validation callback");
     Ok(ValidateCallbackResult::Valid)
 }
 
@@ -94,7 +96,7 @@ pub fn create_whoami(profile: Profile) -> ExternResult<ProfileResponse> {
     link_entries!(agents_path_address, entry_hash.clone())?;
 
     // list me so I can specifically and quickly look up my profile
-    let agent_pubkey = agent_info!()?.agent_pubkey;
+    let agent_pubkey = agent_info!()?.agent_initial_pubkey;
     let agent_entry_hash = EntryHash::from(agent_pubkey);
     link_entries!(agent_entry_hash, entry_hash)?;
 
@@ -126,40 +128,8 @@ pub fn update_whoami(update_who_am_i: UpdateWhoAmIInput) -> ExternResult<Profile
 #[derive(Serialize, Deserialize, SerializedBytes)]
 pub struct WhoAmIOutput(Option<ProfileResponse>);
 
-fn get_latest_for_entry(entry_address: EntryHash) -> ExternResult<Option<(Entry, HeaderHash)>> {
-    // First, make sure we DO have the latest entry address
-    let maybe_latest_entry_address = match get_details!(entry_address.clone())? {
-        Some(Details::Entry(details)) => match details.updates.len() {
-            0 => Some(entry_address),
-            _ => {
-                let mut sortlist = details.updates.to_vec();
-                // unix timestamp should work for sorting
-                sortlist.sort_by_key(|header| header.timestamp.0);
-                // sorts in ascending order, so take the last element
-                Some(sortlist.last().unwrap().entry_hash.clone())
-            }
-        },
-        _ => None,
-    };
-
-    // Second, go and get that entry, and return it and its header_address
-    match maybe_latest_entry_address {
-        Some(latest_entry_address) => match get!(latest_entry_address)? {
-            Some(element) => match element.entry().as_option() {
-                Some(entry) => Ok(Some((
-                    entry.to_owned(),
-                    element.header_address().to_owned(),
-                ))),
-                None => Ok(None),
-            },
-            None => Ok(None),
-        },
-        None => Ok(None),
-    }
-}
-
 pub fn whoami() -> ExternResult<WhoAmIOutput> {
-    let agent_pubkey = agent_info!()?.agent_pubkey;
+    let agent_pubkey = agent_info!()?.agent_initial_pubkey;
     let agent_entry_hash = EntryHash::from(agent_pubkey);
 
     let all_profiles = get_links!(agent_entry_hash)?.into_inner();
@@ -167,16 +137,12 @@ pub fn whoami() -> ExternResult<WhoAmIOutput> {
     // // do it this way so that we always keep the original profile entry address
     // // from the UI perspective
     match maybe_profile_link {
-        Some(profile_link) => match get_latest_for_entry(profile_link.target.clone())? {
-            Some((entry, header_address)) => match entry {
-                Entry::App(sb) => {
-                    let profile = Profile::try_from(sb.to_owned())?;
-                    Ok(WhoAmIOutput(Some(ProfileResponse {
-                        entry: profile,
-                        address: header_address,
-                    })))
-                }
-                _ => Ok(WhoAmIOutput(None)),
+        Some(profile_link) => match get_latest_for_entry::<Profile>(profile_link.target.clone())? {
+            Some((profile, header_address)) => {
+                Ok(WhoAmIOutput(Some(ProfileResponse {
+                    entry: profile,
+                    address: header_address,
+                })))
             },
             None => Ok(WhoAmIOutput(None)),
         },
