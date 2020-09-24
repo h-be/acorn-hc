@@ -3,12 +3,12 @@ use hdk3::prelude::*;
 mod project;
 
 use project::{
-    edge::Edge,
-    entry_point::EntryPoint,
-    goal::Goal,
-    goal_comment::GoalComment,
-    goal_member::GoalMember,
-    goal_vote::GoalVote,
+    edge::{Edge, EDGE_PATH},
+    entry_point::{EntryPoint, ENTRY_POINT_PATH},
+    goal::{Goal, GOAL_PATH},
+    goal_comment::{GoalComment, GOAL_COMMENT_PATH},
+    goal_member::{GoalMember, GOAL_MEMBER_PATH},
+    goal_vote::{GoalVote, GOAL_VOTE_PATH},
     member::{Member, MEMBER_PATH},
     project_meta::{ProjectMeta, PROJECT_META_PATH},
 };
@@ -16,6 +16,12 @@ use project::{
 #[hdk_extern]
 fn init(_: ()) -> ExternResult<InitCallbackResult> {
     // Path::from(AGENTS_PATH).ensure()?;
+    Path::from(EDGE_PATH).ensure()?;
+    Path::from(ENTRY_POINT_PATH).ensure()?;
+    Path::from(GOAL_PATH).ensure()?;
+    Path::from(GOAL_COMMENT_PATH).ensure()?;
+    Path::from(GOAL_MEMBER_PATH).ensure()?;
+    Path::from(GOAL_VOTE_PATH).ensure()?;
     Path::from(PROJECT_META_PATH).ensure()?;
     Path::from(MEMBER_PATH).ensure()?;
 
