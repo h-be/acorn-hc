@@ -1,11 +1,14 @@
 use hdk3::prelude::*;
-use derive_more::*;
-use dna_help::get_latest_for_entry;
+use dna_help::{
+  get_latest_for_entry,
+  fetch_links,
+  EntryAndHash
+};
 
 pub const AGENTS_PATH: &str = "agents";
 
 #[hdk_entry(id = "profile")]
-#[derive(Clone, PartialEq, Constructor)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Profile {
     first_name: String,
     last_name: String,
@@ -15,28 +18,35 @@ pub struct Profile {
     address: String,
 }
 
-#[derive(Serialize, Deserialize, SerializedBytes)]
-pub struct ProfileResponse {
+impl From<EntryAndHash<Profile>> for Profile {
+  fn from(entry_and_hash: EntryAndHash<Profile>) -> Self {
+      entry_and_hash.0
+  }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, SerializedBytes)]
+pub struct WireEntry {
     pub entry: Profile,
     pub address: HeaderHash,
 }
 
-#[derive(Serialize, Deserialize, SerializedBytes)]
-pub struct UpdateWhoAmIInput {
-    profile: Profile,
-    address: HeaderHash,
+impl From<EntryAndHash<Profile>> for WireEntry {
+  fn from(entry_and_hash: EntryAndHash<Profile>) -> Self {
+      WireEntry {
+          entry: entry_and_hash.0,
+          address: entry_and_hash.1,
+      }
+  }
 }
 
-#[derive(Serialize, Deserialize, SerializedBytes)]
+#[derive(Serialize, Deserialize, SerializedBytes, Debug, Clone, PartialEq)]
 struct AgentAddressOutput(String);
 
-#[derive(Serialize, Deserialize, SerializedBytes)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, SerializedBytes)]
 pub struct AgentsOutput(Vec<Profile>);
 
-#[derive(Serialize, Deserialize, SerializedBytes)]
-pub struct WhoAmIOutput(Option<ProfileResponse>);
-
-struct GetError(());
+#[derive(Serialize, Deserialize, SerializedBytes, Debug, Clone, PartialEq)]
+pub struct WhoAmIOutput(Option<WireEntry>);
 
 #[derive(SerializedBytes, Debug, Clone, PartialEq)]
 pub enum Status {
@@ -100,43 +110,39 @@ fn validate(_: Entry) -> ExternResult<ValidateCallbackResult> {
 }
 
 #[hdk_extern]
-pub fn create_whoami(profile: Profile) -> ExternResult<ProfileResponse> {
+pub fn create_whoami(profile: Profile) -> ExternResult<WireEntry> {
     // // send update to peers
     // // notify_new_agent(profile.clone())?;
 
     // commit this new profile
-    let header_hash = commit_entry!(profile.clone())?;
+    let header_hash = create_entry!(profile.clone())?;
 
-    let entry_hash = entry_hash!(profile.clone())?;
+    let entry_hash = hash_entry!(profile.clone())?;
 
     // list me so anyone can see my profile
     let agents_path_address = Path::from(AGENTS_PATH).hash()?;
-    link_entries!(agents_path_address, entry_hash.clone())?;
+    create_link!(agents_path_address, entry_hash.clone())?;
 
     // list me so I can specifically and quickly look up my profile
     let agent_pubkey = agent_info!()?.agent_initial_pubkey;
     let agent_entry_hash = EntryHash::from(agent_pubkey);
-    link_entries!(agent_entry_hash, entry_hash)?;
+    create_link!(agent_entry_hash, entry_hash)?;
 
-    Ok(ProfileResponse {
+    Ok(WireEntry {
         entry: profile,
         address: header_hash,
     })
 }
 
 #[hdk_extern]
-pub fn update_whoami(update_who_am_i: UpdateWhoAmIInput) -> ExternResult<ProfileResponse> {
+pub fn update_whoami(update_who_am_i: WireEntry) -> ExternResult<WireEntry> {
     update_entry!(
         update_who_am_i.address.clone(),
-        update_who_am_i.profile.clone()
+        update_who_am_i.entry.clone()
     )?;
     // // send update to peers
     // // notify_new_agent(profile.clone())?;
-
-    Ok(ProfileResponse {
-        entry: update_who_am_i.profile,
-        address: update_who_am_i.address,
-    })
+    Ok(update_who_am_i)
 }
 
 #[hdk_extern]
@@ -150,11 +156,8 @@ pub fn whoami(_: ()) -> ExternResult<WhoAmIOutput> {
     // // from the UI perspective
     match maybe_profile_link {
         Some(profile_link) => match get_latest_for_entry::<Profile>(profile_link.target.clone())? {
-            Some((profile, header_address)) => {
-                Ok(WhoAmIOutput(Some(ProfileResponse {
-                    entry: profile,
-                    address: header_address,
-                })))
+            Some(entry_and_hash) => {
+                Ok(WhoAmIOutput(Some(WireEntry::from(entry_and_hash))))
             },
             None => Ok(WhoAmIOutput(None)),
         },
@@ -166,24 +169,9 @@ pub fn whoami(_: ()) -> ExternResult<WhoAmIOutput> {
 
 #[hdk_extern]
 pub fn fetch_agents(_: ()) -> ExternResult<AgentsOutput> {
-    let agents_path_address = Path::from(AGENTS_PATH).hash()?;
-    let links = get_links!(agents_path_address)?;
-    let agents = links
-        .into_inner()
-        .into_iter()
-        .map(|link| match get!(link.target) {
-            Ok(Some(element)) => match element.entry().to_app_option::<Profile>() {
-                Ok(Some(profile)) => Ok(profile),
-                _ => Err(GetError(())),
-            },
-            _ => Err(GetError(())),
-        })
-        .filter_map(Result::ok)
-        .collect();
-    Ok(
-        // return all the Profile objects from the entries linked to the profiles anchor (drop entries with wrong type)
-        AgentsOutput(agents),
-    )
+    let path_hash = Path::from(AGENTS_PATH).hash()?;
+    let entries = fetch_links::<Profile, Profile>(path_hash)?;
+    Ok(AgentsOutput(entries))
 }
 
 #[hdk_extern]
@@ -191,6 +179,8 @@ fn fetch_agent_address(_: ()) -> ExternResult<AgentAddressOutput> {
     let agent_info = agent_info!()?;
     Ok(AgentAddressOutput(agent_info.agent_initial_pubkey.to_string()))
 }
+
+
 
 // pub fn profile_def() -> ValidatingEntryType {
 //     entry!(

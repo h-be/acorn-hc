@@ -5,7 +5,8 @@ edition = "2018"
 
 [dependencies]
 serde = "=1.0.104"
-hdk3 = { git = "ssh://git@github.com/holo-host/holochain.git", rev = "eb0eb3a2c6229d8c8567567cdd0858f3da9173e6", package = "hdk3" }
+# hdk3 = { git = "ssh://git@github.com/holochain/holochain.git", rev = "b064f749503f3053a0e1356177c3e4fcce5748b4", package = "hdk3" }
+hdk3 = { git = "ssh://git@github.com/Connoropolous/holochain.git", branch = "develop", package = "hdk3" }
 derive_more = "0.99.9"
 dna_help = { path = "../../../../crates/dna_help" }
 

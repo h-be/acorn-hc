@@ -2,28 +2,66 @@ use hdk3::prelude::*;
 
 mod project;
 
-// use project::{
-//   ArchiveGoalResponse, Edge, EntryPoint, EntryPointResponse, GetHistoryResponse, GetResponse, Goal,
-//   GoalComment, GoalMaybeWithEdge, GoalMember, GoalVote, Member, ProjectMeta, GoalEdgeInput,
-// };
+use project::{
+    edge::Edge,
+    entry_point::EntryPoint,
+    goal::Goal,
+    goal_comment::GoalComment,
+    goal_member::GoalMember,
+    goal_vote::GoalVote,
+    member::{Member, MEMBER_PATH},
+    project_meta::{ProjectMeta, PROJECT_META_PATH},
+};
 
 #[hdk_extern]
 fn init(_: ()) -> ExternResult<InitCallbackResult> {
     // Path::from(AGENTS_PATH).ensure()?;
+    Path::from(PROJECT_META_PATH).ensure()?;
+    Path::from(MEMBER_PATH).ensure()?;
+
+    // let members_anchor_entry = Entry::App(
+    //   "anchor".into(), // app entry type
+    //   // app entry value. We'll use the value to specify what this anchor is for
+    //   "members".into(),
+    // );
+    // let member = Member {
+    //   address: AGENT_ADDRESS.to_string(),
+    // };
+    // let member_entry = Entry::App("member".into(), member.clone().into());
+    // let member_address = hdk::commit_entry(&member_entry)?;
+    // hdk::link_entries(
+    //   &members_anchor_entry.address(),
+    //   &member_address,
+    //   "anchor->member",
+    //   "",
+    // )?;
+
+    // // send update to peers
+    // // notify_member(member.clone())?;
+    // Ok(())
+
     Ok(InitCallbackResult::Pass)
 }
 
-entry_defs!(ProjectMeta::)
+entry_defs!(
+    Edge::entry_def(),
+    EntryPoint::entry_def(),
+    Goal::entry_def(),
+    GoalComment::entry_def(),
+    GoalMember::entry_def(),
+    GoalVote::entry_def(),
+    Member::entry_def(),
+    ProjectMeta::entry_def()
+);
 
-    // project::projectmeta_def()
-    // project::entry_point_def()
-    // project::member_def()
-    // project::edge_def()
-    // project::goal_def()
-    // project::goal_comment_def()
-    // project::goal_member_def()
-    // project::goal_vote_def()
-
+// project::projectmeta_def()
+// project::entry_point_def()
+// project::member_def()
+// project::edge_def()
+// project::goal_def()
+// project::goal_comment_def()
+// project::goal_member_def()
+// project::goal_vote_def()
 
 // #[receive]
 //   pub fn receive(from: Address, msg_json: JsonString) -> String {
