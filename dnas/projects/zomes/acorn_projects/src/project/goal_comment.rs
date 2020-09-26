@@ -7,7 +7,7 @@ pub struct GoalComment {
   goal_address: HeaderHash,
   content: String,
   agent_address: AgentPubKey,
-  unix_timestamp: u128,
+  unix_timestamp: f64,
 }
 
 crud!(GoalComment, goal_comment, "goal_comment");

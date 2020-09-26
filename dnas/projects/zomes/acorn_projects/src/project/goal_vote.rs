@@ -5,12 +5,12 @@ use dna_help::crud;
 #[derive(Debug, Clone, PartialEq)]
 pub struct GoalVote {
     goal_address: HeaderHash,
-    urgency: f32,
-    importance: f32,
-    impact: f32,
-    effort: f32,
+    urgency: f64,
+    importance: f64,
+    impact: f64,
+    effort: f64,
     agent_address: AgentPubKey,
-    unix_timestamp: u128,
+    unix_timestamp: f64,
 }
 
 crud!(GoalVote, goal_vote, "goal_vote");

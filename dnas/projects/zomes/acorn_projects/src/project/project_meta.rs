@@ -5,7 +5,7 @@ use hdk3::prelude::*;
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProjectMeta {
     creator_address: AgentPubKey,
-    created_at: u128,
+    created_at: f64,
     name: String,
     image: Option<String>,
     passphrase: String,

@@ -8,7 +8,7 @@ use hdk3::prelude::*;
 pub struct Edge {
     parent_address: HeaderHash,
     child_address: HeaderHash,
-    randomizer: u128,
+    randomizer: f64,
 }
 
 crud!(Edge, edge, "edge");

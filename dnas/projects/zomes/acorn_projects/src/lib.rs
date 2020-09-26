@@ -15,7 +15,6 @@ use project::{
 
 #[hdk_extern]
 fn init(_: ()) -> ExternResult<InitCallbackResult> {
-    // Path::from(AGENTS_PATH).ensure()?;
     Path::from(EDGE_PATH).ensure()?;
     Path::from(ENTRY_POINT_PATH).ensure()?;
     Path::from(GOAL_PATH).ensure()?;
@@ -50,6 +49,7 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
 }
 
 entry_defs!(
+    Path::entry_def(),
     Edge::entry_def(),
     EntryPoint::entry_def(),
     Goal::entry_def(),
@@ -59,6 +59,16 @@ entry_defs!(
     Member::entry_def(),
     ProjectMeta::entry_def()
 );
+
+#[derive(Serialize, Deserialize, SerializedBytes)]
+pub struct Test(Option<u64>);
+
+#[hdk_extern]
+pub fn test(_: ()) -> ExternResult<Test> {
+    Ok(Test(Some(1)))
+    // Ok(project::goal::Status::Complete)
+    // Err(HdkError::Wasm(WasmError::Zome("wut".into())))
+}
 
 // project::projectmeta_def()
 // project::entry_point_def()

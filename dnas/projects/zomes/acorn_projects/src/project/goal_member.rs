@@ -8,7 +8,7 @@ pub struct GoalMember {
   goal_address: HeaderHash,
   agent_address: AgentPubKey,
   user_edit_hash: Option<AgentPubKey>,
-  unix_timestamp: u128,
+  unix_timestamp: f64,
 }
 
 crud!(GoalMember, goal_member, "goal_member");

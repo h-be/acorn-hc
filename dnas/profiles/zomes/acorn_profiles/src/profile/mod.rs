@@ -110,15 +110,15 @@ fn validate(_: Entry) -> ExternResult<ValidateCallbackResult> {
 }
 
 #[hdk_extern]
-pub fn create_whoami(profile: Profile) -> ExternResult<WireEntry> {
+pub fn create_whoami(entry: Profile) -> ExternResult<WireEntry> {
     // // send update to peers
     // // notify_new_agent(profile.clone())?;
 
     // commit this new profile
-    let header_hash = create_entry!(profile.clone())?;
+    let header_hash = create_entry!(entry.clone())?;
 
-    let entry_hash = hash_entry!(profile.clone())?;
-
+    let entry_hash = hash_entry!(entry.clone())?;
+    
     // list me so anyone can see my profile
     let agents_path_address = Path::from(AGENTS_PATH).hash()?;
     create_link!(agents_path_address, entry_hash.clone())?;
@@ -129,20 +129,20 @@ pub fn create_whoami(profile: Profile) -> ExternResult<WireEntry> {
     create_link!(agent_entry_hash, entry_hash)?;
 
     Ok(WireEntry {
-        entry: profile,
+        entry,
         address: header_hash,
     })
 }
 
 #[hdk_extern]
-pub fn update_whoami(update_who_am_i: WireEntry) -> ExternResult<WireEntry> {
+pub fn update_whoami(update: WireEntry) -> ExternResult<WireEntry> {
     update_entry!(
-        update_who_am_i.address.clone(),
-        update_who_am_i.entry.clone()
+        update.address.clone(),
+        update.entry.clone()
     )?;
     // // send update to peers
     // // notify_new_agent(profile.clone())?;
-    Ok(update_who_am_i)
+    Ok(update)
 }
 
 #[hdk_extern]

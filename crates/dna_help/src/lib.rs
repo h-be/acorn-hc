@@ -4,19 +4,24 @@ pub type EntryAndHash<T> = (T, HeaderHash);
 pub type OptionEntryAndHash<T> = Option<EntryAndHash<T>>;
 
 pub fn get_latest_for_entry<T: TryFrom<SerializedBytes, Error = SerializedBytesError>>(
-    entry_address: EntryHash,
+    entry_hash: EntryHash,
 ) -> ExternResult<OptionEntryAndHash<T>> {
     // First, make sure we DO have the latest entry address
-    let maybe_latest_entry_address = match get_details!(entry_address.clone())? {
-        Some(Details::Entry(details)) => match details.updates.len() {
-            0 => Some(entry_address),
-            _ => {
-                let mut sortlist = details.updates.to_vec();
-                // unix timestamp should work for sorting
-                sortlist.sort_by_key(|header| header.timestamp.0);
-                // sorts in ascending order, so take the last element
-                Some(sortlist.last().unwrap().entry_hash.clone())
-            }
+    let maybe_latest_entry_address = match get_details!(entry_hash.clone())? {
+        Some(Details::Entry(details)) => match details.entry_dht_status {
+            metadata::EntryDhtStatus::Live => match details.updates.len() {
+                0 => Some(entry_hash),
+                _ => {
+                    let mut sortlist = details.updates.to_vec();
+                    // unix timestamp should work for sorting
+                    sortlist.sort_by_key(|update| update.timestamp.0);
+                    // sorts in ascending order, so take the last element
+                    let last = sortlist.last().unwrap();
+                    Some(last.entry_hash.clone())
+                }
+            },
+            metadata::EntryDhtStatus::Dead => None,
+            _ => None,
         },
         _ => None,
     };
@@ -25,7 +30,16 @@ pub fn get_latest_for_entry<T: TryFrom<SerializedBytes, Error = SerializedBytesE
     match maybe_latest_entry_address {
         Some(latest_entry_address) => match get!(latest_entry_address)? {
             Some(element) => match element.entry().to_app_option::<T>()? {
-                Some(entry) => Ok(Some((entry, element.header_address().to_owned()))),
+                Some(entry) => {
+                    let header_address = match element.header() {
+                        // we DO want to return the header for the original
+                        // instead of the updated, in our case
+                        Header::Update(update) => update.original_header_address.clone(),
+                        Header::Create(_) => element.header_address().clone(),
+                        _ => unreachable!("Can't have returned a header for a nonexistent entry"),
+                    };
+                    Ok(Some((entry, header_address)))
+                }
                 None => Ok(None),
             },
             None => Ok(None),
@@ -62,17 +76,17 @@ macro_rules! crud {
 
           #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, SerializedBytes)]
           pub struct [<$crud_type WireEntry>] {
-              pub entry: $crud_type,
-              pub address: HeaderHash,
+            pub entry: $crud_type,
+            pub address: HeaderHash,
           }
 
           impl From<$crate::EntryAndHash<$crud_type>> for [<$crud_type WireEntry>] {
-              fn from(entry_and_hash: $crate::EntryAndHash<$crud_type>) -> Self {
-                [<$crud_type WireEntry>] {
-                      entry: entry_and_hash.0,
-                      address: entry_and_hash.1,
-                  }
+            fn from(entry_and_hash: $crate::EntryAndHash<$crud_type>) -> Self {
+              [<$crud_type WireEntry>] {
+                entry: entry_and_hash.0,
+                address: entry_and_hash.1,
               }
+            }
           }
 
           #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, SerializedBytes)]
@@ -82,13 +96,13 @@ macro_rules! crud {
             CREATE
           */
           pub fn [<inner_create_ $i>](entry: $crud_type) -> ExternResult<[<$crud_type WireEntry>]> {
-              let address = create_entry!(entry.clone())?;
-              let entry_hash = hash_entry!(entry.clone())?;
-              let path_hash = Path::from([<$i:upper _PATH>]).hash()?;
-              create_link!(path_hash, entry_hash)?;
-              let wire_entry = [<$crud_type WireEntry>] { entry, address };
-              // notify_goal_comment(wire_entry.clone())?;
-              Ok(wire_entry)
+            let address = create_entry!(entry.clone())?;
+            let entry_hash = hash_entry!(entry.clone())?;
+            let path_hash = Path::from([<$i:upper _PATH>]).hash()?;
+            create_link!(path_hash, entry_hash)?;
+            let wire_entry = [<$crud_type WireEntry>] { entry, address };
+            // notify_goal_comment(wire_entry.clone())?;
+            Ok(wire_entry)
           }
 
           #[hdk_extern]
@@ -133,13 +147,13 @@ macro_rules! crud {
           */
           pub fn [<inner_archive_ $i>](address: HeaderHash) -> ExternResult<HeaderHash> {
             delete_entry!(address.clone())?;
-              // notify_goal_comment_archived(address.clone())?;
-              Ok(address)
+            // notify_goal_comment_archived(address.clone())?;
+            Ok(address)
           }
 
           #[hdk_extern]
           pub fn [<archive_ $i>](address: HeaderHash) -> ExternResult<HeaderHash> {
-              [<inner_archive_ $i>](address)
+            [<inner_archive_ $i>](address)
           }
         }
     };

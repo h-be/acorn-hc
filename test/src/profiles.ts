@@ -67,7 +67,7 @@ module.exports = (orchestrator) => {
       'acorn_profiles',
       'update_whoami',
       {
-        profile: profile2,
+        entry: profile2,
         address: create_whoami.address,
       }
     )
@@ -97,7 +97,7 @@ module.exports = (orchestrator) => {
       address: '123123',
     }
     await conductor.call('bobbo', 'acorn_profiles', 'update_whoami', {
-      profile: profile3,
+      entry: profile3,
       address: create_whoami.address,
     })
     await delay(2000)

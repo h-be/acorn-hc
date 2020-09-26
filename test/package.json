@@ -4,10 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "all": "npm run wasm-build && npm run compress-profiles && npm run test",
-    "wasm-build": "cargo build --release --target wasm32-unknown-unknown",
-    "compress-profiles": "cd ../dnas/profiles && dna-util -c profiles.dna.workdir && cd ../../tests",
-    "compress-projects": "cd ../dnas/projects && dna-util -c projects.dna.workdir && cd ../../tests",
+    "all": "npm run wasm-build && npm run compress-profiles && npm run compress-projects && npm run test",
+    "wasm-build": "cd .. && cargo build --release --target wasm32-unknown-unknown",
+    "compress-profiles": "cd ../dnas/profiles && dna-util -c profiles.dna.workdir",
+    "compress-projects": "cd ../dnas/projects && dna-util -c projects.dna.workdir",
     "test": "RUST_LOG=error TRYORAMA_LOG_LEVEL=info RUST_BACKTRACE=1 TRYORAMA_HOLOCHAIN_PATH=\"holochain\" ts-node src/index.ts"
   },
   "author": "",
@@ -19,7 +19,7 @@
     "typescript": "^3.9.6"
   },
   "devDependencies": {
-    "@holochain/tryorama": "git://github.com/Holo-Host/tryorama-rsm.git",
+    "@holochain/tryorama": "git://github.com/holochain/tryorama.git#rsm",
     "@types/lodash": "^4.14.158",
     "@types/node": "^14.0.14"
   }

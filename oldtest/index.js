@@ -1,127 +1,3 @@
-/// NB: The tryorama config patterns are still not quite stabilized.
-/// See the tryorama README [https://github.com/holochain/tryorama]
-/// for a potentially more accurate example
-
-const path = require('path')
-
-const {
-  Orchestrator,
-  Config,
-  combine,
-  localOnly,
-  tapeExecutor
-} = require('@holochain/tryorama')
-
-process.on('unhandledRejection', error => {
-  // Will print "unhandledRejection err is not defined"
-  console.error('got unhandledRejection:', error)
-})
-
-const profilesDnaPath = path.join(
-  __dirname,
-  '../dnas/profiles/dist/profiles.dna.json'
-)
-const projectsDnaPath = path.join(
-  __dirname,
-  '../dnas/projects/dist/projects.dna.json'
-)
-
-const globalConfig = {
-  logger: {
-    type: 'info',
-    rules: {
-      rules: [
-        {
-          exclude: true,
-          pattern: '.*holochain_core::dht::dht_reducers.*'
-        },
-        {
-          exclude: true,
-          pattern: '.*ws.*'
-        },
-        {
-          exclude: true,
-          pattern: '.*in_stream::tcp.*'
-        },
-        {
-          exclude: true,
-          pattern: '.*holochain_net::sim2h_worker.*'
-        },
-        {
-          exclude: true,
-          pattern:
-            '.*holochain_core::nucleus::reducers::trace_return_hdk_function.*'
-        },
-        {
-          exclude: true,
-          pattern: '.*holochain_core::wasm_engine::api.*'
-        },
-        {
-          exclude: true,
-          pattern: '.*holochain::profiles.*'
-        },
-        {
-          exclude: true,
-          pattern: '.*parity.*'
-        },
-        {
-          exclude: true,
-          pattern: '.*mio.*'
-        },
-        {
-          exclude: true,
-          pattern: '.*tokio.*'
-        },
-        {
-          exclude: true,
-          pattern: '.*hyper.*'
-        },
-        {
-          exclude: true,
-          pattern: '.*rusoto_core.*'
-        },
-        {
-          exclude: true,
-          pattern: '.*want.*'
-        },
-        {
-          exclude: true,
-          pattern: '.*rpc.*'
-        }
-      ]
-    },
-    state_dump: false
-  },
-  network: {
-    type: 'sim2h',
-    sim2h_url: 'ws://localhost:9000' // 'ws://public.sim2h.net:9000'
-  } // Config.network('memory')
-}
-
-const orchestrator = new Orchestrator({
-  middleware: combine(
-    // use the tape harness to run the tests, injects the tape API into each scenario
-    // as the second argument
-    tapeExecutor(require('tape')),
-
-    // specify that all "players" in the test are on the local machine, rather than
-    // on remote machines
-    localOnly
-  )
-})
-
-const profilesDna = Config.dna(profilesDnaPath, 'profiles')
-const projectsDna = Config.dna(projectsDnaPath, 'projects')
-
-const profilesConfig = Config.gen({ profiles: profilesDna }, globalConfig)
-
-const projectsConfig = Config.gen({ projects: projectsDna }, globalConfig)
-
-const fullConfig = Config.gen(
-  { projects: projectsDna, profiles: profilesDna },
-  globalConfig
-)
-
 orchestrator.registerScenario('create goal test', async (s, t) => {
   // the 'true' is for 'start', which means boot the Conductors
   const { alice } = await s.players({ alice: projectsConfig }, true)
@@ -169,6 +45,7 @@ orchestrator.registerScenario('create goal test', async (s, t) => {
   // check for equality of the actual and expected results
   t.deepEqual(result1.Ok.address, result2.Ok)
 })
+
 orchestrator.registerScenario(
   'goal create/update/history/archive test',
   async (s, t) => {
@@ -254,35 +131,6 @@ orchestrator.registerScenario(
   }
 )
 
-orchestrator.registerScenario('create profile test', async (s, t) => {
-  // the 'true' is for 'start', which means boot the Conductors
-  const { alice } = await s.players({ alice: profilesConfig }, true)
-  // Make a call to a Zome function
-  // indicating the function, and passing it an input
-  const getProfile = await alice.call(
-    'profiles',
-    'acorn_profiles',
-    'create_whoami',
-    {
-      profile: {
-        first_name: 'alice',
-        last_name: 'velandia',
-        status: 'Online',
-        handle: 'Branch',
-        avatar_url: '',
-        address: alice.info('profiles').agentAddress
-      }
-    }
-  )
-
-  // Wait for all network activity to
-  await s.consistency()
-
-  const result = await alice.call('profiles', 'acorn_profiles', 'whoami', {})
-  // check for equality of the actual and expected results
-  t.deepEqual(getProfile, result)
-})
-
 orchestrator.registerScenario('create goal test', async (s, t) => {
   // the 'true' is for 'start', which means boot the Conductors
   const { alice } = await s.players({ alice: projectsConfig }, true)
@@ -311,86 +159,6 @@ orchestrator.registerScenario('create goal test', async (s, t) => {
   )
   // check for equality of the actual and expected results
   t.deepEqual(addr.Ok.goal, result.Ok[0])
-})
-
-orchestrator.registerScenario('two agent profiles test', async (s, t) => {
-  // the 'true' is for 'start', which means boot the Conductors
-  const { alice, bob } = await s.players(
-    { alice: profilesConfig, bob: profilesConfig },
-    true
-  )
-  // Make a call to a Zome function
-  // indicating the function, and passing it an input
-  await alice.call('profiles', 'acorn_profiles', 'create_whoami', {
-    profile: {
-      first_name: 'alice',
-      last_name: 'velandia',
-      status: 'Online',
-      handle: 'Branch',
-      avatar_url: '',
-      address: alice.info('profiles').agentAddress
-    }
-  })
-  await s.consistency()
-  const result2 = await alice.call(
-    'profiles',
-    'acorn_profiles',
-    'create_whoami',
-    {
-      profile: {
-        first_name: 'bob',
-        last_name: 'romero',
-        handle: 'Branch',
-        status: 'Online',
-        avatar_url: '',
-        address: bob.info('profiles').agentAddress
-      }
-    }
-  )
-  await s.consistency()
-  await bob.call('profiles', 'acorn_profiles', 'create_whoami', {
-    profile: {
-      first_name: 'bob',
-      last_name: 'romero',
-      status: 'Online',
-      handle: 'Branch',
-      status: 'Online',
-
-      avatar_url: '',
-      address: bob.info('profiles').agentAddress
-    }
-  })
-
-  // Wait for all network activity to
-  await s.consistency()
-  const result_alice = await alice.call(
-    'profiles',
-    'acorn_profiles',
-    'fetch_agent_address',
-    {}
-  )
-  const result_bob = await bob.call(
-    'profiles',
-    'acorn_profiles',
-    'fetch_agent_address',
-    {}
-  )
-  await s.consistency()
-  // check for equality of the actual and expected results
-  const result = await alice.call(
-    'profiles',
-    'acorn_profiles',
-    'fetch_agents',
-    {}
-  )
-
-  t.equal(result.Ok.length, 2)
-  const parsedError = JSON.parse(result2.Err.Internal)
-  t.equal(
-    parsedError.kind.ValidationFailed,
-    'only the same agent as the profile is about can create their profile'
-  )
-  t.isNotDeepEqual(result_alice.Ok, result_bob.Ok)
 })
 
 orchestrator.registerScenario(
@@ -735,4 +503,5 @@ orchestrator.registerScenario('alex and alice are commenting', async (s, t) => {
   )
   t.equal(fetch2.Ok.length, 0)
 })
+
 orchestrator.run()

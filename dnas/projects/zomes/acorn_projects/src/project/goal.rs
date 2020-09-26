@@ -10,8 +10,8 @@ pub struct Goal {
   content: String,
   user_hash: AgentPubKey,
   user_edit_hash: Option<AgentPubKey>,
-  timestamp_created: u128,
-  timestamp_updated: Option<u128>,
+  timestamp_created: f64,
+  timestamp_updated: Option<f64>,
   hierarchy: Hierarchy,
   status: Status,
   tags: Option<Vec<String>>,
@@ -36,15 +36,17 @@ pub enum Hierarchy {
   Leaf,
   NoHierarchy,
 }
+
 #[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone, PartialEq)]
 pub struct TimeFrame {
-  from_date: u128,
-  to_date: u128,
+  from_date: f64,
+  to_date: f64,
 }
 
 
 crud!(Goal, goal, "goal");
 
+// TODO: finish archive goal
 #[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone, PartialEq)]
 pub struct ArchiveGoalResponse {
   address: HeaderHash,
@@ -55,6 +57,7 @@ pub struct ArchiveGoalResponse {
   archived_entry_points: Vec<HeaderHash>,
 }
 
+// TODO: finish get goal history
 #[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone)]
 pub struct GetHistoryResponse {
   entries: Vec<Goal>,

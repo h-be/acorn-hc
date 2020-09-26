@@ -11,7 +11,7 @@ pub const ENTRY_POINT_PATH: &str = "entry_point";
 pub struct EntryPoint {
     color: String,
     creator_address: AgentPubKey,
-    created_at: u128,
+    created_at: f64,
     goal_address: EntryHash,
 }
 
