@@ -24,7 +24,7 @@ interface Hash {
 function newGoal(agentAddress: Hash, content: string) {
   return {
     content,
-    description: "Test Goal Description",
+    description: 'Test Goal Description',
     user_hash: agentAddress,
     user_edit_hash: null,
     timestamp_created: Date.now(),
@@ -47,72 +47,41 @@ module.exports = (orchestrator) => {
     function callAlice(fn: string, payload: any) {
       return cndtr.call(ALICE_USER_NICK, ZOME, fn, payload)
     }
-    
-    try {
-      const result = await callAlice('test', null)
-      console.log('"test" result:', result)
-    } catch (e) {
-      console.log(e)
-    }
-    
-    const goal = newGoal(agentAddress, "Test Goal Content")
-    let createGoalResult
-    try {
-      createGoalResult = await callAlice('create_goal', goal)
-      t.deepEqual(createGoalResult.entry, goal)
-    } catch (e) {
-      console.log(e)
-    }
 
-    let fetchGoalsResult
-    try {
-      fetchGoalsResult = await callAlice('fetch_goals', null)
-      t.equal(fetchGoalsResult.length, 1)
-      t.deepEqual(fetchGoalsResult[0], createGoalResult)
-    } catch (e) {
-      console.log(e)
-    }
+    const result = await callAlice('test', null)
+    console.log('"test" result:', result)
 
-    let updateGoalResult
-    const updatedGoal = newGoal(agentAddress, "Updated Goal Content")
-    try {
-      updateGoalResult = await callAlice('update_goal', {
-        entry: updatedGoal,
-        address: createGoalResult.address
-      })
-      // the address should stay continuous from the original creation
-      // of the goal
-      t.deepEqual(updateGoalResult.address, createGoalResult.address)
-    } catch (e) {
-      console.log(e)
-    }
-    
-    let fetchGoals2Result
-    try {
-      fetchGoals2Result = await callAlice('fetch_goals', null)
-      t.equal(fetchGoals2Result.length, 1)
-      // the address should stay continuous from the original creation
-      // of the goal, but the entry/goal itself should contain the updated
-      // values
-      t.deepEqual(fetchGoals2Result[0], updateGoalResult)
-    } catch (e) {
-      console.log(e)
-    }
-    
-    let archiveGoalResult
-    try {
-      archiveGoalResult = await callAlice('archive_goal', createGoalResult.address)
-      t.deepEqual(archiveGoalResult, createGoalResult.address)
-    } catch (e) {
-      console.log(e)
-    }
-    
-    let fetchGoals3Result
-    try {
-      fetchGoals3Result = await callAlice('fetch_goals', null)
-      t.equal(fetchGoals3Result.length, 0)
-    } catch (e) {
-      console.log(e)
-    }
+    const goal = newGoal(agentAddress, 'Test Goal Content')
+    const createGoalResult = await callAlice('create_goal', goal)
+    t.deepEqual(createGoalResult.entry, goal)
+
+    const fetchGoalsResult = await callAlice('fetch_goals', null)
+    t.equal(fetchGoalsResult.length, 1)
+    t.deepEqual(fetchGoalsResult[0], createGoalResult)
+
+    const updatedGoal = newGoal(agentAddress, 'Updated Goal Content')
+    const updateGoalResult = await callAlice('update_goal', {
+      entry: updatedGoal,
+      address: createGoalResult.address,
+    })
+    // the address should stay continuous from the original creation
+    // of the goal
+    t.deepEqual(updateGoalResult.address, createGoalResult.address)
+
+    const fetchGoals2Result = await callAlice('fetch_goals', null)
+    t.equal(fetchGoals2Result.length, 1)
+    // the address should stay continuous from the original creation
+    // of the goal, but the entry/goal itself should contain the updated
+    // values
+    t.deepEqual(fetchGoals2Result[0], updateGoalResult)
+
+    const archiveGoalResult = await callAlice(
+      'archive_goal',
+      createGoalResult.address
+    )
+    t.deepEqual(archiveGoalResult, createGoalResult.address)
+
+    const fetchGoals3Result = await callAlice('fetch_goals', null)
+    t.equal(fetchGoals3Result.length, 0)
   })
 }
