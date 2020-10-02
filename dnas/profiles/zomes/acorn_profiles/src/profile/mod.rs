@@ -1,9 +1,5 @@
+use dna_help::{fetch_links, get_latest_for_entry, EntryAndHash};
 use hdk3::prelude::*;
-use dna_help::{
-  get_latest_for_entry,
-  fetch_links,
-  EntryAndHash
-};
 
 pub const AGENTS_PATH: &str = "agents";
 
@@ -19,9 +15,9 @@ pub struct Profile {
 }
 
 impl From<EntryAndHash<Profile>> for Profile {
-  fn from(entry_and_hash: EntryAndHash<Profile>) -> Self {
-      entry_and_hash.0
-  }
+    fn from(entry_and_hash: EntryAndHash<Profile>) -> Self {
+        entry_and_hash.0
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, SerializedBytes)]
@@ -31,12 +27,12 @@ pub struct WireEntry {
 }
 
 impl From<EntryAndHash<Profile>> for WireEntry {
-  fn from(entry_and_hash: EntryAndHash<Profile>) -> Self {
-      WireEntry {
-          entry: entry_and_hash.0,
-          address: entry_and_hash.1,
-      }
-  }
+    fn from(entry_and_hash: EntryAndHash<Profile>) -> Self {
+        WireEntry {
+            entry: entry_and_hash.0,
+            address: entry_and_hash.1,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, SerializedBytes, Debug, Clone, PartialEq)]
@@ -100,14 +96,14 @@ impl<'de> Deserialize<'de> for Status {
     }
 }
 
-#[hdk_extern]
-fn validate(_: Entry) -> ExternResult<ValidateCallbackResult> {
-    // HOLD
-    // have to hold on this until we get more than entry in the validation callback
-    // which will come soon, according to David M.
-    let _ = debug!("in validation callback");
-    Ok(ValidateCallbackResult::Valid)
-}
+// #[hdk_extern]
+// fn validate(_: Entry) -> ExternResult<ValidateCallbackResult> {
+//     // HOLD
+//     // have to hold on this until we get more than entry in the validation callback
+//     // which will come soon, according to David M.
+//     let _ = debug!("in validation callback");
+//     Ok(ValidateCallbackResult::Valid)
+// }
 
 #[hdk_extern]
 pub fn create_whoami(entry: Profile) -> ExternResult<WireEntry> {
@@ -118,7 +114,7 @@ pub fn create_whoami(entry: Profile) -> ExternResult<WireEntry> {
     let header_hash = create_entry!(entry.clone())?;
 
     let entry_hash = hash_entry!(entry.clone())?;
-    
+
     // list me so anyone can see my profile
     let agents_path_address = Path::from(AGENTS_PATH).hash()?;
     create_link!(agents_path_address, entry_hash.clone())?;
@@ -136,10 +132,7 @@ pub fn create_whoami(entry: Profile) -> ExternResult<WireEntry> {
 
 #[hdk_extern]
 pub fn update_whoami(update: WireEntry) -> ExternResult<WireEntry> {
-    update_entry!(
-        update.address.clone(),
-        update.entry.clone()
-    )?;
+    update_entry!(update.address.clone(), update.entry.clone())?;
     // // send update to peers
     // // notify_new_agent(profile.clone())?;
     Ok(update)
@@ -156,16 +149,12 @@ pub fn whoami(_: ()) -> ExternResult<WhoAmIOutput> {
     // // from the UI perspective
     match maybe_profile_link {
         Some(profile_link) => match get_latest_for_entry::<Profile>(profile_link.target.clone())? {
-            Some(entry_and_hash) => {
-                Ok(WhoAmIOutput(Some(WireEntry::from(entry_and_hash))))
-            },
+            Some(entry_and_hash) => Ok(WhoAmIOutput(Some(WireEntry::from(entry_and_hash)))),
             None => Ok(WhoAmIOutput(None)),
         },
         None => Ok(WhoAmIOutput(None)),
     }
 }
-
-
 
 #[hdk_extern]
 pub fn fetch_agents(_: ()) -> ExternResult<AgentsOutput> {
@@ -177,10 +166,10 @@ pub fn fetch_agents(_: ()) -> ExternResult<AgentsOutput> {
 #[hdk_extern]
 fn fetch_agent_address(_: ()) -> ExternResult<AgentAddressOutput> {
     let agent_info = agent_info!()?;
-    Ok(AgentAddressOutput(agent_info.agent_initial_pubkey.to_string()))
+    Ok(AgentAddressOutput(
+        agent_info.agent_initial_pubkey.to_string(),
+    ))
 }
-
-
 
 // pub fn profile_def() -> ValidatingEntryType {
 //     entry!(

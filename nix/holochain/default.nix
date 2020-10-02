@@ -3,34 +3,23 @@ let
   acorn-hc = pkgs.writeShellScriptBin "acorn-hc"
   ''
   set -euxo pipefail
-  # don't error if it doesn't exist to remove
-  rm --force conductor-config.toml
-  cp starter.conductor-config.toml conductor-config.toml
-  hc hash --path dnas/profiles/dist/profiles.dna.json | awk '/DNA Hash: /{print $NF}' | tr -d '\n' > profiles_dna_address
-  node update-dna-address.js
-  holochain -c ./conductor-config.toml
+  acorn-package
+  npm run start
   '';
 
   acorn-fmt = pkgs.writeShellScriptBin "acorn-fmt"
   ''
   set -euxo pipefail
-  cd dnas/profiles/zomes/acorn_profiles/code
   cargo fmt
-  cd ../../../../..
-  cd dnas/projects/zomes/acorn_projects/code
-  cargo fmt
-  cd ../../../../..
   '';
 
   acorn-package = pkgs.writeShellScriptBin "acorn-package"
   ''
   set -euxo pipefail
-  cd dnas/profiles
-  hc package
+  cargo build --release --target wasm32-unknown-unknown
+  cd dnas/profiles && dna-util -c profiles.dna.workdir
   cd ../..
-  cd dnas/projects
-  hc package
-  cd ../..
+  cd dnas/projects && dna-util -c projects.dna.workdir
   '';
 in
 {

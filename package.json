@@ -1,0 +1,25 @@
+{
+  "name": "acorn-hc",
+  "version": "1.0.0",
+  "description": "[![CircleCI](https://circleci.com/gh/h-be/acorn-hc.svg?style=svg)](https://circleci.com/gh/h-be/acorn-hc)",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "start": "npx @holochain-open-dev/holochain-run-dna dnas/profiles/profiles.dna.gz dnas/projects/projects.dna.gz"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/h-be/acorn-hc.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/h-be/acorn-hc/issues"
+  },
+  "homepage": "https://github.com/h-be/acorn-hc#readme",
+  "dependencies": {
+    "@holochain-open-dev/holochain-run-dna": "^0.1.13"
+  }
+}

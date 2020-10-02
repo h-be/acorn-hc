@@ -1,14 +1,14 @@
-use hdk3::prelude::*;
 use dna_help::crud;
+use hdk3::prelude::*;
 
 // a relationship between a Goal and an Agent
 #[hdk_entry(id = "goal_member")]
 #[derive(Debug, Clone, PartialEq)]
 pub struct GoalMember {
-  goal_address: HeaderHash,
-  agent_address: AgentPubKey,
-  user_edit_hash: Option<AgentPubKey>,
-  unix_timestamp: f64,
+    goal_address: HeaderHash,
+    agent_address: AgentPubKey,
+    user_edit_hash: Option<AgentPubKey>,
+    unix_timestamp: f64,
 }
 
 crud!(GoalMember, goal_member, "goal_member");

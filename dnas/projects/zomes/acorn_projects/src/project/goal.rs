@@ -1,5 +1,5 @@
-use hdk3::prelude::*;
 use dna_help::crud;
+use hdk3::prelude::*;
 
 // A Goal Card. This is a card on the SoA Tree which can be small or non-small, complete or
 // incomplete, certain or uncertain, and contains text content.
@@ -7,67 +7,62 @@ use dna_help::crud;
 #[hdk_entry(id = "goal")]
 #[derive(Debug, Clone, PartialEq)]
 pub struct Goal {
-  content: String,
-  user_hash: AgentPubKey,
-  user_edit_hash: Option<AgentPubKey>,
-  timestamp_created: f64,
-  timestamp_updated: Option<f64>,
-  hierarchy: Hierarchy,
-  status: Status,
-  tags: Option<Vec<String>>,
-  description: String,
-  time_frame: Option<TimeFrame>,
+    content: String,
+    user_hash: AgentPubKey,
+    user_edit_hash: Option<AgentPubKey>,
+    timestamp_created: f64,
+    timestamp_updated: Option<f64>,
+    hierarchy: Hierarchy,
+    status: Status,
+    tags: Option<Vec<String>>,
+    description: String,
+    time_frame: Option<TimeFrame>,
 }
 
 #[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone, PartialEq)]
 pub enum Status {
-  Uncertain,
-  Incomplete,
-  InProcess,
-  Complete,
-  InReview,
+    Uncertain,
+    Incomplete,
+    InProcess,
+    Complete,
+    InReview,
 }
 
 #[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone, PartialEq)]
 pub enum Hierarchy {
-  Root,
-  Trunk,
-  Branch,
-  Leaf,
-  NoHierarchy,
+    Root,
+    Trunk,
+    Branch,
+    Leaf,
+    NoHierarchy,
 }
 
 #[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone, PartialEq)]
 pub struct TimeFrame {
-  from_date: f64,
-  to_date: f64,
+    from_date: f64,
+    to_date: f64,
 }
-
 
 crud!(Goal, goal, "goal");
 
 // TODO: finish archive goal
 #[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone, PartialEq)]
 pub struct ArchiveGoalResponse {
-  address: HeaderHash,
-  archived_edges: Vec<HeaderHash>,
-  archived_goal_members: Vec<HeaderHash>,
-  archived_goal_votes: Vec<HeaderHash>,
-  archived_goal_comments: Vec<HeaderHash>,
-  archived_entry_points: Vec<HeaderHash>,
+    address: HeaderHash,
+    archived_edges: Vec<HeaderHash>,
+    archived_goal_members: Vec<HeaderHash>,
+    archived_goal_votes: Vec<HeaderHash>,
+    archived_goal_comments: Vec<HeaderHash>,
+    archived_entry_points: Vec<HeaderHash>,
 }
 
 // TODO: finish get goal history
 #[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone)]
 pub struct GetHistoryResponse {
-  entries: Vec<Goal>,
-  members: Vec<Vec<super::goal_member::GoalMember>>,
-  address: HeaderHash,
+    entries: Vec<Goal>,
+    members: Vec<Vec<super::goal_member::GoalMember>>,
+    address: HeaderHash,
 }
-
-
-
-
 
 // DELETE
 // pub fn archive_goal(address: HeaderHash) -> ExternResult<ArchiveGoalResponse> {
@@ -160,9 +155,6 @@ pub struct GetHistoryResponse {
 
 //   Ok(archive_response)
 // }
-
-
-
 
 // pub fn history_of_goal(address: HeaderHash) -> ExternResult<GetHistoryResponse> {
 //   let anchor_address = Entry::App(

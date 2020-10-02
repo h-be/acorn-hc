@@ -1,13 +1,9 @@
 {
-  "name": "profiles-tests",
+  "name": "acorn-tests",
   "version": "0.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "all": "npm run wasm-build && npm run compress-profiles && npm run compress-projects && npm run test",
-    "wasm-build": "cd .. && cargo build --release --target wasm32-unknown-unknown",
-    "compress-profiles": "cd ../dnas/profiles && dna-util -c profiles.dna.workdir",
-    "compress-projects": "cd ../dnas/projects && dna-util -c projects.dna.workdir",
     "test": "RUST_LOG=error TRYORAMA_LOG_LEVEL=info RUST_BACKTRACE=1 TRYORAMA_HOLOCHAIN_PATH=\"holochain\" ts-node src/index.ts"
   },
   "author": "",

@@ -4,7 +4,8 @@ let
   ''
   set -euxo pipefail
   acorn-package
-  HC_IGNORE_SIM2H_URL_PROPERTY=true hc test --skip-package
+  cd test
+  npm run test
   '';
 in
 {

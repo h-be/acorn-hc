@@ -38,7 +38,7 @@ impl From<EntryAndHash<EntryPoint>> for WireEntry {
 }
 
 #[derive(Serialize, Deserialize, SerializedBytes)]
-pub struct VecEntryPointResponse (Vec<EntryPointResponse>);
+pub struct VecEntryPointResponse(Vec<EntryPointResponse>);
 
 // CREATE
 #[hdk_extern]

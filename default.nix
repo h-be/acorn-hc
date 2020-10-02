@@ -15,7 +15,7 @@ let
    url = "https://github.com/${config.holonix.github.owner}/${config.holonix.github.repo}/tarball/${config.holonix.github.ref}";
    sha256 = config.holonix.github.sha256;
   }
- ) { config = config; };
+ ) { config = config; use-stable-rust = true; };
  # END HOLONIX IMPORT BOILERPLATE
 
 in
@@ -23,6 +23,16 @@ with holonix.pkgs;
 {
  dev-shell = stdenv.mkDerivation (holonix.shell // {
   name = "dev-shell";
+
+  shellHook = holonix.pkgs.lib.concatStrings [
+   holonix.shell.shellHook
+   ''
+    cargo install --force holochain --git https://github.com/holochain/holochain.git --rev a13638dd47f09c2f6ef8a7a9ffea4f89c15f2f83
+    cargo install --force dna_util --git https://github.com/holochain/holochain.git --rev a13638dd47f09c2f6ef8a7a9ffea4f89c15f2f83
+    cd test && npm install && cd ..
+    npm install
+   ''
+  ];
 
   buildInputs = [ ]
    ++ holonix.shell.buildInputs

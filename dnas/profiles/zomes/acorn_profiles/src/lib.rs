@@ -2,9 +2,7 @@ use hdk3::prelude::*;
 
 mod profile;
 
-use profile::{
-    Profile, AGENTS_PATH,
-};
+use profile::{Profile, AGENTS_PATH};
 
 #[hdk_extern]
 fn init(_: ()) -> ExternResult<InitCallbackResult> {
@@ -13,7 +11,6 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
 }
 
 entry_defs![Path::entry_def(), Profile::entry_def()];
-
 
 // The GetResponse struct allows our zome functions to return an entry along with its
 // address so that Redux can know the address of goals and edges

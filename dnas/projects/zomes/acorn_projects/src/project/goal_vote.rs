@@ -1,5 +1,5 @@
-use hdk3::prelude::*;
 use dna_help::crud;
+use hdk3::prelude::*;
 
 #[hdk_entry(id = "goal_vote")]
 #[derive(Debug, Clone, PartialEq)]
