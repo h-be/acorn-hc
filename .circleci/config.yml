@@ -8,11 +8,6 @@ jobs:
       - checkout
       - run:
           no_output_timeout: 20m
-          name: sim2h server
-          command: nix-shell --run sim2h_server
-          background: true
-      - run:
-          no_output_timeout: 20m
           command: nix-shell --run acorn-test
 
   github-wasm:
