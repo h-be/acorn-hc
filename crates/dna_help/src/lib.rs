@@ -3,21 +3,26 @@ use hdk3::prelude::*;
 pub type EntryAndHash<T> = (T, HeaderHash);
 pub type OptionEntryAndHash<T> = Option<EntryAndHash<T>>;
 
+pub fn get_header_hash(shh: element::SignedHeaderHashed) -> HeaderHash {
+    shh.header_hashed().as_hash().to_owned()
+}
+
 pub fn get_latest_for_entry<T: TryFrom<SerializedBytes, Error = SerializedBytesError>>(
     entry_hash: EntryHash,
 ) -> ExternResult<OptionEntryAndHash<T>> {
-    // First, make sure we DO have the latest entry address
-    let maybe_latest_entry_address = match get_details!(entry_hash.clone())? {
+    // First, make sure we DO have the latest header_hash address
+    let maybe_latest_header_hash = match get_details!(entry_hash.clone())? {
         Some(Details::Entry(details)) => match details.entry_dht_status {
             metadata::EntryDhtStatus::Live => match details.updates.len() {
-                0 => Some(entry_hash),
+                // pass out the header associated with this entry
+                0 => Some(get_header_hash(details.headers.first().unwrap().to_owned())),
                 _ => {
                     let mut sortlist = details.updates.to_vec();
                     // unix timestamp should work for sorting
-                    sortlist.sort_by_key(|update| update.timestamp.0);
+                    sortlist.sort_by_key(|update| update.header().timestamp().0);
                     // sorts in ascending order, so take the last element
-                    let last = sortlist.last().unwrap();
-                    Some(last.entry_hash.clone())
+                    let last = sortlist.last().unwrap().to_owned();
+                    Some(get_header_hash(last))
                 }
             },
             metadata::EntryDhtStatus::Dead => None,
@@ -26,20 +31,20 @@ pub fn get_latest_for_entry<T: TryFrom<SerializedBytes, Error = SerializedBytesE
         _ => None,
     };
 
-    // Second, go and get that entry, and return it and its header_address
-    match maybe_latest_entry_address {
-        Some(latest_entry_address) => match get!(latest_entry_address)? {
+    // Second, go and get that element, and return it and its header_address
+    match maybe_latest_header_hash {
+        Some(latest_header_hash) => match get!(latest_header_hash)? {
             Some(element) => match element.entry().to_app_option::<T>()? {
-                Some(entry) => {
-                    let header_address = match element.header() {
+                Some(entry) => Ok(Some((
+                    entry,
+                    match element.header() {
                         // we DO want to return the header for the original
                         // instead of the updated, in our case
                         Header::Update(update) => update.original_header_address.clone(),
                         Header::Create(_) => element.header_address().clone(),
                         _ => unreachable!("Can't have returned a header for a nonexistent entry"),
-                    };
-                    Ok(Some((entry, header_address)))
-                }
+                    },
+                ))),
                 None => Ok(None),
             },
             None => Ok(None),

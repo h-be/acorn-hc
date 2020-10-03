@@ -27,8 +27,8 @@ with holonix.pkgs;
   shellHook = holonix.pkgs.lib.concatStrings [
    holonix.shell.shellHook
    ''
-    cargo install --force holochain --git https://github.com/holochain/holochain.git --rev a13638dd47f09c2f6ef8a7a9ffea4f89c15f2f83
-    cargo install --force dna_util --git https://github.com/holochain/holochain.git --rev a13638dd47f09c2f6ef8a7a9ffea4f89c15f2f83
+    cargo install --force holochain --git https://github.com/holochain/holochain.git --rev 4714fbddc48f1f9987c9f574b8d06510ea58ab16
+    cargo install --force dna_util --git https://github.com/holochain/holochain.git --rev 4714fbddc48f1f9987c9f574b8d06510ea58ab16
     cd test && npm install && cd ..
     npm install
    ''

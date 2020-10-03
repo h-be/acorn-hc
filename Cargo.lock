@@ -96,7 +96,7 @@ dependencies = [
 [[package]]
 name = "fixt"
 version = "0.0.1"
-source = "git+ssh://git@github.com/holochain/holochain.git?branch=develop#2c745dd28320c0d5e2c490bec0baa3db37fa58f2"
+source = "git+ssh://git@github.com/holochain/holochain.git?rev=4714fbddc48f1f9987c9f574b8d06510ea58ab16#4714fbddc48f1f9987c9f574b8d06510ea58ab16"
 dependencies = [
  "holochain_serialized_bytes",
  "paste 0.1.12",
@@ -126,7 +126,7 @@ checksum = "d7afe4a420e3fe79967a00898cc1f4db7c8a49a9333a29f8a4bd76a253d5cd04"
 [[package]]
 name = "hdk3"
 version = "0.0.1"
-source = "git+ssh://git@github.com/holochain/holochain.git?branch=develop#2c745dd28320c0d5e2c490bec0baa3db37fa58f2"
+source = "git+ssh://git@github.com/holochain/holochain.git?rev=4714fbddc48f1f9987c9f574b8d06510ea58ab16#4714fbddc48f1f9987c9f574b8d06510ea58ab16"
 dependencies = [
  "hdk3_derive",
  "holo_hash",
@@ -140,7 +140,7 @@ dependencies = [
 [[package]]
 name = "hdk3_derive"
 version = "0.0.1"
-source = "git+ssh://git@github.com/holochain/holochain.git?branch=develop#2c745dd28320c0d5e2c490bec0baa3db37fa58f2"
+source = "git+ssh://git@github.com/holochain/holochain.git?rev=4714fbddc48f1f9987c9f574b8d06510ea58ab16#4714fbddc48f1f9987c9f574b8d06510ea58ab16"
 dependencies = [
  "holochain_zome_types",
  "paste 1.0.1",
@@ -161,7 +161,7 @@ dependencies = [
 [[package]]
 name = "holo_hash"
 version = "0.0.1"
-source = "git+ssh://git@github.com/holochain/holochain.git?branch=develop#2c745dd28320c0d5e2c490bec0baa3db37fa58f2"
+source = "git+ssh://git@github.com/holochain/holochain.git?rev=4714fbddc48f1f9987c9f574b8d06510ea58ab16#4714fbddc48f1f9987c9f574b8d06510ea58ab16"
 dependencies = [
  "base64",
  "blake2b_simd",
@@ -222,7 +222,7 @@ dependencies = [
 [[package]]
 name = "holochain_zome_types"
 version = "0.0.1"
-source = "git+ssh://git@github.com/holochain/holochain.git?branch=develop#2c745dd28320c0d5e2c490bec0baa3db37fa58f2"
+source = "git+ssh://git@github.com/holochain/holochain.git?rev=4714fbddc48f1f9987c9f574b8d06510ea58ab16#4714fbddc48f1f9987c9f574b8d06510ea58ab16"
 dependencies = [
  "fixt",
  "holo_hash",
