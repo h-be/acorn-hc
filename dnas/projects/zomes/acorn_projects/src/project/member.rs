@@ -1,4 +1,4 @@
-use dna_help::{fetch_links, EntryAndHash};
+use dna_help::{EntryAndHash, WrappedAgentPubKey, fetch_links};
 use hdk3::prelude::*;
 
 pub const MEMBER_PATH: &str = "member";
@@ -7,7 +7,7 @@ pub const MEMBER_PATH: &str = "member";
 #[hdk_entry(id = "member")]
 #[derive(Debug, Clone, PartialEq)]
 pub struct Member {
-    pub address: AgentPubKey,
+    pub address: WrappedAgentPubKey,
 }
 
 impl From<EntryAndHash<Member>> for Member {

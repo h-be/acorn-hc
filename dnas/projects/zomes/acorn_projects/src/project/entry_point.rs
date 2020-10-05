@@ -1,4 +1,4 @@
-use dna_help::crud;
+use dna_help::{WrappedAgentPubKey, WrappedEntryHash, crud};
 use hdk3::prelude::*;
 
 // The "Entry" in EntryPoint is not a reference to Holochain "Entries"
@@ -7,9 +7,9 @@ use hdk3::prelude::*;
 #[derive(Debug, Clone, PartialEq)]
 pub struct EntryPoint {
     color: String,
-    creator_address: AgentPubKey,
+    creator_address: WrappedAgentPubKey,
     created_at: f64,
-    goal_address: EntryHash,
+    goal_address: WrappedEntryHash,
 }
 
 crud!(EntryPoint, entry_point, "entry_point");

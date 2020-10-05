@@ -1,13 +1,13 @@
-use dna_help::crud;
+use dna_help::{WrappedAgentPubKey, WrappedHeaderHash, crud};
 use hdk3::prelude::*;
 
 // a relationship between a Goal and an Agent
 #[hdk_entry(id = "goal_member")]
 #[derive(Debug, Clone, PartialEq)]
 pub struct GoalMember {
-    goal_address: HeaderHash,
-    agent_address: AgentPubKey,
-    user_edit_hash: Option<AgentPubKey>,
+    goal_address: WrappedHeaderHash,
+    agent_address: WrappedAgentPubKey,
+    user_edit_hash: Option<WrappedAgentPubKey>,
     unix_timestamp: f64,
 }
 
@@ -15,7 +15,7 @@ crud!(GoalMember, goal_member, "goal_member");
 
 // DELETE
 // clear all members
-// pub fn archive_goal_members(address: &HeaderHash) -> ExternResult<Vec<HeaderHash>> {
+// pub fn archive_goal_members(address: &WrappedHeaderHash) -> ExternResult<Vec<WrappedHeaderHash>> {
 //   fetch_goal_members()?
 //     .into_iter()
 //     .filter(|wire_entry: WireEntry| {

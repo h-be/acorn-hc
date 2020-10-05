@@ -18,6 +18,12 @@ module.exports = (orchestrator) => {
     const { conductor } = await s.players({ conductor: config })
     await conductor.spawn()
 
+    const res = await conductor.call('bobbo', 'acorn_profiles', 'test', null)
+    console.log(res)
+
+    const res2 = await conductor.call('bobbo', 'acorn_profiles', 'test2', res)
+    console.log(res2)
+
     // address is the HEADER address
     // const address = await conductor.call('bobbo', 'proj', 'create_post', { num: 1, str: "how are you?" })
 

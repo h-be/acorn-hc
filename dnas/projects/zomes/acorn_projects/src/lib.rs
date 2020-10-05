@@ -1,3 +1,4 @@
+use dna_help::WrappedAgentPubKey;
 use hdk3::prelude::*;
 
 mod project;
@@ -28,7 +29,7 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
     // so that all peers can become aware of the new presence
     let member_path_address = Path::from(MEMBER_PATH).hash()?;
     let member = Member {
-      address: agent_info!()?.agent_initial_pubkey,
+      address: WrappedAgentPubKey(agent_info!()?.agent_initial_pubkey),
     };
     create_entry!(member.clone())?;
     let member_entry_hash= hash_entry!(member)?;

@@ -4,6 +4,79 @@ pub use paste;
 pub type EntryAndHash<T> = (T, HeaderHash, EntryHash);
 pub type OptionEntryAndHash<T> = Option<EntryAndHash<T>>;
 
+#[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone, PartialEq)]
+#[serde(try_from = "UIWrappedAgentPubKey")]
+#[serde(into = "UIWrappedAgentPubKey")]
+pub struct WrappedAgentPubKey(pub AgentPubKey);
+
+#[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone, PartialEq)]
+pub struct UIWrappedAgentPubKey(String);
+
+impl TryFrom<UIWrappedAgentPubKey> for WrappedAgentPubKey {
+    type Error = String;
+    fn try_from(ui_wrapped_agent_pub_key: UIWrappedAgentPubKey) -> Result<Self, Self::Error> {
+        match AgentPubKey::try_from(ui_wrapped_agent_pub_key.0) {
+            Ok(address) => Ok(Self(address)),
+            Err(e) => Err(format!("{:?}", e)),
+        }
+    }
+}
+
+impl From<WrappedAgentPubKey> for UIWrappedAgentPubKey {
+    fn from(wrapped_agent_pub_key: WrappedAgentPubKey) -> Self {
+        Self(wrapped_agent_pub_key.0.to_string())
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone, PartialEq)]
+#[serde(try_from = "UIWrappedHeaderHash")]
+#[serde(into = "UIWrappedHeaderHash")]
+pub struct WrappedHeaderHash(pub HeaderHash);
+
+#[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone, PartialEq)]
+pub struct UIWrappedHeaderHash(String);
+
+impl TryFrom<UIWrappedHeaderHash> for WrappedHeaderHash {
+    type Error = String;
+    fn try_from(ui_wrapped_header_hash: UIWrappedHeaderHash) -> Result<Self, Self::Error> {
+        match HeaderHash::try_from(ui_wrapped_header_hash.0) {
+            Ok(address) => Ok(Self(address)),
+            Err(e) => Err(format!("{:?}", e)),
+        }
+    }
+}
+
+impl From<WrappedHeaderHash> for UIWrappedHeaderHash {
+    fn from(wrapped_header_hash: WrappedHeaderHash) -> Self {
+        Self(wrapped_header_hash.0.to_string())
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone, PartialEq)]
+#[serde(try_from = "UIWrappedEntryHash")]
+#[serde(into = "UIWrappedEntryHash")]
+pub struct WrappedEntryHash(pub EntryHash);
+
+#[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone, PartialEq)]
+pub struct UIWrappedEntryHash(String);
+
+impl TryFrom<UIWrappedEntryHash> for WrappedEntryHash {
+    type Error = String;
+    fn try_from(ui_wrapped_entry_hash: UIWrappedEntryHash) -> Result<Self, Self::Error> {
+        match EntryHash::try_from(ui_wrapped_entry_hash.0) {
+            Ok(address) => Ok(Self(address)),
+            Err(e) => Err(format!("{:?}", e)),
+        }
+    }
+}
+
+impl From<WrappedEntryHash> for UIWrappedEntryHash {
+    fn from(wrapped_entry_hash: WrappedEntryHash) -> Self {
+        Self(wrapped_entry_hash.0.to_string())
+    }
+}
+
+
 pub fn get_header_hash(shh: element::SignedHeaderHashed) -> HeaderHash {
     shh.header_hashed().as_hash().to_owned()
 }
@@ -83,22 +156,22 @@ macro_rules! crud {
           #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, SerializedBytes)]
           pub struct [<$crud_type WireEntry>] {
             pub entry: $crud_type,
-            pub address: HeaderHash,
-            pub entry_address: EntryHash
+            pub address: $crate::WrappedHeaderHash,
+            pub entry_address: $crate::WrappedEntryHash
           }
 
           #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, SerializedBytes)]
           pub struct [<$crud_type UpdateInput>] {
             pub entry: $crud_type,
-            pub address: HeaderHash,
+            pub address: $crate::WrappedHeaderHash,
           }
 
           impl From<$crate::EntryAndHash<$crud_type>> for [<$crud_type WireEntry>] {
             fn from(entry_and_hash: $crate::EntryAndHash<$crud_type>) -> Self {
               [<$crud_type WireEntry>] {
                 entry: entry_and_hash.0,
-                address: entry_and_hash.1,
-                entry_address: entry_and_hash.2
+                address: $crate::WrappedHeaderHash(entry_and_hash.1),
+                entry_address: $crate::WrappedEntryHash(entry_and_hash.2)
               }
             }
           }
@@ -114,7 +187,11 @@ macro_rules! crud {
             let entry_hash = hash_entry!(entry.clone())?;
             let path_hash = Path::from([<$i:upper _PATH>]).hash()?;
             create_link!(path_hash, entry_hash.clone())?;
-            let wire_entry = [<$crud_type WireEntry>] { entry, address, entry_address: entry_hash };
+            let wire_entry = [<$crud_type WireEntry>] {
+              entry,
+              address: $crate::WrappedHeaderHash(address),
+              entry_address: $crate::WrappedEntryHash(entry_hash)
+            };
             // notify_goal_comment(wire_entry.clone())?;
             Ok(wire_entry)
           }
@@ -142,12 +219,12 @@ macro_rules! crud {
             UPDATE
           */
           pub fn [<inner_update_ $i>](update: [<$crud_type UpdateInput>]) -> ExternResult<[<$crud_type WireEntry>]> {
-            update_entry!(update.address.clone(), update.entry.clone())?;
+            update_entry!(update.address.0.clone(), update.entry.clone())?;
             let entry_address = hash_entry!(update.entry.clone())?;
             let wire_entry = [<$crud_type WireEntry>] {
                 entry: update.entry,
                 address: update.address,
-                entry_address
+                entry_address: $crate::WrappedEntryHash(entry_address)
             };
             // notify_goal_comment(wire_entry.clone())?;
             Ok(wire_entry)
@@ -161,14 +238,14 @@ macro_rules! crud {
           /*
             DELETE
           */
-          pub fn [<inner_archive_ $i>](address: HeaderHash) -> ExternResult<HeaderHash> {
-            delete_entry!(address.clone())?;
+          pub fn [<inner_archive_ $i>](address: $crate::WrappedHeaderHash) -> ExternResult<$crate::WrappedHeaderHash> {
+            delete_entry!(address.0.clone())?;
             // notify_goal_comment_archived(address.clone())?;
             Ok(address)
           }
 
           #[hdk_extern]
-          pub fn [<archive_ $i>](address: HeaderHash) -> ExternResult<HeaderHash> {
+          pub fn [<archive_ $i>](address: $crate::WrappedHeaderHash) -> ExternResult<$crate::WrappedHeaderHash> {
             [<inner_archive_ $i>](address)
           }
         }

@@ -1,15 +1,15 @@
-use dna_help::crud;
+use dna_help::{WrappedAgentPubKey, WrappedHeaderHash, crud};
 use hdk3::prelude::*;
 
 #[hdk_entry(id = "goal_vote")]
 #[derive(Debug, Clone, PartialEq)]
 pub struct GoalVote {
-    goal_address: HeaderHash,
+    goal_address: WrappedHeaderHash,
     urgency: f64,
     importance: f64,
     impact: f64,
     effort: f64,
-    agent_address: AgentPubKey,
+    agent_address: WrappedAgentPubKey,
     unix_timestamp: f64,
 }
 

@@ -1,4 +1,4 @@
-use dna_help::crud;
+use dna_help::{WrappedAgentPubKey, WrappedHeaderHash, crud};
 use hdk3::prelude::*;
 
 // A Goal Card. This is a card on the SoA Tree which can be small or non-small, complete or
@@ -8,8 +8,8 @@ use hdk3::prelude::*;
 #[derive(Debug, Clone, PartialEq)]
 pub struct Goal {
     content: String,
-    user_hash: AgentPubKey,
-    user_edit_hash: Option<AgentPubKey>,
+    user_hash: WrappedAgentPubKey,
+    user_edit_hash: Option<WrappedAgentPubKey>,
     timestamp_created: f64,
     timestamp_updated: Option<f64>,
     hierarchy: Hierarchy,
@@ -48,12 +48,12 @@ crud!(Goal, goal, "goal");
 // TODO: finish archive goal
 #[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone, PartialEq)]
 pub struct ArchiveGoalResponse {
-    address: HeaderHash,
-    archived_edges: Vec<HeaderHash>,
-    archived_goal_members: Vec<HeaderHash>,
-    archived_goal_votes: Vec<HeaderHash>,
-    archived_goal_comments: Vec<HeaderHash>,
-    archived_entry_points: Vec<HeaderHash>,
+    address: WrappedHeaderHash,
+    archived_edges: Vec<WrappedHeaderHash>,
+    archived_goal_members: Vec<WrappedHeaderHash>,
+    archived_goal_votes: Vec<WrappedHeaderHash>,
+    archived_goal_comments: Vec<WrappedHeaderHash>,
+    archived_entry_points: Vec<WrappedHeaderHash>,
 }
 
 // TODO: finish get goal history
@@ -61,11 +61,11 @@ pub struct ArchiveGoalResponse {
 pub struct GetHistoryResponse {
     entries: Vec<Goal>,
     members: Vec<Vec<super::goal_member::GoalMember>>,
-    address: HeaderHash,
+    address: WrappedHeaderHash,
 }
 
 // DELETE
-// pub fn archive_goal(address: HeaderHash) -> ExternResult<ArchiveGoalResponse> {
+// pub fn archive_goal(address: WrappedHeaderHash) -> ExternResult<ArchiveGoalResponse> {
 //   // commit the removeEntry. Returns the address of the removeEntry
 //   delete_entry!(&address)?;
 
@@ -156,7 +156,7 @@ pub struct GetHistoryResponse {
 //   Ok(archive_response)
 // }
 
-// pub fn history_of_goal(address: HeaderHash) -> ExternResult<GetHistoryResponse> {
+// pub fn history_of_goal(address: WrappedHeaderHash) -> ExternResult<GetHistoryResponse> {
 //   let anchor_address = Entry::App(
 //     "anchor".into(),       // app entry type
 //     "goal_members".into(), // app entry value
@@ -171,7 +171,7 @@ pub struct GetHistoryResponse {
 //   // scoop all these entries up into an array and return it
 //   .addresses()
 //   .into_iter()
-//   .map(|member_address: HeaderHash| {
+//   .map(|member_address: WrappedHeaderHash| {
 //     if let Ok(Some(entry_history)) = hdk::api::get_entry_history(&member_address) {
 //       Some(
 //         entry_history

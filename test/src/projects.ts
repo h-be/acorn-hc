@@ -98,14 +98,18 @@ module.exports = (orchestrator: Orchestrator<null>) => {
     const { callAlice, agentAddress } = await setup(scenario)
 
     const result = await callAlice('fetch_members', null)
+
+    const sampleResult = 'uhCAkmrkoAHPVf_eufG7eC5fm6QKrW5pPMoktvG5LOC0SnJ4vV1Uv'
     tape.equal(1, result.length)
-    tape.deepEqual({
-      address: agentAddress
-    }, result[0])
+    tape.ok(result[0].address)
+    tape.equal(result[0].address.length, sampleResult.length)
   })
 
   orchestrator.registerScenario('goal api', async (scenario, tape) => {
-    const { callAlice, agentAddress } = await setup(scenario)
+    const { callAlice } = await setup(scenario)
+
+    // destructure
+    const [{ address: agentAddress }] = await callAlice('fetch_members', null)
 
     // CREATE
     const goal = newGoal(agentAddress, 'Test Goal Content')
@@ -147,7 +151,10 @@ module.exports = (orchestrator: Orchestrator<null>) => {
   })
 
   orchestrator.registerScenario('edge api', async (scenario, tape) => {
-    const { callAlice, agentAddress } = await setup(scenario)
+    const { callAlice } = await setup(scenario)
+
+    // destructure
+    const [{ address: agentAddress }] = await callAlice('fetch_members', null)
 
     const goal1 = newGoal(agentAddress, 'Test Goal 1')
     const goal2 = newGoal(agentAddress, 'Test Goal 2')
@@ -174,7 +181,10 @@ module.exports = (orchestrator: Orchestrator<null>) => {
   })
 
   orchestrator.registerScenario('entry_point api', async (scenario, tape) => {
-    const { callAlice, agentAddress } = await setup(scenario)
+    const { callAlice } = await setup(scenario)
+
+    // destructure
+    const [{ address: agentAddress }] = await callAlice('fetch_members', null)
 
     const goal1 = newGoal(agentAddress, 'Test Goal 1')
     const createGoal1Result = await callAlice('create_goal', goal1)
@@ -198,7 +208,10 @@ module.exports = (orchestrator: Orchestrator<null>) => {
   })
 
   orchestrator.registerScenario('goal_comment api', async (scenario, tape) => {
-    const { callAlice, agentAddress } = await setup(scenario)
+    const { callAlice } = await setup(scenario)
+
+    // destructure
+    const [{ address: agentAddress }] = await callAlice('fetch_members', null)
 
     const goal1 = newGoal(agentAddress, 'Test Goal 1')
     const createGoal1Result = await callAlice('create_goal', goal1)
@@ -222,7 +235,10 @@ module.exports = (orchestrator: Orchestrator<null>) => {
   })
 
   orchestrator.registerScenario('goal_member api', async (scenario, tape) => {
-    const { callAlice, agentAddress } = await setup(scenario)
+    const { callAlice } = await setup(scenario)
+
+    // destructure
+    const [{ address: agentAddress }] = await callAlice('fetch_members', null)
 
     const goal1 = newGoal(agentAddress, 'Test Goal 1')
     const createGoal1Result = await callAlice('create_goal', goal1)
@@ -246,7 +262,10 @@ module.exports = (orchestrator: Orchestrator<null>) => {
   })
 
   orchestrator.registerScenario('goal_vote api', async (scenario, tape) => {
-    const { callAlice, agentAddress } = await setup(scenario)
+    const { callAlice } = await setup(scenario)
+
+    // destructure
+    const [{ address: agentAddress }] = await callAlice('fetch_members', null)
 
     const goal1 = newGoal(agentAddress, 'Test Goal 1')
     const createGoal1Result = await callAlice('create_goal', goal1)
@@ -273,7 +292,10 @@ module.exports = (orchestrator: Orchestrator<null>) => {
   })
 
   orchestrator.registerScenario('project_meta api', async (scenario, tape) => {
-    const { callAlice, agentAddress } = await setup(scenario)
+    const { callAlice } = await setup(scenario)
+
+    // destructure
+    const [{ address: agentAddress }] = await callAlice('fetch_members', null)
 
     await runPlainCrudTest({
       entryType: 'project_meta',

@@ -1,10 +1,10 @@
-use dna_help::crud;
+use dna_help::{WrappedAgentPubKey, crud};
 use hdk3::prelude::*;
 
 #[hdk_entry(id = "project_meta")]
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProjectMeta {
-    creator_address: AgentPubKey,
+    creator_address: WrappedAgentPubKey,
     created_at: f64,
     name: String,
     image: Option<String>,
