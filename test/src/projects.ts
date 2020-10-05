@@ -1,4 +1,4 @@
-import { Config, Orchestrator, Scenario2 } from '@holochain/tryorama'
+import { Config, Orchestrator } from '@holochain/tryorama'
 import * as _ from 'lodash'
 import { delay } from './timer'
 
@@ -94,6 +94,16 @@ async function runPlainCrudTest({
 }
 
 module.exports = (orchestrator: Orchestrator<null>) => {
+  orchestrator.registerScenario('member api', async (scenario, tape) => {
+    const { callAlice, agentAddress } = await setup(scenario)
+
+    const result = await callAlice('fetch_members', null)
+    tape.equal(1, result.length)
+    tape.deepEqual({
+      address: agentAddress
+    }, result[0])
+  })
+
   orchestrator.registerScenario('goal api', async (scenario, tape) => {
     const { callAlice, agentAddress } = await setup(scenario)
 
@@ -161,5 +171,133 @@ module.exports = (orchestrator: Orchestrator<null>) => {
       callAlice,
       tape,
     })
+  })
+
+  orchestrator.registerScenario('entry_point api', async (scenario, tape) => {
+    const { callAlice, agentAddress } = await setup(scenario)
+
+    const goal1 = newGoal(agentAddress, 'Test Goal 1')
+    const createGoal1Result = await callAlice('create_goal', goal1)
+
+    await runPlainCrudTest({
+      entryType: 'entry_point',
+      createEntry: {
+        color: '#BBB222',
+      },
+      updateEntry: {
+        color: '#AAA111',
+      },
+      baseEntry: {
+        goal_address: createGoal1Result.entry_address,
+        created_at: Date.now(),
+        creator_address: agentAddress,
+      },
+      callAlice,
+      tape,
+    })
+  })
+
+  orchestrator.registerScenario('goal_comment api', async (scenario, tape) => {
+    const { callAlice, agentAddress } = await setup(scenario)
+
+    const goal1 = newGoal(agentAddress, 'Test Goal 1')
+    const createGoal1Result = await callAlice('create_goal', goal1)
+
+    await runPlainCrudTest({
+      entryType: 'goal_comment',
+      createEntry: {
+        content: 'Comment Create',
+      },
+      updateEntry: {
+        content: 'Comment Update',
+      },
+      baseEntry: {
+        goal_address: createGoal1Result.address,
+        unix_timestamp: Date.now(),
+        agent_address: agentAddress,
+      },
+      callAlice,
+      tape,
+    })
+  })
+
+  orchestrator.registerScenario('goal_member api', async (scenario, tape) => {
+    const { callAlice, agentAddress } = await setup(scenario)
+
+    const goal1 = newGoal(agentAddress, 'Test Goal 1')
+    const createGoal1Result = await callAlice('create_goal', goal1)
+
+    await runPlainCrudTest({
+      entryType: 'goal_member',
+      createEntry: {
+        unix_timestamp: 4321,
+      },
+      updateEntry: {
+        unix_timestamp: 1234,
+      },
+      baseEntry: {
+        goal_address: createGoal1Result.address,
+        user_edit_hash: agentAddress,
+        agent_address: agentAddress,
+      },
+      callAlice,
+      tape,
+    })
+  })
+
+  orchestrator.registerScenario('goal_vote api', async (scenario, tape) => {
+    const { callAlice, agentAddress } = await setup(scenario)
+
+    const goal1 = newGoal(agentAddress, 'Test Goal 1')
+    const createGoal1Result = await callAlice('create_goal', goal1)
+
+    await runPlainCrudTest({
+      entryType: 'goal_vote',
+      createEntry: {
+        urgency: 0.5,
+      },
+      updateEntry: {
+        urgency: 0.8,
+      },
+      baseEntry: {
+        goal_address: createGoal1Result.address,
+        importance: 1,
+        impact: 1,
+        effort: 1,
+        unix_timestamp: Date.now(),
+        agent_address: agentAddress,
+      },
+      callAlice,
+      tape,
+    })
+  })
+
+  orchestrator.registerScenario('project_meta api', async (scenario, tape) => {
+    const { callAlice, agentAddress } = await setup(scenario)
+
+    await runPlainCrudTest({
+      entryType: 'project_meta',
+      createEntry: {
+        name: 'Initial Name',
+      },
+      updateEntry: {
+        name: 'Rename',
+      },
+      baseEntry: {
+        creator_address: agentAddress,
+        created_at: Date.now(),
+        image: '',
+        passphrase: 'pinky-stomp-tuffle-waffle',
+      },
+      callAlice,
+      tape,
+    })
+
+    // at this point, the initial one should have been archived
+    try {
+      await callAlice('fetch_project_meta', null)
+    } catch (e) {
+      tape.equal(true, e.data.data.includes('no project meta exists'))
+    }
   })
 }

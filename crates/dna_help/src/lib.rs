@@ -1,7 +1,7 @@
 use hdk3::prelude::*;
 pub use paste;
 
-pub type EntryAndHash<T> = (T, HeaderHash);
+pub type EntryAndHash<T> = (T, HeaderHash, EntryHash);
 pub type OptionEntryAndHash<T> = Option<EntryAndHash<T>>;
 
 pub fn get_header_hash(shh: element::SignedHeaderHashed) -> HeaderHash {
@@ -45,6 +45,7 @@ pub fn get_latest_for_entry<T: TryFrom<SerializedBytes, Error = SerializedBytesE
                         Header::Create(_) => element.header_address().clone(),
                         _ => unreachable!("Can't have returned a header for a nonexistent entry"),
                     },
+                    element.header().entry_hash().unwrap().to_owned(),
                 ))),
                 None => Ok(None),
             },
@@ -83,6 +84,13 @@ macro_rules! crud {
           pub struct [<$crud_type WireEntry>] {
             pub entry: $crud_type,
             pub address: HeaderHash,
+            pub entry_address: EntryHash
+          }
+
+          #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, SerializedBytes)]
+          pub struct [<$crud_type UpdateInput>] {
+            pub entry: $crud_type,
+            pub address: HeaderHash,
           }
 
           impl From<$crate::EntryAndHash<$crud_type>> for [<$crud_type WireEntry>] {
@@ -90,6 +98,7 @@ macro_rules! crud {
               [<$crud_type WireEntry>] {
                 entry: entry_and_hash.0,
                 address: entry_and_hash.1,
+                entry_address: entry_and_hash.2
               }
             }
           }
@@ -104,8 +113,8 @@ macro_rules! crud {
             let address = create_entry!(entry.clone())?;
             let entry_hash = hash_entry!(entry.clone())?;
             let path_hash = Path::from([<$i:upper _PATH>]).hash()?;
-            create_link!(path_hash, entry_hash)?;
-            let wire_entry = [<$crud_type WireEntry>] { entry, address };
+            create_link!(path_hash, entry_hash.clone())?;
+            let wire_entry = [<$crud_type WireEntry>] { entry, address, entry_address: entry_hash };
             // notify_goal_comment(wire_entry.clone())?;
             Ok(wire_entry)
           }
@@ -132,18 +141,20 @@ macro_rules! crud {
           /*
             UPDATE
           */
-          pub fn [<inner_update_ $i>](update: [<$crud_type WireEntry>]) -> ExternResult<[<$crud_type WireEntry>]> {
+          pub fn [<inner_update_ $i>](update: [<$crud_type UpdateInput>]) -> ExternResult<[<$crud_type WireEntry>]> {
             update_entry!(update.address.clone(), update.entry.clone())?;
+            let entry_address = hash_entry!(update.entry.clone())?;
             let wire_entry = [<$crud_type WireEntry>] {
                 entry: update.entry,
                 address: update.address,
+                entry_address
             };
             // notify_goal_comment(wire_entry.clone())?;
             Ok(wire_entry)
           }
 
           #[hdk_extern]
-          pub fn [<update_ $i>](update: [<$crud_type WireEntry>]) -> ExternResult<[<$crud_type WireEntry>]> {
+          pub fn [<update_ $i>](update: [<$crud_type UpdateInput>]) -> ExternResult<[<$crud_type WireEntry>]> {
             [<inner_update_ $i>](update)
           }
 

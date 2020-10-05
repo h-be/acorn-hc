@@ -24,26 +24,18 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
     Path::from(PROJECT_META_PATH).ensure()?;
     Path::from(MEMBER_PATH).ensure()?;
 
-    // let members_anchor_entry = Entry::App(
-    //   "anchor".into(), // app entry type
-    //   // app entry value. We'll use the value to specify what this anchor is for
-    //   "members".into(),
-    // );
-    // let member = Member {
-    //   address: AGENT_ADDRESS.to_string(),
-    // };
-    // let member_entry = Entry::App("member".into(), member.clone().into());
-    // let member_address = hdk::commit_entry(&member_entry)?;
-    // hdk::link_entries(
-    //   &members_anchor_entry.address(),
-    //   &member_address,
-    //   "anchor->member",
-    //   "",
-    // )?;
+    // while joining, list me in the list of members
+    // so that all peers can become aware of the new presence
+    let member_path_address = Path::from(MEMBER_PATH).hash()?;
+    let member = Member {
+      address: agent_info!()?.agent_initial_pubkey,
+    };
+    create_entry!(member.clone())?;
+    let member_entry_hash= hash_entry!(member)?;
+    create_link!(member_path_address, member_entry_hash)?;
 
     // // send update to peers
     // // notify_member(member.clone())?;
-    // Ok(())
 
     Ok(InitCallbackResult::Pass)
 }
