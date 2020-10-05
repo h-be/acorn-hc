@@ -1,4 +1,5 @@
 use hdk3::prelude::*;
+pub use paste;
 
 pub type EntryAndHash<T> = (T, HeaderHash);
 pub type OptionEntryAndHash<T> = Option<EntryAndHash<T>>;
@@ -74,9 +75,8 @@ macro_rules! crud {
     (
       $crud_type:ident, $i:ident, $path:expr
     ) => {
-        use paste::paste;
 
-        paste! {
+        $crate::paste::paste! {
           pub const [<$i:upper _PATH>]: &str = $path;
 
           #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, SerializedBytes)]
