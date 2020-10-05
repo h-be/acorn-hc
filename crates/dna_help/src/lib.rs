@@ -5,72 +5,63 @@ pub type EntryAndHash<T> = (T, HeaderHash, EntryHash);
 pub type OptionEntryAndHash<T> = Option<EntryAndHash<T>>;
 
 #[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone, PartialEq)]
-#[serde(try_from = "UIWrappedAgentPubKey")]
-#[serde(into = "UIWrappedAgentPubKey")]
+pub struct UIStringHash(String);
+
+#[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone, PartialEq)]
+#[serde(try_from = "UIStringHash")]
+#[serde(into = "UIStringHash")]
 pub struct WrappedAgentPubKey(pub AgentPubKey);
 
 #[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone, PartialEq)]
-pub struct UIWrappedAgentPubKey(String);
+#[serde(try_from = "UIStringHash")]
+#[serde(into = "UIStringHash")]
+pub struct WrappedHeaderHash(pub HeaderHash);
 
-impl TryFrom<UIWrappedAgentPubKey> for WrappedAgentPubKey {
+#[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone, PartialEq)]
+#[serde(try_from = "UIStringHash")]
+#[serde(into = "UIStringHash")]
+pub struct WrappedEntryHash(pub EntryHash);
+
+impl TryFrom<UIStringHash> for WrappedAgentPubKey {
     type Error = String;
-    fn try_from(ui_wrapped_agent_pub_key: UIWrappedAgentPubKey) -> Result<Self, Self::Error> {
-        match AgentPubKey::try_from(ui_wrapped_agent_pub_key.0) {
+    fn try_from(ui_string_hash: UIStringHash) -> Result<Self, Self::Error> {
+        match AgentPubKey::try_from(ui_string_hash.0) {
             Ok(address) => Ok(Self(address)),
             Err(e) => Err(format!("{:?}", e)),
         }
     }
 }
-
-impl From<WrappedAgentPubKey> for UIWrappedAgentPubKey {
+impl From<WrappedAgentPubKey> for UIStringHash {
     fn from(wrapped_agent_pub_key: WrappedAgentPubKey) -> Self {
         Self(wrapped_agent_pub_key.0.to_string())
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone, PartialEq)]
-#[serde(try_from = "UIWrappedHeaderHash")]
-#[serde(into = "UIWrappedHeaderHash")]
-pub struct WrappedHeaderHash(pub HeaderHash);
-
-#[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone, PartialEq)]
-pub struct UIWrappedHeaderHash(String);
-
-impl TryFrom<UIWrappedHeaderHash> for WrappedHeaderHash {
+impl TryFrom<UIStringHash> for WrappedHeaderHash {
     type Error = String;
-    fn try_from(ui_wrapped_header_hash: UIWrappedHeaderHash) -> Result<Self, Self::Error> {
-        match HeaderHash::try_from(ui_wrapped_header_hash.0) {
+    fn try_from(ui_string_hash: UIStringHash) -> Result<Self, Self::Error> {
+        match HeaderHash::try_from(ui_string_hash.0) {
             Ok(address) => Ok(Self(address)),
             Err(e) => Err(format!("{:?}", e)),
         }
     }
 }
-
-impl From<WrappedHeaderHash> for UIWrappedHeaderHash {
+impl From<WrappedHeaderHash> for UIStringHash {
     fn from(wrapped_header_hash: WrappedHeaderHash) -> Self {
         Self(wrapped_header_hash.0.to_string())
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone, PartialEq)]
-#[serde(try_from = "UIWrappedEntryHash")]
-#[serde(into = "UIWrappedEntryHash")]
-pub struct WrappedEntryHash(pub EntryHash);
-
-#[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone, PartialEq)]
-pub struct UIWrappedEntryHash(String);
-
-impl TryFrom<UIWrappedEntryHash> for WrappedEntryHash {
+impl TryFrom<UIStringHash> for WrappedEntryHash {
     type Error = String;
-    fn try_from(ui_wrapped_entry_hash: UIWrappedEntryHash) -> Result<Self, Self::Error> {
-        match EntryHash::try_from(ui_wrapped_entry_hash.0) {
+    fn try_from(ui_string_hash: UIStringHash) -> Result<Self, Self::Error> {
+        match EntryHash::try_from(ui_string_hash.0) {
             Ok(address) => Ok(Self(address)),
             Err(e) => Err(format!("{:?}", e)),
         }
     }
 }
-
-impl From<WrappedEntryHash> for UIWrappedEntryHash {
+impl From<WrappedEntryHash> for UIStringHash {
     fn from(wrapped_entry_hash: WrappedEntryHash) -> Self {
         Self(wrapped_entry_hash.0.to_string())
     }
