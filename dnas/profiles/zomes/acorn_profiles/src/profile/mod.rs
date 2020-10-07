@@ -1,4 +1,6 @@
-use dna_help::{fetch_links, get_latest_for_entry, EntryAndHash};
+use dna_help::{
+    fetch_links, get_latest_for_entry, EntryAndHash, WrappedAgentPubKey, WrappedHeaderHash,
+};
 use hdk3::prelude::*;
 
 pub const AGENTS_PATH: &str = "agents";
@@ -11,7 +13,7 @@ pub struct Profile {
     handle: String,
     status: Status,
     avatar_url: String,
-    address: String,
+    address: WrappedAgentPubKey,
 }
 
 impl From<EntryAndHash<Profile>> for Profile {
@@ -23,20 +25,17 @@ impl From<EntryAndHash<Profile>> for Profile {
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, SerializedBytes)]
 pub struct WireEntry {
     pub entry: Profile,
-    pub address: HeaderHash,
+    pub address: WrappedHeaderHash,
 }
 
 impl From<EntryAndHash<Profile>> for WireEntry {
     fn from(entry_and_hash: EntryAndHash<Profile>) -> Self {
         WireEntry {
             entry: entry_and_hash.0,
-            address: entry_and_hash.1,
+            address: WrappedHeaderHash(entry_and_hash.1),
         }
     }
 }
-
-#[derive(Serialize, Deserialize, SerializedBytes, Debug, Clone, PartialEq)]
-struct AgentAddressOutput(String);
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, SerializedBytes)]
 pub struct AgentsOutput(Vec<Profile>);
@@ -126,13 +125,13 @@ pub fn create_whoami(entry: Profile) -> ExternResult<WireEntry> {
 
     Ok(WireEntry {
         entry,
-        address: header_hash,
+        address: WrappedHeaderHash(header_hash),
     })
 }
 
 #[hdk_extern]
 pub fn update_whoami(update: WireEntry) -> ExternResult<WireEntry> {
-    update_entry!(update.address.clone(), update.entry.clone())?;
+    update_entry!(update.address.0.clone(), update.entry.clone())?;
     // // send update to peers
     // // notify_new_agent(profile.clone())?;
     Ok(update)
@@ -164,11 +163,9 @@ pub fn fetch_agents(_: ()) -> ExternResult<AgentsOutput> {
 }
 
 #[hdk_extern]
-fn fetch_agent_address(_: ()) -> ExternResult<AgentAddressOutput> {
+fn fetch_agent_address(_: ()) -> ExternResult<WrappedAgentPubKey> {
     let agent_info = agent_info!()?;
-    Ok(AgentAddressOutput(
-        agent_info.agent_initial_pubkey.to_string(),
-    ))
+    Ok(WrappedAgentPubKey(agent_info.agent_initial_pubkey))
 }
 
 // pub fn profile_def() -> ValidatingEntryType {

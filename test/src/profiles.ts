@@ -18,14 +18,15 @@ module.exports = (orchestrator) => {
     const { conductor } = await s.players({ conductor: config })
     await conductor.spawn()
 
-    const res = await conductor.call('bobbo', 'acorn_profiles', 'test', null)
-    console.log(res)
+    // fetch_agent_address
+    const agent_address = await conductor.call(
+      'bobbo',
+      'acorn_profiles',
+      'fetch_agent_address',
+      null
+    )
 
-    const res2 = await conductor.call('bobbo', 'acorn_profiles', 'test2', res)
-    console.log(res2)
-
-    // address is the HEADER address
-    // const address = await conductor.call('bobbo', 'proj', 'create_post', { num: 1, str: "how are you?" })
+    console.log('agent_address', agent_address)
 
     const profile = {
       first_name: 'c',
@@ -33,7 +34,7 @@ module.exports = (orchestrator) => {
       handle: 'ct',
       status: 'Online',
       avatar_url: 'test',
-      address: '123123',
+      address: agent_address,
     }
     const create_whoami = await conductor.call(
       'bobbo',
@@ -51,14 +52,6 @@ module.exports = (orchestrator) => {
 
     t.deepEqual(fetchAgentsResult, [profile])
 
-    // fetch_agent_address
-    const agent_address = await conductor.call(
-      'bobbo',
-      'acorn_profiles',
-      'fetch_agent_address',
-      null
-    )
-
     // UPDATE WHOAMI
     const profile2 = {
       first_name: 'c',
@@ -66,7 +59,7 @@ module.exports = (orchestrator) => {
       handle: 'ct',
       status: 'Offline',
       avatar_url: 'test',
-      address: '123123',
+      address: agent_address,
     }
     const update_whoami = await conductor.call(
       'bobbo',
@@ -100,7 +93,7 @@ module.exports = (orchestrator) => {
       handle: 'ct',
       status: 'Away',
       avatar_url: 'test',
-      address: '123123',
+      address: agent_address,
     }
     await conductor.call('bobbo', 'acorn_profiles', 'update_whoami', {
       entry: profile3,
