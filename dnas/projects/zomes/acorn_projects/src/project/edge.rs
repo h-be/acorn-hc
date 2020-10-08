@@ -9,9 +9,9 @@ use hdk3::prelude::*;
 #[hdk_entry(id = "edge")]
 #[derive(Debug, Clone, PartialEq)]
 pub struct Edge {
-    parent_address: WrappedHeaderHash,
-    child_address: WrappedHeaderHash,
-    randomizer: f64,
+    pub parent_address: WrappedHeaderHash,
+    pub child_address: WrappedHeaderHash,
+    pub randomizer: f64,
 }
 
 crud!(Edge, edge, "edge");

@@ -1,5 +1,11 @@
 use dna_help::{WrappedAgentPubKey, WrappedHeaderHash, crud};
 use hdk3::prelude::*;
+use std::fmt;
+use super::edge::{
+  Edge,
+  inner_create_edge,
+  EdgeWireEntry
+};
 
 // A Goal Card. This is a card on the SoA Tree which can be small or non-small, complete or
 // incomplete, certain or uncertain, and contains text content.
@@ -19,7 +25,12 @@ pub struct Goal {
     time_frame: Option<TimeFrame>,
 }
 
+#[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone, PartialEq)]
+pub struct UIEnum(String);
+
 #[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone, PartialEq)]
+#[serde(from = "UIEnum")]
+#[serde(into = "UIEnum")]
 pub enum Status {
     Uncertain,
     Incomplete,
@@ -28,13 +39,58 @@ pub enum Status {
     InReview,
 }
 
+impl From<UIEnum> for Status {
+  fn from(ui_enum: UIEnum) -> Self {
+      match ui_enum.0.as_str() {
+        "Incomplete" => Self::Incomplete,
+        "InProcess" => Self::InProcess,
+        "Complete" => Self::Complete,
+        "InReview" => Self::InReview,
+        _ => Self::Uncertain,
+      }
+  }
+}
+impl From<Status> for UIEnum {
+  fn from(status: Status) -> Self {
+      Self(status.to_string())
+  }
+}
+impl fmt::Display for Status {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+      write!(f, "{:?}", self)
+  }
+}
+
 #[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone, PartialEq)]
+#[serde(from = "UIEnum")]
+#[serde(into = "UIEnum")]
 pub enum Hierarchy {
     Root,
     Trunk,
     Branch,
     Leaf,
     NoHierarchy,
+}
+impl From<UIEnum> for Hierarchy {
+  fn from(ui_enum: UIEnum) -> Self {
+      match ui_enum.0.as_str() {
+          "Root" => Self::Root,
+          "Trunk" => Self::Trunk,
+          "Branch" => Self::Branch,
+          "Leaf" => Self::Leaf,
+          _ => Self::NoHierarchy
+      }
+  }
+}
+impl From<Hierarchy> for UIEnum {
+  fn from(hierarchy: Hierarchy) -> Self {
+      Self(hierarchy.to_string())
+  }
+}
+impl fmt::Display for Hierarchy {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+      write!(f, "{:?}", self)
+  }
 }
 
 #[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone, PartialEq)]
@@ -48,20 +104,52 @@ crud!(Goal, goal, "goal");
 // TODO: finish archive goal
 #[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone, PartialEq)]
 pub struct ArchiveGoalResponse {
-    address: WrappedHeaderHash,
-    archived_edges: Vec<WrappedHeaderHash>,
-    archived_goal_members: Vec<WrappedHeaderHash>,
-    archived_goal_votes: Vec<WrappedHeaderHash>,
-    archived_goal_comments: Vec<WrappedHeaderHash>,
-    archived_entry_points: Vec<WrappedHeaderHash>,
+  address: WrappedHeaderHash,
+  archived_edges: Vec<WrappedHeaderHash>,
+  archived_goal_members: Vec<WrappedHeaderHash>,
+  archived_goal_votes: Vec<WrappedHeaderHash>,
+  archived_goal_comments: Vec<WrappedHeaderHash>,
+  archived_entry_points: Vec<WrappedHeaderHash>,
 }
 
 // TODO: finish get goal history
 #[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone)]
 pub struct GetHistoryResponse {
-    entries: Vec<Goal>,
-    members: Vec<Vec<super::goal_member::GoalMember>>,
-    address: WrappedHeaderHash,
+  entries: Vec<Goal>,
+  members: Vec<Vec<super::goal_member::GoalMember>>,
+  address: WrappedHeaderHash,
+}
+
+#[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone, PartialEq)]
+pub struct CreateGoalWithEdgeInput {
+  entry: Goal,
+  maybe_parent_address: Option<WrappedHeaderHash>
+}
+
+#[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone, PartialEq)]
+pub struct CreateGoalWithEdgeOutput {
+  goal: GoalWireEntry,
+  maybe_edge: Option<EdgeWireEntry>
+}
+
+#[hdk_extern]
+pub fn create_goal_with_edge(input: CreateGoalWithEdgeInput) -> ExternResult<CreateGoalWithEdgeOutput> {
+  let wire_entry: GoalWireEntry = inner_create_goal(input.entry.clone())?;
+  Ok(CreateGoalWithEdgeOutput {
+    goal: wire_entry.clone(),
+    maybe_edge: match input.maybe_parent_address {
+      Some(header_hash) => {
+        let edge = Edge {
+          parent_address: header_hash,
+          child_address: wire_entry.address,
+          randomizer: sys_time!()?.as_secs_f64()
+        };
+        let edge_wire_entry = inner_create_edge(edge)?;
+        Some(edge_wire_entry)
+      },
+      None => None
+    }
+  })
 }
 
 // DELETE

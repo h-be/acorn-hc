@@ -7,7 +7,7 @@
     "test": "test"
   },
   "scripts": {
-    "start": "npx @holochain-open-dev/holochain-run-dna dnas/profiles/profiles.dna.gz dnas/projects/projects.dna.gz"
+    "start": "npx @holochain-open-dev/holochain-run-dna dnas/profiles/profiles.dna.gz"
   },
   "repository": {
     "type": "git",

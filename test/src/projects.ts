@@ -29,8 +29,8 @@ function newGoal(agentAddress: Hash, content: string) {
     user_edit_hash: null,
     timestamp_created: Date.now(),
     timestamp_updated: null,
-    hierarchy: { Root: null },
-    status: { Uncertain: null },
+    hierarchy: 'Root',
+    status: 'Uncertain',
     tags: null,
     time_frame: null,
   }
@@ -148,6 +148,38 @@ module.exports = (orchestrator: Orchestrator<null>) => {
 
     const fetchGoals3Result = await callAlice('fetch_goals', null)
     tape.equal(fetchGoals3Result.length, 0)
+
+    // CREATE GOAL WITH EDGE
+    const createGoalWithNoEdgeInput = {
+      entry: newGoal(agentAddress, 'Test Goal With No Edge'),
+      maybe_parent_address: null,
+    }
+    const createGoalWithNoEdgeResult = await callAlice(
+      'create_goal_with_edge',
+      createGoalWithNoEdgeInput
+    )
+    tape.deepEqual(
+      createGoalWithNoEdgeResult.goal.entry,
+      createGoalWithNoEdgeInput.entry
+    )
+    tape.equal(createGoalWithNoEdgeResult.maybe_edge, null)
+
+    // CREATE GOAL WITH EDGE
+    const createGoalWithEdgeInput = {
+      entry: newGoal(agentAddress, 'Test Goal With Edge'),
+      // use the HeaderHash from the first
+      maybe_parent_address: createGoalWithNoEdgeResult.goal.address,
+    }
+    const createGoalWithEdgeResult = await callAlice(
+      'create_goal_with_edge',
+      createGoalWithEdgeInput
+    )
+    tape.deepEqual(
+      createGoalWithEdgeResult.goal.entry,
+      createGoalWithEdgeInput.entry
+    )
+    // expect maybe_edge to be an EdgeWireEntry
+    tape.ok(createGoalWithEdgeResult.maybe_edge)
   })
 
   orchestrator.registerScenario('edge api', async (scenario, tape) => {
