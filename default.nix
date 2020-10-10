@@ -28,12 +28,11 @@ with holonix.pkgs;
    holonix.shell.shellHook
    # NIX_ENFORCE_PURITY to fix = note: impure path `/[...]' used in link
    # https://nixos.wiki/wiki/Development_environment_with_nix-shell
-    # cargo install --force holochain --git https://github.com/holochain/holochain.git --rev 4714fbddc48f1f9987c9f574b8d06510ea58ab16
-    # cargo install --force dna_util --git https://github.com/holochain/holochain.git --rev 4714fbddc48f1f9987c9f574b8d06510ea58ab16
    ''
     export NIX_ENFORCE_PURITY=0
+    cargo install --force holochain --git https://github.com/holochain/holochain.git --rev 4714fbddc48f1f9987c9f574b8d06510ea58ab16
+    cargo install --force dna_util --git https://github.com/holochain/holochain.git --rev 4714fbddc48f1f9987c9f574b8d06510ea58ab16
     cd test && npm install && cd ..
-    ls test/node_modules/@holochain/tryorama
     npm install
    ''
   ];
