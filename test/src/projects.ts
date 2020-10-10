@@ -230,7 +230,7 @@ module.exports = (orchestrator: Orchestrator<null>) => {
         color: '#AAA111',
       },
       baseEntry: {
-        goal_address: createGoal1Result.entry_address,
+        goal_address: createGoal1Result.address,
         created_at: Date.now(),
         creator_address: agentAddress,
       },
