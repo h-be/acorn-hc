@@ -1,6 +1,6 @@
 {
   "name": "acorn-hc",
-  "version": "1.0.0",
+  "version": "0.4.0",
   "description": "[![CircleCI](https://circleci.com/gh/h-be/acorn-hc.svg?style=svg)](https://circleci.com/gh/h-be/acorn-hc)",
   "main": "index.js",
   "directories": {
