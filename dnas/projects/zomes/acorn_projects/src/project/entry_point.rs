@@ -6,10 +6,10 @@ use hdk3::prelude::*;
 #[hdk_entry(id = "entry_point")]
 #[derive(Debug, Clone, PartialEq)]
 pub struct EntryPoint {
-    color: String,
-    creator_address: WrappedAgentPubKey,
-    created_at: f64,
-    goal_address: WrappedHeaderHash,
+    pub color: String,
+    pub creator_address: WrappedAgentPubKey,
+    pub created_at: f64,
+    pub goal_address: WrappedHeaderHash,
 }
 
 crud!(EntryPoint, entry_point, "entry_point");

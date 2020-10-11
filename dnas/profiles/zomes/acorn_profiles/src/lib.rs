@@ -1,4 +1,4 @@
-use dna_help::*;
+// use dna_help::*;
 use hdk3::prelude::*;
 
 mod profile;
@@ -12,24 +12,6 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
 }
 
 entry_defs![Path::entry_def(), Profile::entry_def()];
-
-#[derive(Serialize, Deserialize, SerializedBytes, Clone)]
-pub struct Test {
-    address: WrappedAgentPubKey,
-}
-
-#[hdk_extern]
-fn test(_: ()) -> ExternResult<Test> {
-    let address = agent_info!()?.agent_latest_pubkey;
-    Ok(Test {
-        address: WrappedAgentPubKey(address),
-    })
-}
-
-#[hdk_extern]
-fn test2(_: Test) -> ExternResult<()> {
-    Ok(())
-}
 
 // The GetResponse struct allows our zome functions to return an entry along with its
 // address so that Redux can know the address of goals and edges

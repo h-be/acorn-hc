@@ -168,7 +168,7 @@ macro_rules! crud {
           }
 
           #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, SerializedBytes)]
-          pub struct [<Vec $crud_type WireEntry>](Vec<[<$crud_type WireEntry>]>);
+          pub struct [<Vec $crud_type WireEntry>](pub Vec<[<$crud_type WireEntry>]>);
 
           /*
             CREATE

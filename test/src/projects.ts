@@ -180,6 +180,60 @@ module.exports = (orchestrator: Orchestrator<null>) => {
     )
     // expect maybe_edge to be an EdgeWireEntry
     tape.ok(createGoalWithEdgeResult.maybe_edge)
+
+    // ARCHIVE GOAL FULLY
+    // first of all, we should create one
+    // of each type of entry associated with a goal...
+    // goal_vote, goal_comment, goal_member, entry_point, and edge (which is already created)
+    const { address: goalVoteAddress } = await callAlice('create_goal_vote', {
+      goal_address: createGoalWithEdgeResult.goal.address,
+      urgency: 0.5,
+      importance: 1,
+      impact: 1,
+      effort: 1,
+      unix_timestamp: Date.now(),
+      agent_address: agentAddress,
+    })
+    const { address: goalMemberAddress } = await callAlice(
+      'create_goal_member',
+      {
+        unix_timestamp: Date.now(),
+        goal_address: createGoalWithEdgeResult.goal.address,
+        user_edit_hash: agentAddress,
+        agent_address: agentAddress,
+      }
+    )
+    const { address: goalCommentAddress } = await callAlice(
+      'create_goal_comment',
+      {
+        content: 'Test Goal Comment',
+        goal_address: createGoalWithEdgeResult.goal.address,
+        unix_timestamp: Date.now(),
+        agent_address: agentAddress,
+      }
+    )
+    const { address: entryPointAddress } = await callAlice(
+      'create_entry_point',
+      {
+        color: '#123444',
+        goal_address: createGoalWithEdgeResult.goal.address,
+        created_at: Date.now(),
+        creator_address: agentAddress,
+      }
+    )
+    const archiveGoalFullyResult = await callAlice(
+      'archive_goal_fully',
+      createGoalWithEdgeResult.goal.address
+    )
+    // should include EVERYTHING that's been archived
+    tape.deepEqual(archiveGoalFullyResult, {
+      address: createGoalWithEdgeResult.goal.address,
+      archived_edges: [createGoalWithEdgeResult.maybe_edge.address],
+      archived_goal_votes: [goalVoteAddress],
+      archived_goal_comments: [goalCommentAddress],
+      archived_goal_members: [goalMemberAddress],
+      archived_entry_points: [entryPointAddress],
+    })
   })
 
   orchestrator.registerScenario('edge api', async (scenario, tape) => {

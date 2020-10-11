@@ -53,25 +53,6 @@ entry_defs!(
     ProjectMeta::entry_def()
 );
 
-#[derive(Serialize, Deserialize, SerializedBytes)]
-pub struct Test(Option<u64>);
-
-#[hdk_extern]
-pub fn test(_: ()) -> ExternResult<Test> {
-    Ok(Test(Some(1)))
-    // Ok(project::goal::Status::Complete)
-    // Err(HdkError::Wasm(WasmError::Zome("wut".into())))
-}
-
-// project::projectmeta_def()
-// project::entry_point_def()
-// project::member_def()
-// project::edge_def()
-// project::goal_def()
-// project::goal_comment_def()
-// project::goal_member_def()
-// project::goal_vote_def()
-
 // #[receive]
 //   pub fn receive(from: Address, msg_json: JsonString) -> String {
 //     hdk::debug(format!("New direct message from: {:?}", from)).ok();

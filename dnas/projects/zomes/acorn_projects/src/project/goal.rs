@@ -1,11 +1,13 @@
-use dna_help::{WrappedAgentPubKey, WrappedHeaderHash, crud};
+use super::{
+    edge::{inner_archive_edge, inner_create_edge, inner_fetch_edges, Edge, EdgeWireEntry},
+    entry_point::{inner_archive_entry_point, inner_fetch_entry_points, EntryPointWireEntry},
+    goal_comment::{inner_archive_goal_comment, inner_fetch_goal_comments, GoalCommentWireEntry},
+    goal_member::archive_goal_members,
+    goal_vote::{inner_archive_goal_vote, inner_fetch_goal_votes, GoalVoteWireEntry},
+};
+use dna_help::{crud, WrappedAgentPubKey, WrappedHeaderHash};
 use hdk3::prelude::*;
 use std::fmt;
-use super::edge::{
-  Edge,
-  inner_create_edge,
-  EdgeWireEntry
-};
 
 // A Goal Card. This is a card on the SoA Tree which can be small or non-small, complete or
 // incomplete, certain or uncertain, and contains text content.
@@ -40,25 +42,25 @@ pub enum Status {
 }
 
 impl From<UIEnum> for Status {
-  fn from(ui_enum: UIEnum) -> Self {
-      match ui_enum.0.as_str() {
-        "Incomplete" => Self::Incomplete,
-        "InProcess" => Self::InProcess,
-        "Complete" => Self::Complete,
-        "InReview" => Self::InReview,
-        _ => Self::Uncertain,
-      }
-  }
+    fn from(ui_enum: UIEnum) -> Self {
+        match ui_enum.0.as_str() {
+            "Incomplete" => Self::Incomplete,
+            "InProcess" => Self::InProcess,
+            "Complete" => Self::Complete,
+            "InReview" => Self::InReview,
+            _ => Self::Uncertain,
+        }
+    }
 }
 impl From<Status> for UIEnum {
-  fn from(status: Status) -> Self {
-      Self(status.to_string())
-  }
+    fn from(status: Status) -> Self {
+        Self(status.to_string())
+    }
 }
 impl fmt::Display for Status {
-  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-      write!(f, "{:?}", self)
-  }
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone, PartialEq)]
@@ -72,25 +74,25 @@ pub enum Hierarchy {
     NoHierarchy,
 }
 impl From<UIEnum> for Hierarchy {
-  fn from(ui_enum: UIEnum) -> Self {
-      match ui_enum.0.as_str() {
-          "Root" => Self::Root,
-          "Trunk" => Self::Trunk,
-          "Branch" => Self::Branch,
-          "Leaf" => Self::Leaf,
-          _ => Self::NoHierarchy
-      }
-  }
+    fn from(ui_enum: UIEnum) -> Self {
+        match ui_enum.0.as_str() {
+            "Root" => Self::Root,
+            "Trunk" => Self::Trunk,
+            "Branch" => Self::Branch,
+            "Leaf" => Self::Leaf,
+            _ => Self::NoHierarchy,
+        }
+    }
 }
 impl From<Hierarchy> for UIEnum {
-  fn from(hierarchy: Hierarchy) -> Self {
-      Self(hierarchy.to_string())
-  }
+    fn from(hierarchy: Hierarchy) -> Self {
+        Self(hierarchy.to_string())
+    }
 }
 impl fmt::Display for Hierarchy {
-  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-      write!(f, "{:?}", self)
-  }
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone, PartialEq)]
@@ -101,148 +103,142 @@ pub struct TimeFrame {
 
 crud!(Goal, goal, "goal");
 
-// TODO: finish archive goal
-#[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone, PartialEq)]
-pub struct ArchiveGoalResponse {
-  address: WrappedHeaderHash,
-  archived_edges: Vec<WrappedHeaderHash>,
-  archived_goal_members: Vec<WrappedHeaderHash>,
-  archived_goal_votes: Vec<WrappedHeaderHash>,
-  archived_goal_comments: Vec<WrappedHeaderHash>,
-  archived_entry_points: Vec<WrappedHeaderHash>,
-}
-
-// TODO: finish get goal history
-#[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone)]
-pub struct GetHistoryResponse {
-  entries: Vec<Goal>,
-  members: Vec<Vec<super::goal_member::GoalMember>>,
-  address: WrappedHeaderHash,
-}
-
 #[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone, PartialEq)]
 pub struct CreateGoalWithEdgeInput {
-  entry: Goal,
-  maybe_parent_address: Option<WrappedHeaderHash>
+    entry: Goal,
+    maybe_parent_address: Option<WrappedHeaderHash>,
 }
 
 #[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone, PartialEq)]
 pub struct CreateGoalWithEdgeOutput {
-  goal: GoalWireEntry,
-  maybe_edge: Option<EdgeWireEntry>
+    goal: GoalWireEntry,
+    maybe_edge: Option<EdgeWireEntry>,
 }
 
 #[hdk_extern]
-pub fn create_goal_with_edge(input: CreateGoalWithEdgeInput) -> ExternResult<CreateGoalWithEdgeOutput> {
-  let wire_entry: GoalWireEntry = inner_create_goal(input.entry.clone())?;
-  Ok(CreateGoalWithEdgeOutput {
-    goal: wire_entry.clone(),
-    maybe_edge: match input.maybe_parent_address {
-      Some(header_hash) => {
-        let edge = Edge {
-          parent_address: header_hash,
-          child_address: wire_entry.address,
-          randomizer: sys_time!()?.as_secs_f64()
-        };
-        let edge_wire_entry = inner_create_edge(edge)?;
-        Some(edge_wire_entry)
-      },
-      None => None
-    }
-  })
+pub fn create_goal_with_edge(
+    input: CreateGoalWithEdgeInput,
+) -> ExternResult<CreateGoalWithEdgeOutput> {
+    let wire_entry: GoalWireEntry = inner_create_goal(input.entry.clone())?;
+    Ok(CreateGoalWithEdgeOutput {
+        goal: wire_entry.clone(),
+        maybe_edge: match input.maybe_parent_address {
+            Some(header_hash) => {
+                let edge = Edge {
+                    parent_address: header_hash,
+                    child_address: wire_entry.address,
+                    randomizer: sys_time!()?.as_secs_f64(),
+                };
+                let edge_wire_entry = inner_create_edge(edge)?;
+                Some(edge_wire_entry)
+            }
+            None => None,
+        },
+    })
 }
 
-// DELETE
-// pub fn archive_goal(address: WrappedHeaderHash) -> ExternResult<ArchiveGoalResponse> {
-//   // commit the removeEntry. Returns the address of the removeEntry
-//   delete_entry!(&address)?;
+#[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone, PartialEq)]
+pub struct ArchiveGoalFullyResponse {
+    address: WrappedHeaderHash,
+    archived_edges: Vec<WrappedHeaderHash>,
+    archived_goal_members: Vec<WrappedHeaderHash>,
+    archived_goal_votes: Vec<WrappedHeaderHash>,
+    archived_goal_comments: Vec<WrappedHeaderHash>,
+    archived_entry_points: Vec<WrappedHeaderHash>,
+}
 
-//   let archived_edges = inner_fetch_edges()?
-//     .into_iter()
-//     .filter(|get_response: &GetResponse<Edge>| {
-//       // check whether the parent_address or child_address is equal to the given address.
-//       // If so, the edge is connected to the goal being archived.
-//       get_response.entry.child_address == address || get_response.entry.parent_address == address
-//     })
-//     .map(|get_response: GetResponse<Edge>| {
-//       let edge_address = get_response.address;
-//       // archive the edge with this address
-//       match delete_entry!(&edge_address) {
-//         Ok(_) => Ok(edge_address),
-//         Err(e) => Err(e),
-//       }
-//     })
-//     // filter out errors
-//     .filter_map(Result::ok)
-//     .collect(); // returns vec of the edge addresses which were removed
+#[hdk_extern]
+pub fn archive_goal_fully(address: WrappedHeaderHash) -> ExternResult<ArchiveGoalFullyResponse> {
+    inner_archive_goal(address.clone())?;
 
-//   let archived_goal_members = archive_members_of_goal(&address)?; // returns vec of the goal_member addresses which were removed
-//   let archived_goal_votes = inner_fetch_goal_votes()?
-//     .into_iter()
-//     .filter(|get_response: &GetResponse<GoalVote>| {
-//       // check whether the parent_address or child_address is equal to the given address.
-//       // If so, the edge is connected to the goal being archived.
-//       get_response.entry.goal_address == address
-//     })
-//     .map(|get_response: GetResponse<GoalVote>| {
-//       let goal_vote_address = get_response.address;
-//       // archive the edge with this address
-//       match delete_entry!(&goal_vote_address) {
-//         Ok(_) => Ok(goal_vote_address),
-//         Err(e) => Err(e),
-//       }
-//     })
-//     // filter out errors
-//     .filter_map(Result::ok)
-//     .collect();
-//   let archived_goal_comments = inner_fetch_goal_comments()?
-//     .into_iter()
-//     .filter(|get_response: &GetResponse<GoalComment>| {
-//       // check whether the parent_address or child_address is equal to the given address.
-//       // If so, the edge is connected to the goal being archived.
-//       get_response.entry.goal_address == address
-//     })
-//     .map(|get_response: GetResponse<GoalComment>| {
-//       let goal_comment_address = get_response.address;
-//       // archive the edge with this address
-//       match delete_entry!(&goal_comment_address) {
-//         Ok(_) => Ok(goal_comment_address),
-//         Err(e) => Err(e),
-//       }
-//     })
-//     // filter out errors
-//     .filter_map(Result::ok)
-//     .collect(); // returns vec of the goal_member addresses which were removed
-//                 // return the address of the archived goal for the UI to use
-//   let archived_entry_points = inner_fetch_entry_points()?
-//     .into_iter()
-//     .filter(|entry_point_response: &EntryPointResponse| {
-//       entry_point_response.entry_point.goal_address == address
-//     })
-//     .map(|entry_point_response: EntryPointResponse| {
-//       let entry_point_address = entry_point_response.entry_point_address;
-//       match delete_entry!(&entry_point_address) {
-//         Ok(_) => Ok(entry_point_address),
-//         Err(e) => Err(e),
-//       }
-//     })
-//     // filter out errors
-//     .filter_map(Result::ok)
-//     .collect(); // returns vec of the entry_points addresses which were removed
-//                 // return the address of the archived goal for the UI to use
+    let archived_edges = inner_fetch_edges()?
+        .0
+        .into_iter()
+        .filter(|wire_entry: &EdgeWireEntry| {
+            // check whether the parent_address or child_address is equal to the given address.
+            // If so, the edge is connected to the goal being archived.
+            wire_entry.entry.child_address == address.clone()
+                || wire_entry.entry.parent_address == address.clone()
+        })
+        .map(|wire_entry: EdgeWireEntry| {
+            let edge_address = wire_entry.address;
+            match inner_archive_edge(edge_address.clone()) {
+                Ok(_) => Ok(edge_address),
+                Err(e) => Err(e),
+            }
+        })
+        // filter out errors
+        .filter_map(Result::ok)
+        .collect();
 
-//   let archive_response = ArchiveGoalResponse {
-//     address,
-//     archived_edges,
-//     archived_goal_members,
-//     archived_goal_votes,
-//     archived_goal_comments,
-//     archived_entry_points,
-//   };
-//   // notify_goal_archived(archive_response.clone())?;
+    let archived_goal_members = archive_goal_members(address.clone())?;
 
-//   Ok(archive_response)
-// }
+    let archived_goal_votes = inner_fetch_goal_votes()?
+        .0
+        .into_iter()
+        .filter(|wire_entry: &GoalVoteWireEntry| wire_entry.entry.goal_address == address.clone())
+        .map(|wire_entry: GoalVoteWireEntry| {
+            let goal_vote_address = wire_entry.address;
+            match inner_archive_goal_vote(goal_vote_address.clone()) {
+                Ok(_) => Ok(goal_vote_address),
+                Err(e) => Err(e),
+            }
+        })
+        // filter out errors
+        .filter_map(Result::ok)
+        .collect();
+
+    let archived_goal_comments = inner_fetch_goal_comments()?
+        .0
+        .into_iter()
+        .filter(|wire_entry: &GoalCommentWireEntry| wire_entry.entry.goal_address == address)
+        .map(|wire_entry: GoalCommentWireEntry| {
+            let goal_comment_address = wire_entry.address;
+            match inner_archive_goal_comment(goal_comment_address.clone()) {
+                Ok(_) => Ok(goal_comment_address),
+                Err(e) => Err(e),
+            }
+        })
+        // filter out errors
+        .filter_map(Result::ok)
+        .collect();
+
+    let archived_entry_points = inner_fetch_entry_points()?
+        .0
+        .into_iter()
+        .filter(|wire_entry: &EntryPointWireEntry| wire_entry.entry.goal_address == address)
+        .map(|wire_entry: EntryPointWireEntry| {
+            let entry_point_address = wire_entry.address;
+            match inner_archive_entry_point(entry_point_address.clone()) {
+                Ok(_) => Ok(entry_point_address),
+                Err(e) => Err(e),
+            }
+        })
+        // filter out errors
+        .filter_map(Result::ok)
+        .collect();
+
+    let archive_response = ArchiveGoalFullyResponse {
+        address,
+        archived_edges,
+        archived_goal_members,
+        archived_goal_votes,
+        archived_goal_comments,
+        archived_entry_points,
+    };
+    // notify_goal_archived(archive_response.clone())?;
+
+    Ok(archive_response)
+}
+
+
+// TODO: finish get goal history
+#[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone)]
+pub struct GetHistoryResponse {
+    entries: Vec<Goal>,
+    members: Vec<Vec<super::goal_member::GoalMember>>,
+    address: WrappedHeaderHash,
+}
 
 // pub fn history_of_goal(address: WrappedHeaderHash) -> ExternResult<GetHistoryResponse> {
 //   let anchor_address = Entry::App(

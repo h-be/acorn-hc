@@ -4,11 +4,11 @@ use hdk3::prelude::*;
 #[hdk_entry(id = "project_meta")]
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProjectMeta {
-    creator_address: WrappedAgentPubKey,
-    created_at: f64,
-    name: String,
-    image: Option<String>,
-    passphrase: String,
+    pub creator_address: WrappedAgentPubKey,
+    pub created_at: f64,
+    pub name: String,
+    pub image: Option<String>,
+    pub passphrase: String,
 }
 
 crud!(ProjectMeta, project_meta, "project_meta");

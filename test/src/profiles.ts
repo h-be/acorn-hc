@@ -26,8 +26,6 @@ module.exports = (orchestrator) => {
       null
     )
 
-    console.log('agent_address', agent_address)
-
     const profile = {
       first_name: 'c',
       last_name: 't',
