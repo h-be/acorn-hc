@@ -30,8 +30,8 @@ with holonix.pkgs;
    # https://nixos.wiki/wiki/Development_environment_with_nix-shell
    ''
     export NIX_ENFORCE_PURITY=0
-    cargo install --force holochain --git https://github.com/holochain/holochain.git --rev 4714fbddc48f1f9987c9f574b8d06510ea58ab16
-    cargo install --force dna_util --git https://github.com/holochain/holochain.git --rev 4714fbddc48f1f9987c9f574b8d06510ea58ab16
+    cargo install --force holochain --git https://github.com/holochain/holochain.git --rev 41ee0119df466708c408453da3ae520bed281fd6
+    cargo install --force dna_util --git https://github.com/holochain/holochain.git --rev 41ee0119df466708c408453da3ae520bed281fd6
     cd test && npm install && cd ..
     npm install
    ''
