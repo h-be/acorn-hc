@@ -1,8 +1,7 @@
 {
   "name": "acorn-hc",
   "version": "0.4.0",
-  "description": "[![CircleCI](https://circleci.com/gh/h-be/acorn-hc.svg?style=svg)](https://circleci.com/gh/h-be/acorn-hc)",
-  "main": "index.js",
+  "description": "",
   "directories": {
     "test": "test"
   },
@@ -20,6 +19,6 @@
   },
   "homepage": "https://github.com/h-be/acorn-hc#readme",
   "dependencies": {
-    "@holochain-open-dev/holochain-run-dna": "^0.1.13"
+    "@holochain-open-dev/holochain-run-dna": "0.1.18"
   }
 }

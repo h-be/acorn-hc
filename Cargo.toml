@@ -11,4 +11,7 @@ opt-level = "z"
 [profile.release]
 opt-level = "z"
 
-
+[patch.crates-io]
+# hc_utils = {git = "https://github.com/guillemcordoba/hc-utils", branch = "develop", package = "hc_utils"}
+hdk3 = {git = "https://github.com/holochain/holochain.git", rev = "60292dc6aa8413866da6f44d8af11c7bd600608a", package = "hdk3"}
+# holo_hash = {git = "https://github.com/holochain/holochain.git", rev = "60292dc6aa8413866da6f44d8af11c7bd600608a", package = "holo_hash"}

@@ -9,17 +9,17 @@ To download it as a native application for Linux or MacOS from [acorn-release](h
 ## Holochain Compatibility
 
 Current compatibility with [holochain/holochain](https://github.com/holochain/holochain):
-[41ee0119df466708c408453da3ae520bed281fd6 (Oct 21, 2020)](https://github.com/holochain/holochain/commit/41ee0119df466708c408453da3ae520bed281fd6)
+[60292dc6aa8413866da6f44d8af11c7bd600608a (Oct 21, 2020)](https://github.com/holochain/holochain/commit/60292dc6aa8413866da6f44d8af11c7bd600608a)
 
 When changing, change these lines in `default.nix`
 ```
-cargo install --force holochain --git https://github.com/holochain/holochain.git --rev 41ee0119df466708c408453da3ae520bed281fd6
-cargo install --force dna_util --git https://github.com/holochain/holochain.git --rev 41ee0119df466708c408453da3ae520bed281fd6
+cargo install --force holochain --git https://github.com/holochain/holochain.git --rev 60292dc6aa8413866da6f44d8af11c7bd600608a
+cargo install --force dna_util --git https://github.com/holochain/holochain.git --rev 60292dc6aa8413866da6f44d8af11c7bd600608a
 ```
 
-Also change this line in `crates/dna_help/Cargo.toml`, `dnas/profiles/zomes/acorn_profiles/Cargo.toml`, and `dnas/projects/zomes/acorn_projects/Cargo.toml`:
+Also change this line in `Cargo.toml`:
 ```toml
-hdk3 = { git = "https://github.com/holochain/holochain", rev = "41ee0119df466708c408453da3ae520bed281fd6", package = "hdk3" }
+hdk3 = { git = "https://github.com/holochain/holochain", rev = "60292dc6aa8413866da6f44d8af11c7bd600608a", package = "hdk3" }
 ```
 
 Make sure the tests still pass for the new version.
