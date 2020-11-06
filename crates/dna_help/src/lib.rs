@@ -67,6 +67,50 @@ impl From<WrappedEntryHash> for UIStringHash {
     }
 }
 
+/*
+  SIGNALS
+*/
+
+// sender
+pub fn signal_peers<T: TryInto<SerializedBytes>>(signal: T, peers: Vec<AgentPubKey>) -> ExternResult<()> {
+  let zome_info = zome_info!()?;
+  match signal.try_into() {
+    Ok(sb) => {
+      for peer in peers {
+        // ignore errors
+        let _ = call_remote!(
+          peer,
+          zome_info.zome_name.clone(),
+          zome::FunctionName("receive_signal".into()),
+          None,
+          sb.clone()
+        );
+      };
+      Ok(())
+    },
+    Err(_) => Err(
+      HdkError::SerializedBytes(
+        SerializedBytesError::ToBytes(
+          "couldnt convert signal into serializedbytes".to_string()
+        )
+      )
+    )
+  }
+}
+
+pub fn create_receive_signal_cap_grant() -> ExternResult<()> {
+  let mut functions: GrantedFunctions = HashSet::new();
+  functions.insert((zome_info!()?.zome_name, "receive_signal".into()));
+
+  create_cap_grant!(CapGrantEntry {
+      tag: "".into(),
+      // empty access converts to unrestricted
+      access: ().into(),
+      functions,
+  })?;
+  Ok(())
+}
+
 
 pub fn get_header_hash(shh: element::SignedHeaderHashed) -> HeaderHash {
     shh.header_hashed().as_hash().to_owned()

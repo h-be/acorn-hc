@@ -1,5 +1,5 @@
 use dna_help::{
-    fetch_links, get_latest_for_entry, EntryAndHash, WrappedAgentPubKey, WrappedHeaderHash,
+    signal_peers, fetch_links, get_latest_for_entry, EntryAndHash, WrappedAgentPubKey, WrappedHeaderHash,
 };
 use hdk3::prelude::*;
 
@@ -14,6 +14,12 @@ pub struct Profile {
     status: Status,
     avatar_url: String,
     address: WrappedAgentPubKey,
+}
+
+impl From<Profile> for AgentPubKey {
+  fn from(profile: Profile) -> Self {
+      profile.address.0
+  }
 }
 
 impl From<EntryAndHash<Profile>> for Profile {
@@ -123,17 +129,23 @@ pub fn create_whoami(entry: Profile) -> ExternResult<WireEntry> {
     let agent_entry_hash = EntryHash::from(agent_pubkey);
     create_link!(agent_entry_hash, entry_hash)?;
 
-    Ok(WireEntry {
-        entry,
-        address: WrappedHeaderHash(header_hash),
-    })
-}
+    let wire_entry = WireEntry {
+      entry,
+      address: WrappedHeaderHash(header_hash),
+    };
 
-#[hdk_extern]
-pub fn update_whoami(update: WireEntry) -> ExternResult<WireEntry> {
+    // we don't want to cause real failure for inability to send to peers
+    let _ = send_agent_signal(wire_entry.clone());
+    
+    Ok(wire_entry)
+  }
+  
+  #[hdk_extern]
+  pub fn update_whoami(update: WireEntry) -> ExternResult<WireEntry> {
     update_entry!(update.address.0.clone(), update.entry.clone())?;
     // // send update to peers
-    // // notify_new_agent(profile.clone())?;
+    // we don't want to cause real failure for inability to send to peers
+    let _ = send_agent_signal(update.clone());
     Ok(update)
 }
 
@@ -166,6 +178,47 @@ pub fn fetch_agents(_: ()) -> ExternResult<AgentsOutput> {
 fn fetch_agent_address(_: ()) -> ExternResult<WrappedAgentPubKey> {
     let agent_info = agent_info!()?;
     Ok(WrappedAgentPubKey(agent_info.agent_initial_pubkey))
+}
+
+
+/*
+SIGNALS
+*/
+
+fn send_agent_signal(wire_entry: WireEntry) -> ExternResult<()> {
+  signal_peers(AgentSignal {
+    tag: "agent".to_string(),
+    data: wire_entry
+  }, get_peers()?)
+}
+
+// used to get addresses of agents to send signals to
+fn get_peers() -> ExternResult<Vec<AgentPubKey>> {
+  let path_hash = Path::from(AGENTS_PATH).hash()?;
+  let entries = fetch_links::<Profile, Profile>(path_hash)?;
+  let agent_info = agent_info!()?;
+  Ok(
+    entries.into_iter()
+      // eliminate yourself as a peer
+      .filter(|x| x.address.0 == agent_info.agent_initial_pubkey)
+      .map(|x| AgentPubKey::from(x))
+      .collect::<Vec<AgentPubKey>>()
+  )
+}
+
+#[derive(Clone, Serialize, Deserialize, SerializedBytes)]
+pub struct AgentSignal {
+  tag: String,
+  data: WireEntry
+}
+
+// receiver (and forward to UI)
+#[hdk_extern]
+pub fn receive_signal(signal: AgentSignal) -> ExternResult<()> {
+  match emit_signal!(signal) {
+    Ok(_) => Ok(()),
+    Err(_) => Err(HdkError::SerializedBytes(SerializedBytesError::ToBytes("couldnt convert to bytes to send as signal".to_string())))
+  }
 }
 
 // pub fn profile_def() -> ValidatingEntryType {
@@ -240,36 +293,4 @@ fn fetch_agent_address(_: ()) -> ExternResult<WrappedAgentPubKey> {
 //             )
 //         ]
 //     )
-// }
-
-// send the direct messages that will result in
-// signals being emitted to the UI
-// fn notify_all(message: DirectMessage) -> ExternResult<()> {
-//     fetch_agents()?.iter().for_each(|profile| {
-//         // useful for development purposes
-//         // uncomment to send signals to oneself
-//         // if profile.address == AGENT_ADDRESS.to_string() {
-//         //     signal_ui(&message);
-//         // }
-
-//         if profile.address != AGENT_ADDRESS.to_string() {
-//             hdk::debug(format!(
-//                 "Send a message to: {:?}",
-//                 &profile.address.to_string()
-//             ))
-//             .ok();
-//             hdk::send(
-//                 Address::from(profile.address.clone()),
-//                 JsonString::from(message.clone()).into(),
-//                 1.into(),
-//             )
-//             .ok();
-//         }
-//     });
-//     Ok(())
-// }
-
-// fn notify_new_agent(profile: Profile) -> ExternResult<()> {
-//     let message = DirectMessage::NewAgentNotification(NewAgentSignalPayload { agent: profile });
-//     notify_all(message)
 // }
