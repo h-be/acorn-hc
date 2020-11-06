@@ -8,6 +8,7 @@ edition = "2018"
 
 [dependencies]
 serde = "=1.0.104"
-hdk3 = { git = "ssh://git@github.com/holochain/holochain.git", rev = "4714fbddc48f1f9987c9f574b8d06510ea58ab16", package = "hdk3" }
-paste = "1.0.1"
+# patched
+hdk3 = "0"
+paste = "1.0.2"
 

@@ -6,6 +6,26 @@ Holochain backend for Acorn, see [acorn-ui](https://github.com/h-be/acorn-ui) fo
 
 To download it as a native application for Linux or MacOS from [acorn-release](https://github.com/h-be/acorn-release/releases).
 
+## Holochain Compatibility
+
+Current compatibility with [holochain/holochain](https://github.com/holochain/holochain):
+[60292dc6aa8413866da6f44d8af11c7bd600608a (Oct 21, 2020)](https://github.com/holochain/holochain/commit/60292dc6aa8413866da6f44d8af11c7bd600608a)
+
+When changing, change these lines in `default.nix`
+```
+cargo install --force holochain --git https://github.com/holochain/holochain.git --rev 60292dc6aa8413866da6f44d8af11c7bd600608a
+cargo install --force dna_util --git https://github.com/holochain/holochain.git --rev 60292dc6aa8413866da6f44d8af11c7bd600608a
+```
+
+Also change this line in `Cargo.toml`:
+```toml
+hdk3 = { git = "https://github.com/holochain/holochain", rev = "60292dc6aa8413866da6f44d8af11c7bd600608a", package = "hdk3" }
+```
+
+Make sure the tests still pass for the new version.
+
+
+
 ## Running
 
 Before starting up the UI development, start up a Holochain Conductor with the Acorn DNA. Here's how:
