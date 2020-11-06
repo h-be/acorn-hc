@@ -200,7 +200,7 @@ fn get_peers() -> ExternResult<Vec<AgentPubKey>> {
   Ok(
     entries.into_iter()
       // eliminate yourself as a peer
-      .filter(|x| x.address.0 == agent_info.agent_initial_pubkey)
+      .filter(|x| x.address.0 != agent_info.agent_initial_pubkey)
       .map(|x| AgentPubKey::from(x))
       .collect::<Vec<AgentPubKey>>()
   )
