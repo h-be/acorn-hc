@@ -1,4 +1,4 @@
-use dna_help::{ActionType, EntryAndHash, WrappedAgentPubKey, fetch_links};
+use dna_help::{fetch_links, ActionType, EntryAndHash, WrappedAgentPubKey};
 use hdk3::prelude::*;
 
 pub const MEMBER_PATH: &str = "member";
@@ -21,19 +21,19 @@ pub struct VecMember(Vec<Member>);
 
 #[derive(Debug, Serialize, Deserialize, SerializedBytes)]
 pub struct MemberSignal {
-  entry_type: String,
-  action: ActionType,
-  data: Member
+    entry_type: String,
+    action: ActionType,
+    data: Member,
 }
 
 impl MemberSignal {
-  pub fn new(member: Member) -> Self {
-    Self {
-      entry_type: "member".to_string(),
-      action: ActionType::Create,
-      data: member
+    pub fn new(member: Member) -> Self {
+        Self {
+            entry_type: "member".to_string(),
+            action: ActionType::Create,
+            data: member,
+        }
     }
-  }
 }
 
 #[hdk_extern]

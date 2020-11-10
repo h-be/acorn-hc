@@ -1,5 +1,6 @@
 use dna_help::{
-    signal_peers, fetch_links, get_latest_for_entry, EntryAndHash, WrappedAgentPubKey, WrappedHeaderHash,
+    fetch_links, get_latest_for_entry, signal_peers, EntryAndHash, WrappedAgentPubKey,
+    WrappedHeaderHash,
 };
 use hdk3::prelude::*;
 
@@ -17,9 +18,9 @@ pub struct Profile {
 }
 
 impl From<Profile> for AgentPubKey {
-  fn from(profile: Profile) -> Self {
-      profile.address.0
-  }
+    fn from(profile: Profile) -> Self {
+        profile.address.0
+    }
 }
 
 impl From<EntryAndHash<Profile>> for Profile {
@@ -130,18 +131,18 @@ pub fn create_whoami(entry: Profile) -> ExternResult<WireEntry> {
     create_link!(agent_entry_hash, entry_hash)?;
 
     let wire_entry = WireEntry {
-      entry,
-      address: WrappedHeaderHash(header_hash),
+        entry,
+        address: WrappedHeaderHash(header_hash),
     };
 
     // we don't want to cause real failure for inability to send to peers
     let _ = send_agent_signal(wire_entry.clone());
-    
+
     Ok(wire_entry)
-  }
-  
-  #[hdk_extern]
-  pub fn update_whoami(update: WireEntry) -> ExternResult<WireEntry> {
+}
+
+#[hdk_extern]
+pub fn update_whoami(update: WireEntry) -> ExternResult<WireEntry> {
     update_entry!(update.address.0.clone(), update.entry.clone())?;
     // // send update to peers
     // we don't want to cause real failure for inability to send to peers
@@ -180,45 +181,48 @@ fn fetch_agent_address(_: ()) -> ExternResult<WrappedAgentPubKey> {
     Ok(WrappedAgentPubKey(agent_info.agent_initial_pubkey))
 }
 
-
 /*
 SIGNALS
 */
 
 fn send_agent_signal(wire_entry: WireEntry) -> ExternResult<()> {
-  signal_peers(AgentSignal {
-    tag: "agent".to_string(),
-    data: wire_entry
-  }, get_peers)
+    signal_peers(
+        AgentSignal {
+            tag: "agent".to_string(),
+            data: wire_entry,
+        },
+        get_peers,
+    )
 }
 
 // used to get addresses of agents to send signals to
 fn get_peers() -> ExternResult<Vec<AgentPubKey>> {
-  let path_hash = Path::from(AGENTS_PATH).hash()?;
-  let entries = fetch_links::<Profile, Profile>(path_hash)?;
-  let agent_info = agent_info!()?;
-  Ok(
-    entries.into_iter()
-      // eliminate yourself as a peer
-      .filter(|x| x.address.0 != agent_info.agent_initial_pubkey)
-      .map(|x| AgentPubKey::from(x))
-      .collect::<Vec<AgentPubKey>>()
-  )
+    let path_hash = Path::from(AGENTS_PATH).hash()?;
+    let entries = fetch_links::<Profile, Profile>(path_hash)?;
+    let agent_info = agent_info!()?;
+    Ok(entries
+        .into_iter()
+        // eliminate yourself as a peer
+        .filter(|x| x.address.0 != agent_info.agent_initial_pubkey)
+        .map(|x| AgentPubKey::from(x))
+        .collect::<Vec<AgentPubKey>>())
 }
 
 #[derive(Clone, Serialize, Deserialize, SerializedBytes)]
 pub struct AgentSignal {
-  tag: String,
-  data: WireEntry
+    tag: String,
+    data: WireEntry,
 }
 
 // receiver (and forward to UI)
 #[hdk_extern]
 pub fn receive_signal(signal: AgentSignal) -> ExternResult<()> {
-  match emit_signal!(signal) {
-    Ok(_) => Ok(()),
-    Err(_) => Err(HdkError::SerializedBytes(SerializedBytesError::ToBytes("couldnt convert to bytes to send as signal".to_string())))
-  }
+    match emit_signal!(signal) {
+        Ok(_) => Ok(()),
+        Err(_) => Err(HdkError::SerializedBytes(SerializedBytesError::ToBytes(
+            "couldnt convert to bytes to send as signal".to_string(),
+        ))),
+    }
 }
 
 // pub fn profile_def() -> ValidatingEntryType {

@@ -1,5 +1,5 @@
 use crate::{get_peers, SignalType};
-use dna_help::{WrappedAgentPubKey, WrappedHeaderHash, crud};
+use dna_help::{crud, WrappedAgentPubKey, WrappedHeaderHash};
 use hdk3::prelude::*;
 
 // The "Entry" in EntryPoint is not a reference to Holochain "Entries"
@@ -14,7 +14,13 @@ pub struct EntryPoint {
 }
 
 fn convert_to_receiver_signal(signal: EntryPointSignal) -> SignalType {
-  SignalType::EntryPoint(signal)
+    SignalType::EntryPoint(signal)
 }
 
-crud!(EntryPoint, entry_point, "entry_point", get_peers, convert_to_receiver_signal);
+crud!(
+    EntryPoint,
+    entry_point,
+    "entry_point",
+    get_peers,
+    convert_to_receiver_signal
+);

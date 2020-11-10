@@ -1,5 +1,5 @@
 use crate::{get_peers, SignalType};
-use dna_help::{WrappedAgentPubKey, WrappedHeaderHash, crud};
+use dna_help::{crud, WrappedAgentPubKey, WrappedHeaderHash};
 use hdk3::prelude::*;
 
 #[hdk_entry(id = "goal_comment")]
@@ -12,7 +12,13 @@ pub struct GoalComment {
 }
 
 fn convert_to_receiver_signal(signal: GoalCommentSignal) -> SignalType {
-  SignalType::GoalComment(signal)
+    SignalType::GoalComment(signal)
 }
 
-crud!(GoalComment, goal_comment, "goal_comment", get_peers, convert_to_receiver_signal);
+crud!(
+    GoalComment,
+    goal_comment,
+    "goal_comment",
+    get_peers,
+    convert_to_receiver_signal
+);
