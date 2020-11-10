@@ -47,6 +47,8 @@ async function setup(scenario) {
     return cndtr.call(ALICE_USER_NICK, ZOME, fn, payload)
   }
 
+  // await delay(5000)
+
   return { callAlice, agentAddress }
 }
 

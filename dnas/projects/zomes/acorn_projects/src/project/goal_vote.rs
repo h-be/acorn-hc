@@ -1,4 +1,5 @@
-use dna_help::{WrappedAgentPubKey, WrappedHeaderHash, crud};
+use crate::{get_peers, SignalType};
+use dna_help::{crud, WrappedAgentPubKey, WrappedHeaderHash};
 use hdk3::prelude::*;
 
 #[hdk_entry(id = "goal_vote")]
@@ -13,4 +14,14 @@ pub struct GoalVote {
     pub unix_timestamp: f64,
 }
 
-crud!(GoalVote, goal_vote, "goal_vote");
+fn convert_to_receiver_signal(signal: GoalVoteSignal) -> SignalType {
+    SignalType::GoalVote(signal)
+}
+
+crud!(
+    GoalVote,
+    goal_vote,
+    "goal_vote",
+    get_peers,
+    convert_to_receiver_signal
+);

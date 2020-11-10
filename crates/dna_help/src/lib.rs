@@ -1,5 +1,40 @@
 use hdk3::prelude::*;
 pub use paste;
+use std::fmt;
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, SerializedBytes)]
+#[serde(from = "UIEnum")]
+#[serde(into = "UIEnum")]
+pub enum ActionType {
+    Create,
+    Update,
+    Delete,
+}
+
+#[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone, PartialEq)]
+pub struct UIEnum(String);
+
+impl From<UIEnum> for ActionType {
+    fn from(ui_enum: UIEnum) -> Self {
+        match ui_enum.0.as_str() {
+            "create" => Self::Create,
+            "update" => Self::Update,
+            _ => Self::Delete,
+        }
+    }
+}
+
+impl From<ActionType> for UIEnum {
+    fn from(action_type: ActionType) -> Self {
+        Self(action_type.to_string().to_lowercase())
+    }
+}
+
+impl fmt::Display for ActionType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
 
 pub type EntryAndHash<T> = (T, HeaderHash, EntryHash);
 pub type OptionEntryAndHash<T> = Option<EntryAndHash<T>>;
@@ -67,6 +102,55 @@ impl From<WrappedEntryHash> for UIStringHash {
     }
 }
 
+/*
+  SIGNALS
+*/
+
+// sender
+pub fn signal_peers<T: TryInto<SerializedBytes>>(
+    signal: T,
+    get_peers: fn() -> ExternResult<Vec<AgentPubKey>>,
+) -> ExternResult<()> {
+    let peers = get_peers()?;
+    let zome_info = zome_info!()?;
+    debug!(format!("PEERS! {:?}", peers))?;
+    match signal.try_into() {
+        Ok(sb) => {
+            for peer in peers {
+                // ignore errors
+                let res = call_remote!(
+                    peer,
+                    zome_info.zome_name.clone(),
+                    zome::FunctionName("receive_signal".into()),
+                    None,
+                    sb.clone()
+                );
+                if res.is_err() {
+                    let _ = debug!(format!("CALL REMOTE ERROR: {:?}", res));
+                } else {
+                    let _ = debug!(format!("CALL REMOTE SUCCESS {:?}", res));
+                }
+            }
+            Ok(())
+        }
+        Err(_) => Err(HdkError::SerializedBytes(SerializedBytesError::ToBytes(
+            "couldnt convert signal into serializedbytes".to_string(),
+        ))),
+    }
+}
+
+pub fn create_receive_signal_cap_grant() -> ExternResult<()> {
+    let mut functions: GrantedFunctions = HashSet::new();
+    functions.insert((zome_info!()?.zome_name, "receive_signal".into()));
+
+    create_cap_grant!(CapGrantEntry {
+        tag: "".into(),
+        // empty access converts to unrestricted
+        access: ().into(),
+        functions,
+    })?;
+    Ok(())
+}
 
 pub fn get_header_hash(shh: element::SignedHeaderHashed) -> HeaderHash {
     shh.header_hashed().as_hash().to_owned()
@@ -138,7 +222,7 @@ pub fn fetch_links<
 #[macro_export]
 macro_rules! crud {
     (
-      $crud_type:ident, $i:ident, $path:expr
+      $crud_type:ident, $i:ident, $path:expr, $get_peers:ident, $convert_to_receiver_signal:ident
     ) => {
 
         $crate::paste::paste! {
@@ -149,6 +233,25 @@ macro_rules! crud {
             pub entry: $crud_type,
             pub address: $crate::WrappedHeaderHash,
             pub entry_address: $crate::WrappedEntryHash
+          }
+
+          // this will be used to send these data structures as signals to the UI
+          #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, SerializedBytes)]
+          // untagged because the useful tagging is done externally on the *Signal object
+          // as the tag and action
+          #[serde(untagged)]
+          pub enum [<$crud_type SignalData>] {
+            Create([<$crud_type WireEntry>]),
+            Update([<$crud_type WireEntry>]),
+            Delete($crate::WrappedHeaderHash),
+          }
+
+          // this will be used to send these data structures as signals to the UI
+          #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, SerializedBytes)]
+          pub struct [<$crud_type Signal>] {
+            pub entry_type: String,
+            pub action: $crate::ActionType,
+            pub data: [<$crud_type SignalData>],
           }
 
           #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, SerializedBytes)]
@@ -173,7 +276,7 @@ macro_rules! crud {
           /*
             CREATE
           */
-          pub fn [<inner_create_ $i>](entry: $crud_type) -> ExternResult<[<$crud_type WireEntry>]> {
+          pub fn [<inner_create_ $i>](entry: $crud_type, send_signal: bool) -> ExternResult<[<$crud_type WireEntry>]> {
             let address = create_entry!(entry.clone())?;
             let entry_hash = hash_entry!(entry.clone())?;
             let path_hash = Path::from([<$i:upper _PATH>]).hash()?;
@@ -183,13 +286,21 @@ macro_rules! crud {
               address: $crate::WrappedHeaderHash(address),
               entry_address: $crate::WrappedEntryHash(entry_hash)
             };
-            // notify_goal_comment(wire_entry.clone())?;
+            if (send_signal) {
+              let signal = $convert_to_receiver_signal([<$crud_type Signal>] {
+                entry_type: $path.to_string(),
+                action: $crate::ActionType::Create,
+                data: [<$crud_type SignalData>]::Create(wire_entry.clone()),
+              });
+              debug!(format!("CREATE ACTION SIGNAL PEERS {:?}", signal))?;
+              let _ = $crate::signal_peers(signal, $get_peers);
+            }
             Ok(wire_entry)
           }
 
           #[hdk_extern]
           pub fn [<create_ $i>](entry: $crud_type) -> ExternResult<[<$crud_type WireEntry>]> {
-            [<inner_create_ $i>](entry)
+            [<inner_create_ $i>](entry, true)
           }
 
           /*
@@ -209,7 +320,7 @@ macro_rules! crud {
           /*
             UPDATE
           */
-          pub fn [<inner_update_ $i>](update: [<$crud_type UpdateInput>]) -> ExternResult<[<$crud_type WireEntry>]> {
+          pub fn [<inner_update_ $i>](update: [<$crud_type UpdateInput>], send_signal: bool) -> ExternResult<[<$crud_type WireEntry>]> {
             update_entry!(update.address.0.clone(), update.entry.clone())?;
             let entry_address = hash_entry!(update.entry.clone())?;
             let wire_entry = [<$crud_type WireEntry>] {
@@ -217,27 +328,43 @@ macro_rules! crud {
                 address: update.address,
                 entry_address: $crate::WrappedEntryHash(entry_address)
             };
-            // notify_goal_comment(wire_entry.clone())?;
+            if (send_signal) {
+              let signal = $convert_to_receiver_signal([<$crud_type Signal>] {
+                entry_type: $path.to_string(),
+                action: $crate::ActionType::Update,
+                data: [<$crud_type SignalData>]::Update(wire_entry.clone()),
+              });
+              debug!(format!("UPDATE ACTION SIGNAL PEERS {:?}", signal))?;
+              let _ = $crate::signal_peers(signal, $get_peers);
+            }
             Ok(wire_entry)
           }
 
           #[hdk_extern]
           pub fn [<update_ $i>](update: [<$crud_type UpdateInput>]) -> ExternResult<[<$crud_type WireEntry>]> {
-            [<inner_update_ $i>](update)
+            [<inner_update_ $i>](update, true)
           }
 
           /*
             DELETE
           */
-          pub fn [<inner_archive_ $i>](address: $crate::WrappedHeaderHash) -> ExternResult<$crate::WrappedHeaderHash> {
+          pub fn [<inner_archive_ $i>](address: $crate::WrappedHeaderHash, send_signal: bool) -> ExternResult<$crate::WrappedHeaderHash> {
             delete_entry!(address.0.clone())?;
-            // notify_goal_comment_archived(address.clone())?;
+            if (send_signal) {
+              let signal = $convert_to_receiver_signal([<$crud_type Signal>] {
+                entry_type: $path.to_string(),
+                action: $crate::ActionType::Delete,
+                data: [<$crud_type SignalData>]::Delete(address.clone()),
+              });
+              debug!(format!("DELETE ACTION SIGNAL PEERS {:?}", signal))?;
+              let _ = $crate::signal_peers(signal, $get_peers);
+            }
             Ok(address)
           }
 
           #[hdk_extern]
           pub fn [<archive_ $i>](address: $crate::WrappedHeaderHash) -> ExternResult<$crate::WrappedHeaderHash> {
-            [<inner_archive_ $i>](address)
+            [<inner_archive_ $i>](address, true)
           }
         }
     };

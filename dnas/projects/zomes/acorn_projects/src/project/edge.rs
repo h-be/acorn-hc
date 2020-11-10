@@ -1,7 +1,5 @@
-use dna_help::{
-  crud,
-  WrappedHeaderHash
-};
+use crate::{get_peers, SignalType};
+use dna_help::{crud, WrappedHeaderHash};
 use hdk3::prelude::*;
 
 // An edge. This is an arrow on the SoA Tree which directionally links
@@ -14,4 +12,8 @@ pub struct Edge {
     pub randomizer: f64,
 }
 
-crud!(Edge, edge, "edge");
+fn convert_to_receiver_signal(signal: EdgeSignal) -> SignalType {
+    SignalType::Edge(signal)
+}
+
+crud!(Edge, edge, "edge", get_peers, convert_to_receiver_signal);
