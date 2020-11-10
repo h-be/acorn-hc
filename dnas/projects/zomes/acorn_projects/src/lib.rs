@@ -35,13 +35,15 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
     let member = Member {
         address: WrappedAgentPubKey(agent_info!()?.agent_initial_pubkey),
     };
-    create_entry!(member.clone())?;
-    let member_entry_hash = hash_entry!(member.clone())?;
-    create_link!(member_path_address, member_entry_hash)?;
-
     // send update to peers alerting them that you joined
     // don't fail if something goes wrong here
-    let _ = signal_peers(MemberSignal::new(member), get_peers);
+    let _ = signal_peers(MemberSignal::new(member.clone()), get_peers);
+
+    // now create the link, so that we don't see ourselves in the get_peers list
+    create_entry!(member.clone())?;
+    let member_entry_hash = hash_entry!(member)?;
+    create_link!(member_path_address, member_entry_hash)?;
+
 
     Ok(InitCallbackResult::Pass)
 }
