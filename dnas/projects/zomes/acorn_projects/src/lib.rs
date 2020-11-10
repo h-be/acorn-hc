@@ -1,6 +1,6 @@
 use dna_help::{
     fetch_links,
-    // signal_peers,
+    signal_peers,
     WrappedAgentPubKey,
 };
 use hdk3::prelude::*;
@@ -41,7 +41,7 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
 
     // send update to peers alerting them that you joined
     // don't fail if something goes wrong here
-    // let _ = signal_peers(MemberSignal::new(member), get_peers);
+    let _ = signal_peers(MemberSignal::new(member), get_peers);
 
     Ok(InitCallbackResult::Pass)
 }
@@ -89,12 +89,12 @@ pub enum SignalType {
 pub fn get_peers() -> ExternResult<Vec<AgentPubKey>> {
     let path_hash = Path::from(MEMBER_PATH).hash()?;
     let entries = fetch_links::<Member, Member>(path_hash)?;
-    // let agent_info = agent_info!()?;
+    let agent_info = agent_info!()?;
     debug!(format!("PEER ENTRIES {:?}", entries))?;
     Ok(entries
         .into_iter()
         // eliminate yourself as a peer
-        // .filter(|x| x.address.0 != agent_info.agent_initial_pubkey)
+        .filter(|x| x.address.0 != agent_info.agent_initial_pubkey)
         .map(|x| x.address.0)
         .collect::<Vec<AgentPubKey>>())
 }
