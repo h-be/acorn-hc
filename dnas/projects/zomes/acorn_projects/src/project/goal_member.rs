@@ -1,3 +1,4 @@
+use crate::{get_peers, SignalType};
 use dna_help::{WrappedAgentPubKey, WrappedHeaderHash, crud};
 use hdk3::prelude::*;
 
@@ -11,7 +12,11 @@ pub struct GoalMember {
   pub unix_timestamp: f64,
 }
 
-crud!(GoalMember, goal_member, "goal_member");
+fn convert_to_receiver_signal(signal: GoalMemberSignal) -> SignalType {
+  SignalType::GoalMember(signal)
+}
+
+crud!(GoalMember, goal_member, "goal_member", get_peers, convert_to_receiver_signal);
 
 // DELETE
 // clear all members
@@ -26,9 +31,9 @@ pub fn archive_goal_members(address: WrappedHeaderHash) -> ExternResult<Vec<Wrap
     .map(|wire_entry: GoalMemberWireEntry| {
       let goal_member_address = wire_entry.address;
       // archive the edge with this address
-      match inner_archive_goal_member(goal_member_address.clone()) {
+      // this will also trigger signals
+      match inner_archive_goal_member(goal_member_address.clone(), true) {
         Ok(_) => {
-          // notify_goal_member_archived(goal_member_address.clone())?;
           Ok(goal_member_address)
         }
         Err(e) => Err(e),

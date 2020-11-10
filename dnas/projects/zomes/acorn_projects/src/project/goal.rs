@@ -1,3 +1,4 @@
+use crate::{get_peers, SignalType};
 use super::{
     edge::{inner_archive_edge, inner_create_edge, inner_fetch_edges, Edge, EdgeWireEntry},
     entry_point::{inner_archive_entry_point, inner_fetch_entry_points, EntryPointWireEntry},
@@ -5,7 +6,7 @@ use super::{
     goal_member::archive_goal_members,
     goal_vote::{inner_archive_goal_vote, inner_fetch_goal_votes, GoalVoteWireEntry},
 };
-use dna_help::{crud, WrappedAgentPubKey, WrappedHeaderHash};
+use dna_help::{ActionType, signal_peers, crud, WrappedAgentPubKey, WrappedHeaderHash};
 use hdk3::prelude::*;
 use std::fmt;
 
@@ -101,7 +102,11 @@ pub struct TimeFrame {
     to_date: f64,
 }
 
-crud!(Goal, goal, "goal");
+fn convert_to_receiver_signal(signal: GoalSignal) -> SignalType {
+  SignalType::Goal(signal)
+}
+
+crud!(Goal, goal, "goal", get_peers, convert_to_receiver_signal);
 
 #[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone, PartialEq)]
 pub struct CreateGoalWithEdgeInput {
@@ -115,26 +120,47 @@ pub struct CreateGoalWithEdgeOutput {
     maybe_edge: Option<EdgeWireEntry>,
 }
 
+// custom signal type
+#[derive(Debug, Serialize, Deserialize, SerializedBytes)]
+pub struct GoalWithEdgeSignal {
+  entry_type: String,
+  action: ActionType,
+  data: CreateGoalWithEdgeOutput
+}
+
+
 #[hdk_extern]
 pub fn create_goal_with_edge(
     input: CreateGoalWithEdgeInput,
 ) -> ExternResult<CreateGoalWithEdgeOutput> {
-    let wire_entry: GoalWireEntry = inner_create_goal(input.entry.clone())?;
-    Ok(CreateGoalWithEdgeOutput {
+  // false to say don't send a signal
+    let wire_entry: GoalWireEntry = inner_create_goal(input.entry.clone(), false)?;
+    let maybe_edge: Option<EdgeWireEntry> = match input.maybe_parent_address {
+        Some(header_hash) => {
+            let edge = Edge {
+                parent_address: header_hash,
+                child_address: wire_entry.address.clone(),
+                randomizer: sys_time!()?.as_secs_f64(),
+            };
+            let edge_wire_entry = inner_create_edge(edge, false)?;
+            Some(edge_wire_entry)
+        }
+        None => None,
+    };
+
+    let goal_with_edge = CreateGoalWithEdgeOutput {
         goal: wire_entry.clone(),
-        maybe_edge: match input.maybe_parent_address {
-            Some(header_hash) => {
-                let edge = Edge {
-                    parent_address: header_hash,
-                    child_address: wire_entry.address,
-                    randomizer: sys_time!()?.as_secs_f64(),
-                };
-                let edge_wire_entry = inner_create_edge(edge)?;
-                Some(edge_wire_entry)
-            }
-            None => None,
-        },
-    })
+        maybe_edge
+    };
+    let signal = SignalType::GoalWithEdge(GoalWithEdgeSignal {
+      entry_type: "goal_with_edge".to_string(),
+      action: ActionType::Create,
+      data: goal_with_edge.clone(),
+    });
+    debug!(format!("GOAL WITH EDGE ACTION SIGNAL PEERS {:?}", signal))?;
+    let _ = signal_peers(signal, get_peers);
+
+    Ok(goal_with_edge)
 }
 
 #[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone, PartialEq)]
@@ -147,9 +173,17 @@ pub struct ArchiveGoalFullyResponse {
     archived_entry_points: Vec<WrappedHeaderHash>,
 }
 
+// custom signal type
+#[derive(Debug, Serialize, Deserialize, SerializedBytes)]
+pub struct ArchiveGoalFullySignal { 
+  entry_type: String,
+  action: ActionType,
+  data: ArchiveGoalFullyResponse
+}
+
 #[hdk_extern]
 pub fn archive_goal_fully(address: WrappedHeaderHash) -> ExternResult<ArchiveGoalFullyResponse> {
-    inner_archive_goal(address.clone())?;
+    inner_archive_goal(address.clone(), false)?;
 
     let archived_edges = inner_fetch_edges()?
         .0
@@ -162,7 +196,7 @@ pub fn archive_goal_fully(address: WrappedHeaderHash) -> ExternResult<ArchiveGoa
         })
         .map(|wire_entry: EdgeWireEntry| {
             let edge_address = wire_entry.address;
-            match inner_archive_edge(edge_address.clone()) {
+            match inner_archive_edge(edge_address.clone(), false) {
                 Ok(_) => Ok(edge_address),
                 Err(e) => Err(e),
             }
@@ -179,7 +213,7 @@ pub fn archive_goal_fully(address: WrappedHeaderHash) -> ExternResult<ArchiveGoa
         .filter(|wire_entry: &GoalVoteWireEntry| wire_entry.entry.goal_address == address.clone())
         .map(|wire_entry: GoalVoteWireEntry| {
             let goal_vote_address = wire_entry.address;
-            match inner_archive_goal_vote(goal_vote_address.clone()) {
+            match inner_archive_goal_vote(goal_vote_address.clone(), false) {
                 Ok(_) => Ok(goal_vote_address),
                 Err(e) => Err(e),
             }
@@ -194,7 +228,7 @@ pub fn archive_goal_fully(address: WrappedHeaderHash) -> ExternResult<ArchiveGoa
         .filter(|wire_entry: &GoalCommentWireEntry| wire_entry.entry.goal_address == address)
         .map(|wire_entry: GoalCommentWireEntry| {
             let goal_comment_address = wire_entry.address;
-            match inner_archive_goal_comment(goal_comment_address.clone()) {
+            match inner_archive_goal_comment(goal_comment_address.clone(), false) {
                 Ok(_) => Ok(goal_comment_address),
                 Err(e) => Err(e),
             }
@@ -209,7 +243,7 @@ pub fn archive_goal_fully(address: WrappedHeaderHash) -> ExternResult<ArchiveGoa
         .filter(|wire_entry: &EntryPointWireEntry| wire_entry.entry.goal_address == address)
         .map(|wire_entry: EntryPointWireEntry| {
             let entry_point_address = wire_entry.address;
-            match inner_archive_entry_point(entry_point_address.clone()) {
+            match inner_archive_entry_point(entry_point_address.clone(), false) {
                 Ok(_) => Ok(entry_point_address),
                 Err(e) => Err(e),
             }
@@ -226,7 +260,14 @@ pub fn archive_goal_fully(address: WrappedHeaderHash) -> ExternResult<ArchiveGoa
         archived_goal_comments,
         archived_entry_points,
     };
-    // notify_goal_archived(archive_response.clone())?;
+
+    let signal = SignalType::ArchiveGoalFully(ArchiveGoalFullySignal {
+      entry_type: "archive_goal_fully".to_string(),
+      action: ActionType::Delete,
+      data: archive_response.clone(),
+    });
+    debug!(format!("ARCHIVE GOAL FULLY ACTION SIGNAL PEERS {:?}", signal))?;
+    let _ = signal_peers(signal, get_peers);
 
     Ok(archive_response)
 }

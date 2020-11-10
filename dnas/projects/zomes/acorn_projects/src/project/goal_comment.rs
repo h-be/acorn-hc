@@ -1,3 +1,4 @@
+use crate::{get_peers, SignalType};
 use dna_help::{WrappedAgentPubKey, WrappedHeaderHash, crud};
 use hdk3::prelude::*;
 
@@ -10,4 +11,8 @@ pub struct GoalComment {
     pub unix_timestamp: f64,
 }
 
-crud!(GoalComment, goal_comment, "goal_comment");
+fn convert_to_receiver_signal(signal: GoalCommentSignal) -> SignalType {
+  SignalType::GoalComment(signal)
+}
+
+crud!(GoalComment, goal_comment, "goal_comment", get_peers, convert_to_receiver_signal);

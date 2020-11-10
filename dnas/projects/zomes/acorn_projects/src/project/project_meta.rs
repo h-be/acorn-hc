@@ -1,3 +1,4 @@
+use crate::{get_peers, SignalType};
 use dna_help::{WrappedAgentPubKey, crud};
 use hdk3::prelude::*;
 
@@ -11,7 +12,11 @@ pub struct ProjectMeta {
     pub passphrase: String,
 }
 
-crud!(ProjectMeta, project_meta, "project_meta");
+fn convert_to_receiver_signal(signal: ProjectMetaSignal) -> SignalType {
+  SignalType::ProjectMeta(signal)
+}
+
+crud!(ProjectMeta, project_meta, "project_meta", get_peers, convert_to_receiver_signal);
 
 // READ
 #[hdk_extern]
