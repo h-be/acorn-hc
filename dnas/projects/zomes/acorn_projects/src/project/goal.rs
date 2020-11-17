@@ -139,7 +139,7 @@ pub fn create_goal_with_edge(
             let edge = Edge {
                 parent_address: header_hash,
                 child_address: wire_entry.address.clone(),
-                randomizer: sys_time!()?.as_secs_f64(),
+                randomizer: sys_time()?.as_secs_f64(),
             };
             let edge_wire_entry = inner_create_edge(edge, false)?;
             Some(edge_wire_entry)
@@ -156,8 +156,8 @@ pub fn create_goal_with_edge(
         action: ActionType::Create,
         data: goal_with_edge.clone(),
     });
-    debug!(format!("GOAL WITH EDGE ACTION SIGNAL PEERS {:?}", signal))?;
-    let _ = signal_peers(signal, get_peers);
+    debug!(format!("GOAL WITH EDGE ACTION SIGNAL PEERS {:?}", signal));
+    let _ = signal_peers(&signal, get_peers);
 
     Ok(goal_with_edge)
 }
@@ -268,8 +268,8 @@ pub fn archive_goal_fully(address: WrappedHeaderHash) -> ExternResult<ArchiveGoa
     debug!(format!(
         "ARCHIVE GOAL FULLY ACTION SIGNAL PEERS {:?}",
         signal
-    ))?;
-    let _ = signal_peers(signal, get_peers);
+    ));
+    let _ = signal_peers(&signal, get_peers);
 
     Ok(archive_response)
 }
