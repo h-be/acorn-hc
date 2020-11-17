@@ -1,25 +1,13 @@
 import { Config, Orchestrator } from '@holochain/tryorama'
+import { ScenarioApi } from '@holochain/tryorama/lib/api'
 import * as _ from 'lodash'
+import path from 'path'
 import { delay } from './timer'
 
 const ZOME = 'acorn_projects'
-const ALICE_USER_NICK = 'alice'
-const BOBBO_USER_NICK = 'bobbo'
-
-// Configure a conductor with two identical DNAs,
-// differentiated by UUID, nicknamed "alice" and "bobbo"
-const config = Config.gen(
-  {
-    [ALICE_USER_NICK]: Config.dna('../dnas/projects/projects.dna.gz', null),
-    [BOBBO_USER_NICK]: Config.dna('../dnas/projects/projects.dna.gz', null),
-  }
-  // { logger: Config.logger(true) }
-)
-
-interface Hash {
-  hash: Buffer
-  hash_type: Buffer
-}
+const config = Config.gen()
+const projectsDnaPath = path.join(__dirname, '../../dnas/projects/projects.dna.gz')
+type Hash = Buffer
 
 function newGoal(agentAddress: Hash, content: string) {
   return {
@@ -36,20 +24,17 @@ function newGoal(agentAddress: Hash, content: string) {
   }
 }
 
-async function setup(scenario) {
-  // spawn the conductor process
-  const { cndtr } = await scenario.players({ cndtr: config })
-  await cndtr.spawn()
+async function setup(scenario: ScenarioApi) {
+  const [conductor] = await scenario.players([config])
+  const [[{ agent, cells: [projectsCell ]}]] = await conductor.installAgentsHapps([[[projectsDnaPath]]])
 
-  const [_dnaHash, agentAddress] = cndtr.cellId(ALICE_USER_NICK)
-
-  function callAlice(fn: string, payload: any) {
-    return cndtr.call(ALICE_USER_NICK, ZOME, fn, payload)
+  function callAlice(fn: string, payload?: any) {
+    return projectsCell.call(ZOME, fn, payload)
   }
 
   // await delay(5000)
 
-  return { callAlice, agentAddress }
+  return { callAlice, agentAddress: agent }
 }
 
 async function runPlainCrudTest({
@@ -96,10 +81,10 @@ async function runPlainCrudTest({
 }
 
 module.exports = (orchestrator: Orchestrator<null>) => {
-  orchestrator.registerScenario('member api', async (scenario, tape) => {
+  orchestrator.registerScenario('member api', async (scenario: ScenarioApi, tape) => {
     const { callAlice, agentAddress } = await setup(scenario)
 
-    const result = await callAlice('fetch_members', null)
+    const result = await callAlice('fetch_members')
 
     const sampleResult = 'uhCAkmrkoAHPVf_eufG7eC5fm6QKrW5pPMoktvG5LOC0SnJ4vV1Uv'
     tape.equal(1, result.length)
@@ -107,11 +92,11 @@ module.exports = (orchestrator: Orchestrator<null>) => {
     tape.equal(result[0].address.length, sampleResult.length)
   })
 
-  orchestrator.registerScenario('goal api', async (scenario, tape) => {
+  orchestrator.registerScenario('goal api', async (scenario: ScenarioApi, tape) => {
     const { callAlice } = await setup(scenario)
 
     // destructure
-    const [{ address: agentAddress }] = await callAlice('fetch_members', null)
+    const [{ address: agentAddress }] = await callAlice('fetch_members')
 
     // CREATE
     const goal = newGoal(agentAddress, 'Test Goal Content')
@@ -119,7 +104,7 @@ module.exports = (orchestrator: Orchestrator<null>) => {
     tape.deepEqual(createGoalResult.entry, goal)
 
     // READ
-    const fetchGoalsResult = await callAlice('fetch_goals', null)
+    const fetchGoalsResult = await callAlice('fetch_goals')
     tape.equal(fetchGoalsResult.length, 1)
     tape.deepEqual(fetchGoalsResult[0], createGoalResult)
 
@@ -134,7 +119,7 @@ module.exports = (orchestrator: Orchestrator<null>) => {
     tape.deepEqual(updateGoalResult.address, createGoalResult.address)
     tape.deepEqual(updateGoalResult.entry, updatedGoal)
 
-    const fetchGoals2Result = await callAlice('fetch_goals', null)
+    const fetchGoals2Result = await callAlice('fetch_goals')
     tape.equal(fetchGoals2Result.length, 1)
     // the address should stay continuous from the original creation
     // of the goal, but the entry/goal itself should contain the updated
@@ -148,7 +133,7 @@ module.exports = (orchestrator: Orchestrator<null>) => {
     )
     tape.deepEqual(archiveGoalResult, createGoalResult.address)
 
-    const fetchGoals3Result = await callAlice('fetch_goals', null)
+    const fetchGoals3Result = await callAlice('fetch_goals')
     tape.equal(fetchGoals3Result.length, 0)
 
     // CREATE GOAL WITH EDGE
@@ -238,11 +223,11 @@ module.exports = (orchestrator: Orchestrator<null>) => {
     })
   })
 
-  orchestrator.registerScenario('edge api', async (scenario, tape) => {
+  orchestrator.registerScenario('edge api', async (scenario: ScenarioApi, tape) => {
     const { callAlice } = await setup(scenario)
 
     // destructure
-    const [{ address: agentAddress }] = await callAlice('fetch_members', null)
+    const [{ address: agentAddress }] = await callAlice('fetch_members')
 
     const goal1 = newGoal(agentAddress, 'Test Goal 1')
     const goal2 = newGoal(agentAddress, 'Test Goal 2')
@@ -268,11 +253,11 @@ module.exports = (orchestrator: Orchestrator<null>) => {
     })
   })
 
-  orchestrator.registerScenario('entry_point api', async (scenario, tape) => {
+  orchestrator.registerScenario('entry_point api', async (scenario: ScenarioApi, tape) => {
     const { callAlice } = await setup(scenario)
 
     // destructure
-    const [{ address: agentAddress }] = await callAlice('fetch_members', null)
+    const [{ address: agentAddress }] = await callAlice('fetch_members')
 
     const goal1 = newGoal(agentAddress, 'Test Goal 1')
     const createGoal1Result = await callAlice('create_goal', goal1)
@@ -295,11 +280,11 @@ module.exports = (orchestrator: Orchestrator<null>) => {
     })
   })
 
-  orchestrator.registerScenario('goal_comment api', async (scenario, tape) => {
+  orchestrator.registerScenario('goal_comment api', async (scenario: ScenarioApi, tape) => {
     const { callAlice } = await setup(scenario)
 
     // destructure
-    const [{ address: agentAddress }] = await callAlice('fetch_members', null)
+    const [{ address: agentAddress }] = await callAlice('fetch_members')
 
     const goal1 = newGoal(agentAddress, 'Test Goal 1')
     const createGoal1Result = await callAlice('create_goal', goal1)
@@ -322,11 +307,9 @@ module.exports = (orchestrator: Orchestrator<null>) => {
     })
   })
 
-  orchestrator.registerScenario('goal_member api', async (scenario, tape) => {
+  orchestrator.registerScenario('goal_member api', async (scenario: ScenarioApi, tape) => {
     const { callAlice } = await setup(scenario)
-
-    // destructure
-    const [{ address: agentAddress }] = await callAlice('fetch_members', null)
+    const [{ address: agentAddress }] = await callAlice('fetch_members')
 
     const goal1 = newGoal(agentAddress, 'Test Goal 1')
     const createGoal1Result = await callAlice('create_goal', goal1)
@@ -349,11 +332,9 @@ module.exports = (orchestrator: Orchestrator<null>) => {
     })
   })
 
-  orchestrator.registerScenario('goal_vote api', async (scenario, tape) => {
+  orchestrator.registerScenario('goal_vote api', async (scenario: ScenarioApi, tape) => {
     const { callAlice } = await setup(scenario)
-
-    // destructure
-    const [{ address: agentAddress }] = await callAlice('fetch_members', null)
+    const [{ address: agentAddress }] = await callAlice('fetch_members')
 
     const goal1 = newGoal(agentAddress, 'Test Goal 1')
     const createGoal1Result = await callAlice('create_goal', goal1)
@@ -379,11 +360,9 @@ module.exports = (orchestrator: Orchestrator<null>) => {
     })
   })
 
-  orchestrator.registerScenario('project_meta api', async (scenario, tape) => {
+  orchestrator.registerScenario('project_meta api', async (scenario: ScenarioApi, tape) => {
     const { callAlice } = await setup(scenario)
-
-    // destructure
-    const [{ address: agentAddress }] = await callAlice('fetch_members', null)
+    const [{ address: agentAddress }] = await callAlice('fetch_members')
 
     await runPlainCrudTest({
       entryType: 'project_meta',
@@ -405,7 +384,7 @@ module.exports = (orchestrator: Orchestrator<null>) => {
 
     // at this point, the initial one should have been archived
     try {
-      await callAlice('fetch_project_meta', null)
+      await callAlice('fetch_project_meta')
     } catch (e) {
       tape.equal(true, e.data.data.includes('no project meta exists'))
     }

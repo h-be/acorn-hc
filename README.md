@@ -9,17 +9,16 @@ To download it as a native application for Linux or MacOS from [acorn-release](h
 ## Holochain Compatibility
 
 Current compatibility with [holochain/holochain](https://github.com/holochain/holochain):
-[60292dc6aa8413866da6f44d8af11c7bd600608a (Oct 21, 2020)](https://github.com/holochain/holochain/commit/60292dc6aa8413866da6f44d8af11c7bd600608a)
+[ad3ccd0a126683d5fa44985f7abc18f1d891de01 (Nov 9, 2020)](https://github.com/holochain/holochain/commit/ad3ccd0a126683d5fa44985f7abc18f1d891de01)
 
-When changing, change these lines in `default.nix`
+When changing, change this line in `install-holochain.sh`
 ```
-cargo install --force holochain --git https://github.com/holochain/holochain.git --rev 60292dc6aa8413866da6f44d8af11c7bd600608a
-cargo install --force dna_util --git https://github.com/holochain/holochain.git --rev 60292dc6aa8413866da6f44d8af11c7bd600608a
+REV=ad3ccd0a126683d5fa44985f7abc18f1d891de01
 ```
 
 Also change this line in `Cargo.toml`:
 ```toml
-hdk3 = { git = "https://github.com/holochain/holochain", rev = "60292dc6aa8413866da6f44d8af11c7bd600608a", package = "hdk3" }
+hdk3 = { git = "https://github.com/holochain/holochain", rev = "ad3ccd0a126683d5fa44985f7abc18f1d891de01", package = "hdk3" }
 ```
 
 Make sure the tests still pass for the new version.

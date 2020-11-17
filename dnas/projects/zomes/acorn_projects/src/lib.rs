@@ -1,8 +1,4 @@
-use dna_help::{
-    fetch_links,
-    signal_peers,
-    WrappedAgentPubKey,
-};
+use dna_help::{fetch_links, signal_peers, WrappedAgentPubKey};
 use hdk3::prelude::*;
 
 mod project;
@@ -33,17 +29,16 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
     // so that all peers can become aware of the new presence
     let member_path_address = Path::from(MEMBER_PATH).hash()?;
     let member = Member {
-        address: WrappedAgentPubKey(agent_info!()?.agent_initial_pubkey),
+        address: WrappedAgentPubKey(agent_info()?.agent_initial_pubkey),
     };
     // send update to peers alerting them that you joined
     // don't fail if something goes wrong here
-    let _ = signal_peers(MemberSignal::new(member.clone()), get_peers);
+    let _ = signal_peers(&MemberSignal::new(member.clone()), get_peers);
 
     // now create the link, so that we don't see ourselves in the get_peers list
-    create_entry!(member.clone())?;
-    let member_entry_hash = hash_entry!(member)?;
-    create_link!(member_path_address, member_entry_hash)?;
-
+    create_entry(&member)?;
+    let member_entry_hash = hash_entry(&member)?;
+    create_link(member_path_address, member_entry_hash, ())?;
 
     Ok(InitCallbackResult::Pass)
 }
@@ -91,8 +86,8 @@ pub enum SignalType {
 pub fn get_peers() -> ExternResult<Vec<AgentPubKey>> {
     let path_hash = Path::from(MEMBER_PATH).hash()?;
     let entries = fetch_links::<Member, Member>(path_hash)?;
-    let agent_info = agent_info!()?;
-    debug!(format!("PEER ENTRIES {:?}", entries))?;
+    let agent_info = agent_info()?;
+    let _ = debug!(format!("PEER ENTRIES {:?}", entries));
     Ok(entries
         .into_iter()
         // eliminate yourself as a peer
@@ -104,7 +99,7 @@ pub fn get_peers() -> ExternResult<Vec<AgentPubKey>> {
 // receiver (and forward to UI)
 #[hdk_extern]
 pub fn receive_signal(signal: SignalType) -> ExternResult<()> {
-    match emit_signal!(signal) {
+    match emit_signal(&signal) {
         Ok(_) => Ok(()),
         Err(_) => Err(HdkError::SerializedBytes(SerializedBytesError::ToBytes(
             "couldnt convert to bytes to send as signal".to_string(),

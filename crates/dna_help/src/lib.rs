@@ -107,43 +107,36 @@ impl From<WrappedEntryHash> for UIStringHash {
 */
 
 // sender
-pub fn signal_peers<T: TryInto<SerializedBytes>>(
-    signal: T,
+pub fn signal_peers<'a, I: 'a>(
+    signal: &'a I,
     get_peers: fn() -> ExternResult<Vec<AgentPubKey>>,
-) -> ExternResult<()> {
+) -> ExternResult<()>
+where
+    SerializedBytes: TryFrom<&'a I, Error = SerializedBytesError>,
+{
     let peers = get_peers()?;
-    let zome_info = zome_info!()?;
-    debug!(format!("PEERS! {:?}", peers))?;
-    match signal.try_into() {
-        Ok(sb) => {
-            for peer in peers {
-                // ignore errors
-                let res = call_remote!(
-                    peer,
-                    zome_info.zome_name.clone(),
-                    zome::FunctionName("receive_signal".into()),
-                    None,
-                    sb.clone()
-                );
-                if res.is_err() {
-                    let _ = debug!(format!("CALL REMOTE ERROR: {:?}", res));
-                } else {
-                    let _ = debug!(format!("CALL REMOTE SUCCESS {:?}", res));
-                }
-            }
-            Ok(())
+    let zome_info = zome_info()?;
+    let _ = debug!(format!("PEERS! {:?}", peers));
+    for peer in peers {
+        let res: HdkResult<()> = call_remote(
+            peer,
+            zome_info.zome_name.clone(),
+            zome::FunctionName("receive_signal".into()),
+            None,
+            &signal,
+        );
+        if res.is_err() {
+            let _ = debug!(format!("Error during signal_peers {:?}", res.unwrap_err()));
         }
-        Err(_) => Err(HdkError::SerializedBytes(SerializedBytesError::ToBytes(
-            "couldnt convert signal into serializedbytes".to_string(),
-        ))),
     }
+    Ok(())
 }
 
 pub fn create_receive_signal_cap_grant() -> ExternResult<()> {
     let mut functions: GrantedFunctions = HashSet::new();
-    functions.insert((zome_info!()?.zome_name, "receive_signal".into()));
+    functions.insert((zome_info()?.zome_name, "receive_signal".into()));
 
-    create_cap_grant!(CapGrantEntry {
+    create_cap_grant(CapGrantEntry {
         tag: "".into(),
         // empty access converts to unrestricted
         access: ().into(),
@@ -160,7 +153,7 @@ pub fn get_latest_for_entry<T: TryFrom<SerializedBytes, Error = SerializedBytesE
     entry_hash: EntryHash,
 ) -> ExternResult<OptionEntryAndHash<T>> {
     // First, make sure we DO have the latest header_hash address
-    let maybe_latest_header_hash = match get_details!(entry_hash.clone())? {
+    let maybe_latest_header_hash = match get_details(entry_hash.clone(), GetOptions)? {
         Some(Details::Entry(details)) => match details.entry_dht_status {
             metadata::EntryDhtStatus::Live => match details.updates.len() {
                 // pass out the header associated with this entry
@@ -182,7 +175,7 @@ pub fn get_latest_for_entry<T: TryFrom<SerializedBytes, Error = SerializedBytesE
 
     // Second, go and get that element, and return it and its header_address
     match maybe_latest_header_hash {
-        Some(latest_header_hash) => match get!(latest_header_hash)? {
+        Some(latest_header_hash) => match get(latest_header_hash, GetOptions)? {
             Some(element) => match element.entry().to_app_option::<T>()? {
                 Some(entry) => Ok(Some((
                     entry,
@@ -208,8 +201,8 @@ pub fn fetch_links<
     WireEntry: From<EntryAndHash<EntryType>>,
 >(
     entry_hash: EntryHash,
-) -> Result<Vec<WireEntry>, SerializedBytesError> {
-    Ok(get_links!(entry_hash)?
+) -> Result<Vec<WireEntry>, HdkError> {
+    Ok(get_links(entry_hash, None)?
         .into_inner()
         .into_iter()
         .map(|link: link::Link| get_latest_for_entry::<EntryType>(link.target.clone()))
@@ -277,10 +270,10 @@ macro_rules! crud {
             CREATE
           */
           pub fn [<inner_create_ $i>](entry: $crud_type, send_signal: bool) -> ExternResult<[<$crud_type WireEntry>]> {
-            let address = create_entry!(entry.clone())?;
-            let entry_hash = hash_entry!(entry.clone())?;
+            let address = create_entry(&entry)?;
+            let entry_hash = hash_entry(&entry)?;
             let path_hash = Path::from([<$i:upper _PATH>]).hash()?;
-            create_link!(path_hash, entry_hash.clone())?;
+            create_link(path_hash, entry_hash.clone(), ())?;
             let wire_entry = [<$crud_type WireEntry>] {
               entry,
               address: $crate::WrappedHeaderHash(address),
@@ -292,8 +285,8 @@ macro_rules! crud {
                 action: $crate::ActionType::Create,
                 data: [<$crud_type SignalData>]::Create(wire_entry.clone()),
               });
-              debug!(format!("CREATE ACTION SIGNAL PEERS {:?}", signal))?;
-              let _ = $crate::signal_peers(signal, $get_peers);
+              let _ = debug!(format!("CREATE ACTION SIGNAL PEERS {:?}", signal));
+              let _ = $crate::signal_peers(&signal, $get_peers);
             }
             Ok(wire_entry)
           }
@@ -321,8 +314,8 @@ macro_rules! crud {
             UPDATE
           */
           pub fn [<inner_update_ $i>](update: [<$crud_type UpdateInput>], send_signal: bool) -> ExternResult<[<$crud_type WireEntry>]> {
-            update_entry!(update.address.0.clone(), update.entry.clone())?;
-            let entry_address = hash_entry!(update.entry.clone())?;
+            update_entry(update.address.0.clone(), &update.entry)?;
+            let entry_address = hash_entry(&update.entry)?;
             let wire_entry = [<$crud_type WireEntry>] {
                 entry: update.entry,
                 address: update.address,
@@ -334,8 +327,8 @@ macro_rules! crud {
                 action: $crate::ActionType::Update,
                 data: [<$crud_type SignalData>]::Update(wire_entry.clone()),
               });
-              debug!(format!("UPDATE ACTION SIGNAL PEERS {:?}", signal))?;
-              let _ = $crate::signal_peers(signal, $get_peers);
+              let _ = debug!(format!("UPDATE ACTION SIGNAL PEERS {:?}", signal));
+              let _ = $crate::signal_peers(&signal, $get_peers);
             }
             Ok(wire_entry)
           }
@@ -349,15 +342,15 @@ macro_rules! crud {
             DELETE
           */
           pub fn [<inner_archive_ $i>](address: $crate::WrappedHeaderHash, send_signal: bool) -> ExternResult<$crate::WrappedHeaderHash> {
-            delete_entry!(address.0.clone())?;
+            delete_entry(address.0.clone())?;
             if (send_signal) {
               let signal = $convert_to_receiver_signal([<$crud_type Signal>] {
                 entry_type: $path.to_string(),
                 action: $crate::ActionType::Delete,
                 data: [<$crud_type SignalData>]::Delete(address.clone()),
               });
-              debug!(format!("DELETE ACTION SIGNAL PEERS {:?}", signal))?;
-              let _ = $crate::signal_peers(signal, $get_peers);
+              let _ = debug!(format!("DELETE ACTION SIGNAL PEERS {:?}", signal));
+              let _ = $crate::signal_peers(&signal, $get_peers);
             }
             Ok(address)
           }

@@ -107,7 +107,7 @@ impl<'de> Deserialize<'de> for Status {
 //     // HOLD
 //     // have to hold on this until we get more than entry in the validation callback
 //     // which will come soon, according to David M.
-//     let _ = debug!("in validation callback");
+//     let _ = debug!(("in validation callback");
 //     Ok(ValidateCallbackResult::Valid)
 // }
 
@@ -117,18 +117,18 @@ pub fn create_whoami(entry: Profile) -> ExternResult<WireEntry> {
     // // notify_new_agent(profile.clone())?;
 
     // commit this new profile
-    let header_hash = create_entry!(entry.clone())?;
+    let header_hash = create_entry(&entry)?;
 
-    let entry_hash = hash_entry!(entry.clone())?;
+    let entry_hash = hash_entry(&entry)?;
 
     // list me so anyone can see my profile
     let agents_path_address = Path::from(AGENTS_PATH).hash()?;
-    create_link!(agents_path_address, entry_hash.clone())?;
+    create_link(agents_path_address, entry_hash.clone(), ())?;
 
     // list me so I can specifically and quickly look up my profile
-    let agent_pubkey = agent_info!()?.agent_initial_pubkey;
+    let agent_pubkey = agent_info()?.agent_initial_pubkey;
     let agent_entry_hash = EntryHash::from(agent_pubkey);
-    create_link!(agent_entry_hash, entry_hash)?;
+    create_link(agent_entry_hash, entry_hash, ())?;
 
     let wire_entry = WireEntry {
         entry,
@@ -143,7 +143,7 @@ pub fn create_whoami(entry: Profile) -> ExternResult<WireEntry> {
 
 #[hdk_extern]
 pub fn update_whoami(update: WireEntry) -> ExternResult<WireEntry> {
-    update_entry!(update.address.0.clone(), update.entry.clone())?;
+    update_entry(update.address.0.clone(), &update.entry)?;
     // // send update to peers
     // we don't want to cause real failure for inability to send to peers
     let _ = send_agent_signal(update.clone());
@@ -152,10 +152,10 @@ pub fn update_whoami(update: WireEntry) -> ExternResult<WireEntry> {
 
 #[hdk_extern]
 pub fn whoami(_: ()) -> ExternResult<WhoAmIOutput> {
-    let agent_pubkey = agent_info!()?.agent_initial_pubkey;
+    let agent_pubkey = agent_info()?.agent_initial_pubkey;
     let agent_entry_hash = EntryHash::from(agent_pubkey);
 
-    let all_profiles = get_links!(agent_entry_hash)?.into_inner();
+    let all_profiles = get_links(agent_entry_hash, None)?.into_inner();
     let maybe_profile_link = all_profiles.last();
     // // do it this way so that we always keep the original profile entry address
     // // from the UI perspective
@@ -177,7 +177,7 @@ pub fn fetch_agents(_: ()) -> ExternResult<AgentsOutput> {
 
 #[hdk_extern]
 fn fetch_agent_address(_: ()) -> ExternResult<WrappedAgentPubKey> {
-    let agent_info = agent_info!()?;
+    let agent_info = agent_info()?;
     Ok(WrappedAgentPubKey(agent_info.agent_initial_pubkey))
 }
 
@@ -186,20 +186,18 @@ SIGNALS
 */
 
 fn send_agent_signal(wire_entry: WireEntry) -> ExternResult<()> {
-    signal_peers(
-        AgentSignal {
-            tag: "agent".to_string(),
-            data: wire_entry,
-        },
-        get_peers,
-    )
+    let signal = AgentSignal {
+        tag: "agent".to_string(),
+        data: wire_entry,
+    };
+    signal_peers(&signal, get_peers)
 }
 
 // used to get addresses of agents to send signals to
 fn get_peers() -> ExternResult<Vec<AgentPubKey>> {
     let path_hash = Path::from(AGENTS_PATH).hash()?;
     let entries = fetch_links::<Profile, Profile>(path_hash)?;
-    let agent_info = agent_info!()?;
+    let agent_info = agent_info()?;
     Ok(entries
         .into_iter()
         // eliminate yourself as a peer
@@ -217,7 +215,7 @@ pub struct AgentSignal {
 // receiver (and forward to UI)
 #[hdk_extern]
 pub fn receive_signal(signal: AgentSignal) -> ExternResult<()> {
-    match emit_signal!(signal) {
+    match emit_signal(&signal) {
         Ok(_) => Ok(()),
         Err(_) => Err(HdkError::SerializedBytes(SerializedBytesError::ToBytes(
             "couldnt convert to bytes to send as signal".to_string(),
