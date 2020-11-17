@@ -19,6 +19,6 @@
   },
   "homepage": "https://github.com/h-be/acorn-hc#readme",
   "dependencies": {
-    "@holochain-open-dev/holochain-run-dna": "0.1.18"
+    "@holochain-open-dev/holochain-run-dna": "0.1.22"
   }
 }

@@ -156,7 +156,7 @@ pub fn create_goal_with_edge(
         action: ActionType::Create,
         data: goal_with_edge.clone(),
     });
-    debug!(format!("GOAL WITH EDGE ACTION SIGNAL PEERS {:?}", signal));
+    let _ = debug!(format!("GOAL WITH EDGE ACTION SIGNAL PEERS {:?}", signal));
     let _ = signal_peers(&signal, get_peers);
 
     Ok(goal_with_edge)
@@ -265,7 +265,7 @@ pub fn archive_goal_fully(address: WrappedHeaderHash) -> ExternResult<ArchiveGoa
         action: ActionType::Delete,
         data: archive_response.clone(),
     });
-    debug!(format!(
+    let _ = debug!(format!(
         "ARCHIVE GOAL FULLY ACTION SIGNAL PEERS {:?}",
         signal
     ));

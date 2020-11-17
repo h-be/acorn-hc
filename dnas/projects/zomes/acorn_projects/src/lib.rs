@@ -1,8 +1,4 @@
-use dna_help::{
-    fetch_links,
-    signal_peers,
-    WrappedAgentPubKey,
-};
+use dna_help::{fetch_links, signal_peers, WrappedAgentPubKey};
 use hdk3::prelude::*;
 
 mod project;
@@ -43,7 +39,6 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
     create_entry(&member)?;
     let member_entry_hash = hash_entry(&member)?;
     create_link(member_path_address, member_entry_hash, ())?;
-
 
     Ok(InitCallbackResult::Pass)
 }
@@ -92,7 +87,7 @@ pub fn get_peers() -> ExternResult<Vec<AgentPubKey>> {
     let path_hash = Path::from(MEMBER_PATH).hash()?;
     let entries = fetch_links::<Member, Member>(path_hash)?;
     let agent_info = agent_info()?;
-    debug!(format!("PEER ENTRIES {:?}", entries));
+    let _ = debug!(format!("PEER ENTRIES {:?}", entries));
     Ok(entries
         .into_iter()
         // eliminate yourself as a peer

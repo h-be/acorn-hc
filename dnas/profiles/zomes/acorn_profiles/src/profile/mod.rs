@@ -186,14 +186,11 @@ SIGNALS
 */
 
 fn send_agent_signal(wire_entry: WireEntry) -> ExternResult<()> {
-  let signal = AgentSignal {
-    tag: "agent".to_string(),
-    data: wire_entry,
-  };
-  signal_peers(
-      &signal,
-      get_peers,
-  )
+    let signal = AgentSignal {
+        tag: "agent".to_string(),
+        data: wire_entry,
+    };
+    signal_peers(&signal, get_peers)
 }
 
 // used to get addresses of agents to send signals to

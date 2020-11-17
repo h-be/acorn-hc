@@ -113,7 +113,7 @@ pub fn signal_peers<'a, I: 'a>(
 ) -> ExternResult<()>
 where
     SerializedBytes: TryFrom<&'a I, Error = SerializedBytesError>,
- {
+{
     let peers = get_peers()?;
     let zome_info = zome_info()?;
     let _ = debug!(format!("PEERS! {:?}", peers));
@@ -123,10 +123,10 @@ where
             zome_info.zome_name.clone(),
             zome::FunctionName("receive_signal".into()),
             None,
-            &signal
+            &signal,
         );
         if res.is_err() {
-          let _ = debug!(format!("Error during signal_peers {:?}", res.unwrap_err()));
+            let _ = debug!(format!("Error during signal_peers {:?}", res.unwrap_err()));
         }
     }
     Ok(())
@@ -285,7 +285,7 @@ macro_rules! crud {
                 action: $crate::ActionType::Create,
                 data: [<$crud_type SignalData>]::Create(wire_entry.clone()),
               });
-              debug!(format!("CREATE ACTION SIGNAL PEERS {:?}", signal))?;
+              let _ = debug!(format!("CREATE ACTION SIGNAL PEERS {:?}", signal));
               let _ = $crate::signal_peers(&signal, $get_peers);
             }
             Ok(wire_entry)
@@ -327,7 +327,7 @@ macro_rules! crud {
                 action: $crate::ActionType::Update,
                 data: [<$crud_type SignalData>]::Update(wire_entry.clone()),
               });
-              debug!(format!("UPDATE ACTION SIGNAL PEERS {:?}", signal))?;
+              let _ = debug!(format!("UPDATE ACTION SIGNAL PEERS {:?}", signal));
               let _ = $crate::signal_peers(&signal, $get_peers);
             }
             Ok(wire_entry)
@@ -349,7 +349,7 @@ macro_rules! crud {
                 action: $crate::ActionType::Delete,
                 data: [<$crud_type SignalData>]::Delete(address.clone()),
               });
-              debug!(format!("DELETE ACTION SIGNAL PEERS {:?}", signal))?;
+              let _ = debug!(format!("DELETE ACTION SIGNAL PEERS {:?}", signal));
               let _ = $crate::signal_peers(&signal, $get_peers);
             }
             Ok(address)
