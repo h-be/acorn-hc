@@ -10,5 +10,5 @@ edition = "2018"
 serde = "=1.0.104"
 # patched
 hdk3 = "0"
-paste = "1.0.2"
+paste = "1.0.3"
 
