@@ -153,7 +153,7 @@ pub fn get_latest_for_entry<T: TryFrom<SerializedBytes, Error = SerializedBytesE
     entry_hash: EntryHash,
 ) -> ExternResult<OptionEntryAndHash<T>> {
     // First, make sure we DO have the latest header_hash address
-    let maybe_latest_header_hash = match get_details(entry_hash.clone(), GetOptions::blocking())? {
+    let maybe_latest_header_hash = match get_details(entry_hash.clone(), GetOptions::latest())? {
         Some(Details::Entry(details)) => match details.entry_dht_status {
             metadata::EntryDhtStatus::Live => match details.updates.len() {
                 // pass out the header associated with this entry
@@ -175,7 +175,7 @@ pub fn get_latest_for_entry<T: TryFrom<SerializedBytes, Error = SerializedBytesE
 
     // Second, go and get that element, and return it and its header_address
     match maybe_latest_header_hash {
-        Some(latest_header_hash) => match get(latest_header_hash, GetOptions::blocking())? {
+        Some(latest_header_hash) => match get(latest_header_hash, GetOptions::latest())? {
             Some(element) => match element.entry().to_app_option::<T>()? {
                 Some(entry) => Ok(Some((
                     entry,

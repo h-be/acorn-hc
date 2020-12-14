@@ -1,7 +1,4 @@
-use dna_help::{
-    fetch_links, get_latest_for_entry, signal_peers, EntryAndHash, WrappedAgentPubKey,
-    WrappedHeaderHash,
-};
+use dna_help::{ActionType, EntryAndHash, WrappedAgentPubKey, WrappedHeaderHash, fetch_links, get_latest_for_entry, signal_peers};
 use hdk3::prelude::*;
 
 pub const AGENTS_PATH: &str = "agents";
@@ -136,9 +133,18 @@ pub fn create_whoami(entry: Profile) -> ExternResult<WireEntry> {
     };
 
     // we don't want to cause real failure for inability to send to peers
-    let _ = send_agent_signal(wire_entry.clone());
+    let signal = AgentSignal {
+      entry_type: agent_signal_entry_type(),
+      action: ActionType::Create,
+      data: SignalData::Create(wire_entry.clone())
+    };
+    let _ = send_agent_signal(signal);
 
     Ok(wire_entry)
+}
+
+fn agent_signal_entry_type() -> String {
+  "agent".to_string()
 }
 
 #[hdk_extern]
@@ -146,7 +152,12 @@ pub fn update_whoami(update: WireEntry) -> ExternResult<WireEntry> {
     update_entry(update.address.0.clone(), &update.entry)?;
     // // send update to peers
     // we don't want to cause real failure for inability to send to peers
-    let _ = send_agent_signal(update.clone());
+    let signal = AgentSignal {
+      entry_type: agent_signal_entry_type(),
+      action: ActionType::Update,
+      data: SignalData::Update(update.clone())
+    };
+    let _ = send_agent_signal(signal);
     Ok(update)
 }
 
@@ -185,11 +196,7 @@ fn fetch_agent_address(_: ()) -> ExternResult<WrappedAgentPubKey> {
 SIGNALS
 */
 
-fn send_agent_signal(wire_entry: WireEntry) -> ExternResult<()> {
-    let signal = AgentSignal {
-        tag: "agent".to_string(),
-        data: wire_entry,
-    };
+fn send_agent_signal(signal: AgentSignal) -> ExternResult<()> {
     signal_peers(&signal, get_peers)
 }
 
@@ -206,10 +213,21 @@ fn get_peers() -> ExternResult<Vec<AgentPubKey>> {
         .collect::<Vec<AgentPubKey>>())
 }
 
-#[derive(Clone, Serialize, Deserialize, SerializedBytes)]
+// this will be used to send these data structures as signals to the UI
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, SerializedBytes)]
+#[serde(untagged)]
+pub enum SignalData {
+  Create(WireEntry),
+  Update(WireEntry),
+  Delete(WrappedHeaderHash),
+}
+
+// this will be used to send these data structures as signals to the UI
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, SerializedBytes)]
 pub struct AgentSignal {
-    tag: String,
-    data: WireEntry,
+  pub entry_type: String,
+  pub action: ActionType,
+  pub data: SignalData,
 }
 
 // receiver (and forward to UI)

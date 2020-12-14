@@ -72,7 +72,7 @@ pub enum SignalType {
     GoalWithEdge(GoalWithEdgeSignal),
     // custom signal type for goal_fully_archived
     // this is because it's important to the UI to receive
-    // both the archived goal, and eveyrthing connected to it that
+    // both the archived goal, and everything connected to it that
     // was archived at the same time
     ArchiveGoalFully(ArchiveGoalFullySignal),
     GoalComment(GoalCommentSignal),
