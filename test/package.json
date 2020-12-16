@@ -4,12 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "RUST_LOG=error TRYORAMA_LOG_LEVEL=info RUST_BACKTRACE=1 TRYORAMA_HOLOCHAIN_PATH=\"holochain\" ts-node src/index.ts"
+    "test": "RUST_LOG=debug,kitsune_p2p_transport_quic=warn,kitsune_p2p=warn,p2p_event_task=warn TRYORAMA_LOG_LEVEL=info RUST_BACKTRACE=1 TRYORAMA_HOLOCHAIN_PATH=\"holochain\" ts-node src/index.ts"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@holochain/tryorama": "holochain/tryorama#bump-for-conductor-api-dev12",
+    "@holochain/tryorama": "0.4.0-dev.2",
     "lodash": "^4.17.19",
     "tape": "^5.0.1",
     "ts-node": "^8.10.2",

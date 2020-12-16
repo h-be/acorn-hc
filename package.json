@@ -6,7 +6,8 @@
     "test": "test"
   },
   "scripts": {
-    "start": "npx @holochain-open-dev/holochain-run-dna --proxy-url kitsune-proxy://VYgwCrh2ZCKL1lpnMM1VVUee7ks-9BkmW47C_ys4nqg/kitsune-quic/h/proxy-acorn.harris-braun.com/p/12345/-- dnas/profiles/profiles.dna.gz"
+    "start": "npx @holochain-open-dev/holochain-run-dna --installed-app-id my-app6 --port 8888 --proxy-url kitsune-proxy://VYgwCrh2ZCKL1lpnMM1VVUee7ks-9BkmW47C_ys4nqg/kitsune-quic/h/proxy-acorn.harris-braun.com/p/12345/-- dnas/profiles/profiles.dna.gz",
+    "start2": "npx @holochain-open-dev/holochain-run-dna --installed-app-id my-app6 --port 8889 --proxy-url kitsune-proxy://VYgwCrh2ZCKL1lpnMM1VVUee7ks-9BkmW47C_ys4nqg/kitsune-quic/h/proxy-acorn.harris-braun.com/p/12345/-- dnas/profiles/profiles.dna.gz"
   },
   "repository": {
     "type": "git",
