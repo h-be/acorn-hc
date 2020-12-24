@@ -1,4 +1,4 @@
-use dna_help::{fetch_links, signal_peers, WrappedAgentPubKey};
+use dna_help::{WrappedAgentPubKey, create_receive_signal_cap_grant, fetch_links, signal_peers};
 use hdk3::prelude::*;
 
 mod project;
@@ -16,6 +16,9 @@ use project::{
 
 #[hdk_extern]
 fn init(_: ()) -> ExternResult<InitCallbackResult> {
+    // authorize receive_signal
+    create_receive_signal_cap_grant()?;
+
     Path::from(EDGE_PATH).ensure()?;
     Path::from(ENTRY_POINT_PATH).ensure()?;
     Path::from(GOAL_PATH).ensure()?;
@@ -72,7 +75,7 @@ pub enum SignalType {
     GoalWithEdge(GoalWithEdgeSignal),
     // custom signal type for goal_fully_archived
     // this is because it's important to the UI to receive
-    // both the archived goal, and eveyrthing connected to it that
+    // both the archived goal, and everything connected to it that
     // was archived at the same time
     ArchiveGoalFully(ArchiveGoalFullySignal),
     GoalComment(GoalCommentSignal),
@@ -99,6 +102,7 @@ pub fn get_peers() -> ExternResult<Vec<AgentPubKey>> {
 // receiver (and forward to UI)
 #[hdk_extern]
 pub fn receive_signal(signal: SignalType) -> ExternResult<()> {
+    let _ = debug!(format!("RECEIVED SIGNAL: {:?}", signal));
     match emit_signal(&signal) {
         Ok(_) => Ok(()),
         Err(_) => Err(HdkError::SerializedBytes(SerializedBytesError::ToBytes(
