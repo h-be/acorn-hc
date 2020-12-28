@@ -1,4 +1,4 @@
-use crate::{get_peers, SignalType};
+use crate::{get_peers_content, SignalType};
 use dna_help::{crud, WrappedAgentPubKey, WrappedHeaderHash};
 use hdk3::prelude::*;
 
@@ -20,14 +20,14 @@ crud!(
     GoalMember,
     goal_member,
     "goal_member",
-    get_peers,
+    get_peers_content,
     convert_to_receiver_signal
 );
 
 // DELETE
 // clear all members
 pub fn archive_goal_members(address: WrappedHeaderHash) -> ExternResult<Vec<WrappedHeaderHash>> {
-    Ok(inner_fetch_goal_members()?
+    Ok(inner_fetch_goal_members(GetOptions::content())?
         .0
         .into_iter()
         .filter(|wire_entry: &GoalMemberWireEntry| {

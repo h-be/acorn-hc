@@ -1,4 +1,4 @@
-use crate::{get_peers, SignalType};
+use crate::{get_peers_content, SignalType};
 use dna_help::{crud, WrappedAgentPubKey, WrappedHeaderHash};
 use hdk3::prelude::*;
 
@@ -19,6 +19,6 @@ crud!(
     GoalComment,
     goal_comment,
     "goal_comment",
-    get_peers,
+    get_peers_content,
     convert_to_receiver_signal
 );

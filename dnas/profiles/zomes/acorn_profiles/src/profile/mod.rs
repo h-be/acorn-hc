@@ -1,4 +1,7 @@
-use dna_help::{ActionType, EntryAndHash, WrappedAgentPubKey, WrappedHeaderHash, fetch_links, get_latest_for_entry, signal_peers};
+use dna_help::{
+    fetch_links, get_latest_for_entry, signal_peers, ActionType, EntryAndHash, WrappedAgentPubKey,
+    WrappedHeaderHash,
+};
 use hdk3::prelude::*;
 
 pub const AGENTS_PATH: &str = "agents";
@@ -110,9 +113,6 @@ impl<'de> Deserialize<'de> for Status {
 
 #[hdk_extern]
 pub fn create_whoami(entry: Profile) -> ExternResult<WireEntry> {
-    // // send update to peers
-    // // notify_new_agent(profile.clone())?;
-
     // commit this new profile
     let header_hash = create_entry(&entry)?;
 
@@ -134,9 +134,9 @@ pub fn create_whoami(entry: Profile) -> ExternResult<WireEntry> {
 
     // we don't want to cause real failure for inability to send to peers
     let signal = AgentSignal {
-      entry_type: agent_signal_entry_type(),
-      action: ActionType::Create,
-      data: SignalData::Create(wire_entry.clone())
+        entry_type: agent_signal_entry_type(),
+        action: ActionType::Create,
+        data: SignalData::Create(wire_entry.clone()),
     };
     let _ = send_agent_signal(signal);
 
@@ -144,7 +144,7 @@ pub fn create_whoami(entry: Profile) -> ExternResult<WireEntry> {
 }
 
 fn agent_signal_entry_type() -> String {
-  "agent".to_string()
+    "agent".to_string()
 }
 
 #[hdk_extern]
@@ -153,9 +153,9 @@ pub fn update_whoami(update: WireEntry) -> ExternResult<WireEntry> {
     // // send update to peers
     // we don't want to cause real failure for inability to send to peers
     let signal = AgentSignal {
-      entry_type: agent_signal_entry_type(),
-      action: ActionType::Update,
-      data: SignalData::Update(update.clone())
+        entry_type: agent_signal_entry_type(),
+        action: ActionType::Update,
+        data: SignalData::Update(update.clone()),
     };
     let _ = send_agent_signal(signal);
     Ok(update)
@@ -171,7 +171,7 @@ pub fn whoami(_: ()) -> ExternResult<WhoAmIOutput> {
     // // do it this way so that we always keep the original profile entry address
     // // from the UI perspective
     match maybe_profile_link {
-        Some(profile_link) => match get_latest_for_entry::<Profile>(profile_link.target.clone())? {
+        Some(profile_link) => match get_latest_for_entry::<Profile>(profile_link.target.clone(), GetOptions::content())? {
             Some(entry_and_hash) => Ok(WhoAmIOutput(Some(WireEntry::from(entry_and_hash)))),
             None => Ok(WhoAmIOutput(None)),
         },
@@ -182,7 +182,7 @@ pub fn whoami(_: ()) -> ExternResult<WhoAmIOutput> {
 #[hdk_extern]
 pub fn fetch_agents(_: ()) -> ExternResult<AgentsOutput> {
     let path_hash = Path::from(AGENTS_PATH).hash()?;
-    let entries = fetch_links::<Profile, Profile>(path_hash)?;
+    let entries = fetch_links::<Profile, Profile>(path_hash, GetOptions::content())?;
     Ok(AgentsOutput(entries))
 }
 
@@ -203,7 +203,7 @@ fn send_agent_signal(signal: AgentSignal) -> ExternResult<()> {
 // used to get addresses of agents to send signals to
 fn get_peers() -> ExternResult<Vec<AgentPubKey>> {
     let path_hash = Path::from(AGENTS_PATH).hash()?;
-    let entries = fetch_links::<Profile, Profile>(path_hash)?;
+    let entries = fetch_links::<Profile, Profile>(path_hash, GetOptions::latest())?;
     let agent_info = agent_info()?;
     Ok(entries
         .into_iter()
@@ -217,28 +217,24 @@ fn get_peers() -> ExternResult<Vec<AgentPubKey>> {
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, SerializedBytes)]
 #[serde(untagged)]
 pub enum SignalData {
-  Create(WireEntry),
-  Update(WireEntry),
-  Delete(WrappedHeaderHash),
+    Create(WireEntry),
+    Update(WireEntry),
+    Delete(WrappedHeaderHash),
 }
 
 // this will be used to send these data structures as signals to the UI
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, SerializedBytes)]
 pub struct AgentSignal {
-  pub entry_type: String,
-  pub action: ActionType,
-  pub data: SignalData,
+    pub entry_type: String,
+    pub action: ActionType,
+    pub data: SignalData,
 }
 
 // receiver (and forward to UI)
 #[hdk_extern]
-pub fn receive_signal(signal: AgentSignal) -> ExternResult<()> {
-    match emit_signal(&signal) {
-        Ok(_) => Ok(()),
-        Err(_) => Err(HdkError::SerializedBytes(SerializedBytesError::ToBytes(
-            "couldnt convert to bytes to send as signal".to_string(),
-        ))),
-    }
+pub fn recv_remote_signal(sb: SerializedBytes) -> ExternResult<()> {
+    let signal: AgentSignal = AgentSignal::try_from(sb)?;
+    Ok(emit_signal(&signal)?)
 }
 
 // pub fn profile_def() -> ValidatingEntryType {

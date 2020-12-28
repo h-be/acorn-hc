@@ -115,26 +115,17 @@ where
     SerializedBytes: TryFrom<&'a I, Error = SerializedBytesError>,
 {
     let peers = get_peers()?;
-    let zome_info = zome_info()?;
     let _ = debug!(format!("PEERS! {:?}", peers));
-    for peer in peers {
-        let res: HdkResult<()> = call_remote(
-            peer,
-            zome_info.zome_name.clone(),
-            zome::FunctionName("receive_signal".into()),
-            None,
-            &signal,
-        );
-        if res.is_err() {
-            let _ = debug!(format!("Error during signal_peers {:?}", res.unwrap_err()));
-        }
-    }
+    remote_signal(
+        &signal,
+        peers,
+    )?;
     Ok(())
 }
 
 pub fn create_receive_signal_cap_grant() -> ExternResult<()> {
     let mut functions: GrantedFunctions = HashSet::new();
-    functions.insert((zome_info()?.zome_name, "receive_signal".into()));
+    functions.insert((zome_info()?.zome_name, "recv_remote_signal".into()));
 
     create_cap_grant(CapGrantEntry {
         tag: "".into(),
@@ -151,9 +142,10 @@ pub fn get_header_hash(shh: element::SignedHeaderHashed) -> HeaderHash {
 
 pub fn get_latest_for_entry<T: TryFrom<SerializedBytes, Error = SerializedBytesError>>(
     entry_hash: EntryHash,
+    get_options: GetOptions
 ) -> ExternResult<OptionEntryAndHash<T>> {
     // First, make sure we DO have the latest header_hash address
-    let maybe_latest_header_hash = match get_details(entry_hash.clone(), GetOptions::latest())? {
+    let maybe_latest_header_hash = match get_details(entry_hash.clone(), get_options.clone())? {
         Some(Details::Entry(details)) => match details.entry_dht_status {
             metadata::EntryDhtStatus::Live => match details.updates.len() {
                 // pass out the header associated with this entry
@@ -175,7 +167,7 @@ pub fn get_latest_for_entry<T: TryFrom<SerializedBytes, Error = SerializedBytesE
 
     // Second, go and get that element, and return it and its header_address
     match maybe_latest_header_hash {
-        Some(latest_header_hash) => match get(latest_header_hash, GetOptions::latest())? {
+        Some(latest_header_hash) => match get(latest_header_hash, get_options)? {
             Some(element) => match element.entry().to_app_option::<T>()? {
                 Some(entry) => Ok(Some((
                     entry,
@@ -201,11 +193,12 @@ pub fn fetch_links<
     WireEntry: From<EntryAndHash<EntryType>>,
 >(
     entry_hash: EntryHash,
+    get_options: GetOptions
 ) -> Result<Vec<WireEntry>, HdkError> {
     Ok(get_links(entry_hash, None)?
         .into_inner()
         .into_iter()
-        .map(|link: link::Link| get_latest_for_entry::<EntryType>(link.target.clone()))
+        .map(|link: link::Link| get_latest_for_entry::<EntryType>(link.target.clone(), get_options.clone()))
         .filter_map(Result::ok)
         .filter_map(|x| x)
         .map(|x| WireEntry::from(x))
@@ -272,7 +265,13 @@ macro_rules! crud {
           pub fn [<inner_create_ $i>](entry: $crud_type, send_signal: bool) -> ExternResult<[<$crud_type WireEntry>]> {
             let address = create_entry(&entry)?;
             let entry_hash = hash_entry(&entry)?;
-            let path_hash = Path::from([<$i:upper _PATH>]).hash()?;
+            let path = Path::from([<$i:upper _PATH>]);
+            let start_ensure_time: std::time::Duration = sys_time()?;
+            debug!("start! of Path.ensure() time {:?}", start_ensure_time.clone());
+            path.ensure()?;
+            let end_ensure_time: std::time::Duration = sys_time()?;
+            debug!("end! of Path.ensure() time {:?}", end_ensure_time.clone());
+            let path_hash = path.hash()?;
             create_link(path_hash, entry_hash.clone(), ())?;
             let wire_entry = [<$crud_type WireEntry>] {
               entry,
@@ -280,6 +279,8 @@ macro_rules! crud {
               entry_address: $crate::WrappedEntryHash(entry_hash)
             };
             if (send_signal) {
+              let start_signal_time: std::time::Duration = sys_time()?;
+              debug!("start!! of signal time {:?}", start_signal_time.clone());
               let signal = $convert_to_receiver_signal([<$crud_type Signal>] {
                 entry_type: $path.to_string(),
                 action: $crate::ActionType::Create,
@@ -287,6 +288,8 @@ macro_rules! crud {
               });
               let _ = debug!(format!("CREATE ACTION SIGNAL PEERS {:?}", signal));
               let _ = $crate::signal_peers(&signal, $get_peers);
+              let end_signal_time: std::time::Duration = sys_time()?;
+              debug!("end!! of signal time {:?}", end_signal_time.clone());
             }
             Ok(wire_entry)
           }
@@ -299,15 +302,15 @@ macro_rules! crud {
           /*
             READ
           */
-          pub fn [<inner_fetch_ $i s>]() -> ExternResult<[<Vec $crud_type WireEntry>]> {
+          pub fn [<inner_fetch_ $i s>](get_options: GetOptions) -> ExternResult<[<Vec $crud_type WireEntry>]> {
             let path_hash = Path::from([<$i:upper _PATH>]).hash()?;
-            let entries = $crate::fetch_links::<$crud_type, [<$crud_type WireEntry>]>(path_hash)?;
+            let entries = $crate::fetch_links::<$crud_type, [<$crud_type WireEntry>]>(path_hash, get_options)?;
             Ok([<Vec $crud_type WireEntry>](entries))
           }
 
           #[hdk_extern]
           pub fn [<fetch_ $i s>](_: ()) -> ExternResult<[<Vec $crud_type WireEntry>]> {
-            [<inner_fetch_ $i s>]()
+            [<inner_fetch_ $i s>](GetOptions::latest())
           }
 
           /*
