@@ -39,6 +39,6 @@ impl MemberSignal {
 #[hdk_extern]
 pub fn fetch_members(_: ()) -> ExternResult<VecMember> {
     let path_hash = Path::from(MEMBER_PATH).hash()?;
-    let entries = fetch_links::<Member, Member>(path_hash)?;
+    let entries = fetch_links::<Member, Member>(path_hash, GetOptions::content())?;
     Ok(VecMember(entries))
 }

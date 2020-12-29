@@ -5,7 +5,7 @@ use super::{
     goal_member::archive_goal_members,
     goal_vote::{inner_archive_goal_vote, inner_fetch_goal_votes, GoalVoteWireEntry},
 };
-use crate::{get_peers, SignalType};
+use crate::{get_peers_content, SignalType};
 use dna_help::{crud, signal_peers, ActionType, WrappedAgentPubKey, WrappedHeaderHash};
 use hdk3::prelude::*;
 use std::fmt;
@@ -106,7 +106,7 @@ fn convert_to_receiver_signal(signal: GoalSignal) -> SignalType {
     SignalType::Goal(signal)
 }
 
-crud!(Goal, goal, "goal", get_peers, convert_to_receiver_signal);
+crud!(Goal, goal, "goal", get_peers_content, convert_to_receiver_signal);
 
 #[derive(Serialize, Deserialize, Debug, SerializedBytes, Clone, PartialEq)]
 pub struct CreateGoalWithEdgeInput {
@@ -157,7 +157,7 @@ pub fn create_goal_with_edge(
         data: goal_with_edge.clone(),
     });
     let _ = debug!(format!("GOAL WITH EDGE ACTION SIGNAL PEERS {:?}", signal));
-    let _ = signal_peers(&signal, get_peers);
+    let _ = signal_peers(&signal, get_peers_content);
 
     Ok(goal_with_edge)
 }
@@ -184,7 +184,7 @@ pub struct ArchiveGoalFullySignal {
 pub fn archive_goal_fully(address: WrappedHeaderHash) -> ExternResult<ArchiveGoalFullyResponse> {
     inner_archive_goal(address.clone(), false)?;
 
-    let archived_edges = inner_fetch_edges()?
+    let archived_edges = inner_fetch_edges(GetOptions::content())?
         .0
         .into_iter()
         .filter(|wire_entry: &EdgeWireEntry| {
@@ -206,7 +206,7 @@ pub fn archive_goal_fully(address: WrappedHeaderHash) -> ExternResult<ArchiveGoa
 
     let archived_goal_members = archive_goal_members(address.clone())?;
 
-    let archived_goal_votes = inner_fetch_goal_votes()?
+    let archived_goal_votes = inner_fetch_goal_votes(GetOptions::content())?
         .0
         .into_iter()
         .filter(|wire_entry: &GoalVoteWireEntry| wire_entry.entry.goal_address == address.clone())
@@ -221,7 +221,7 @@ pub fn archive_goal_fully(address: WrappedHeaderHash) -> ExternResult<ArchiveGoa
         .filter_map(Result::ok)
         .collect();
 
-    let archived_goal_comments = inner_fetch_goal_comments()?
+    let archived_goal_comments = inner_fetch_goal_comments(GetOptions::content())?
         .0
         .into_iter()
         .filter(|wire_entry: &GoalCommentWireEntry| wire_entry.entry.goal_address == address)
@@ -236,7 +236,7 @@ pub fn archive_goal_fully(address: WrappedHeaderHash) -> ExternResult<ArchiveGoa
         .filter_map(Result::ok)
         .collect();
 
-    let archived_entry_points = inner_fetch_entry_points()?
+    let archived_entry_points = inner_fetch_entry_points(GetOptions::content())?
         .0
         .into_iter()
         .filter(|wire_entry: &EntryPointWireEntry| wire_entry.entry.goal_address == address)
@@ -269,7 +269,7 @@ pub fn archive_goal_fully(address: WrappedHeaderHash) -> ExternResult<ArchiveGoa
         "ARCHIVE GOAL FULLY ACTION SIGNAL PEERS {:?}",
         signal
     ));
-    let _ = signal_peers(&signal, get_peers);
+    let _ = signal_peers(&signal, get_peers_content);
 
     Ok(archive_response)
 }
