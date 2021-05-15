@@ -1,3 +1,7 @@
+# Deprecated
+
+## This code now lives at [https://github.com/h-be/acorn](https://github.com/h-be/acorn) in the `dna` and `conductor` folders.
+
 # acorn-hc
 
 [![CircleCI](https://circleci.com/gh/h-be/acorn-hc.svg?style=svg)](https://circleci.com/gh/h-be/acorn-hc)
